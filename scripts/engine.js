@@ -40,114 +40,6 @@
 
   let toastTimer = null;
 
-  // Playable Retro Snake Mini-Game on Jacob's Bedroom PC!
-  const snake = {
-    active: false,
-    gridW: 24,
-    gridH: 15,
-    body: [],
-    dir: { x: 1, y: 0 },
-    nextDir: { x: 1, y: 0 },
-    food: { x: 15, y: 7 },
-    score: 0,
-    best: Number(localStorage.getItem("lod_snake_best") || 0),
-    timer: 0,
-    over: false
-  };
-
-  function startSnake() {
-    snake.active = true;
-    snake.over = false;
-    snake.score = 0;
-    snake.dir = { x: 1, y: 0 };
-    snake.nextDir = { x: 1, y: 0 };
-    snake.body = [{ x: 8, y: 7 }, { x: 7, y: 7 }, { x: 6, y: 7 }];
-    snake.food = { x: 16, y: 7 };
-    snake.timer = 0;
-    window.AudioFX.confirm();
-  }
-
-  function exitSnake() {
-    snake.active = false;
-    window.AudioFX.cancel();
-  }
-
-  function updateSnake(dt) {
-    if (!snake.active || snake.over) return;
-    snake.timer += dt;
-    if (snake.timer < 0.13) return;
-    snake.timer = 0;
-    snake.dir = { ...snake.nextDir };
-    const head = { x: snake.body[0].x + snake.dir.x, y: snake.body[0].y + snake.dir.y };
-    if (head.x < 0 || head.y < 0 || head.x >= snake.gridW || head.y >= snake.gridH ||
-        snake.body.some(s => s.x === head.x && s.y === head.y)) {
-      snake.over = true;
-      window.AudioFX.hit();
-      return;
-    }
-    snake.body.unshift(head);
-    if (head.x === snake.food.x && head.y === snake.food.y) {
-      snake.score += 10;
-      if (snake.score > snake.best) {
-        snake.best = snake.score;
-        try { localStorage.setItem("lod_snake_best", String(snake.best)); } catch (_) {}
-      }
-      window.AudioFX.heal();
-      if (snake.score >= 30) setSideQuest("snake_champ", "done");
-      snake.food = {
-        x: Math.floor(Math.random() * snake.gridW),
-        y: Math.floor(Math.random() * snake.gridH)
-      };
-    } else {
-      snake.body.pop();
-    }
-  }
-
-  function drawSnake() {
-    ctx.fillStyle = "#051a0f";
-    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-    // Retro CRT header
-    ctx.fillStyle = "#0a2e1a";
-    ctx.fillRect(0, 0, VIEW_W, 28);
-    ctx.fillStyle = "#4ade80";
-    ctx.font = "bold 11px monospace";
-    ctx.fillText(`SNAKE.EXE  SCORE:${snake.score}  BEST:${snake.best}`, 12, 18);
-    ctx.fillStyle = "#86efac";
-    ctx.font = "9px monospace";
-    ctx.fillText("B: EXIT", 332, 18);
-
-    // Playfield border (24x15 cells of 14px each, centered)
-    const ox = 24, oy = 38, cs = 14;
-    ctx.strokeStyle = "#22c55e";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(ox - 2, oy - 2, snake.gridW * cs + 4, snake.gridH * cs + 4);
-
-    // Apple
-    ctx.fillStyle = "#ef4444";
-    ctx.fillRect(ox + snake.food.x * cs + 2, oy + snake.food.y * cs + 2, cs - 4, cs - 4);
-    ctx.fillStyle = "#fde047";
-    ctx.fillRect(ox + snake.food.x * cs + 5, oy + snake.food.y * cs + 1, 3, 2);
-
-    // Snake segments
-    snake.body.forEach((seg, i) => {
-      ctx.fillStyle = i === 0 ? "#86efac" : "#22c55e";
-      ctx.fillRect(ox + seg.x * cs + 1, oy + seg.y * cs + 1, cs - 2, cs - 2);
-    });
-
-    if (snake.over) {
-      ctx.fillStyle = "rgba(0,0,0,0.72)";
-      ctx.fillRect(72, 108, 240, 74);
-      ctx.strokeStyle = "#f5c542";
-      ctx.strokeRect(72, 108, 240, 74);
-      ctx.fillStyle = "#f5c542";
-      ctx.font = "bold 16px monospace";
-      ctx.fillText("GAME OVER!", 142, 134);
-      ctx.fillStyle = "#e2e8f0";
-      ctx.font = "11px monospace";
-      ctx.fillText("PRESS A TO RETRY • B TO EXIT", 94, 162);
-    }
-  }
-
   const game = {
     pinUnlocked: false,
     started: false,
@@ -368,6 +260,7 @@
       game.mapId = mapId;
       game.player.x = tx * T;
       game.player.y = ty * T;
+      if (mapId !== "overworld" && mapId !== "westside") game.player.dir = "up";
       game.player.frame = 0;
       rebuildActors();
       markExplored(mapId, game.player.x, game.player.y);
@@ -643,7 +536,7 @@
     } else if (eventName === "playSnake") {
       if (!game.sideQuests.status.snake_champ) setSideQuest("snake_champ", "active");
       showChoices([
-        { label: "Play SNAKE.EXE", action: () => startSnake() },
+        { label: "Play SNAKE.EXE", action: () => window.SnakeGame.start(() => setSideQuest("snake_champ", "done")) },
         { label: "Step Away", action: () => {} }
       ]);
     } else if (eventName === "loreTwilightFireflies") {
@@ -915,7 +808,7 @@
 
   function interact() {
     if (!game.pinUnlocked) return;
-    if (snake.active) { if (snake.over) startSnake(); return; }
+    if (snake.active) { if (snake.over) window.SnakeGame.start(() => setSideQuest("snake_champ", "done")); return; }
     if (!game.started) { confirmTitle(); return; }
     if (window.Battle.isActive()) { window.Battle.confirmMove(); return; }
     if (game.choice) { confirmChoice(); return; }
@@ -998,8 +891,6 @@
           window.WorldArt.drawRoadTile(ctx, map, x, y, sx, sy, game.purgatorio);
         } else if (tile === 5) {
           window.WorldArt.drawSidewalkTile(ctx, sx, sy, game.purgatorio);
-        } else if (tile === 8) {
-          window.WorldArt.drawDistantCityTile(ctx, x, y, sx, sy, game.purgatorio);
         } else if (tile === 9) {
           window.WorldArt.drawFenceTile(ctx, map, x, y, sx, sy, game.purgatorio);
         } else if (tile === 10) {
@@ -1009,10 +900,12 @@
         } else if (!isExterior && window.WorldArt.drawInteriorFloorTile(ctx, map.floorType, tile, x, y, sx, sy, time, game.purgatorio)) {
           // Drawn by Stardew interior floor renderer!
         } else {
-          const g1 = (game.purgatorio && map.floorType === "grass") ? "#24473c" : c1;
-          const g2 = (game.purgatorio && map.floorType === "grass") ? "#1d3b32" : c2;
-          ctx.fillStyle = (x + y) % 2 === 0 ? g1 : g2;
-          ctx.fillRect(sx, sy, T, T);
+          if (map.floorType === "grass") {
+            window.WorldArt.drawGrassTile(ctx, x, y, sx, sy, game.purgatorio);
+          } else {
+            ctx.fillStyle = (x + y) % 2 === 0 ? c1 : c2;
+            ctx.fillRect(sx, sy, T, T);
+          }
           if (map.floorType === "dream" && (x * 7 + y * 13) % 11 === 0) {
             ctx.fillStyle = Math.sin(time * 0.005 + x) > 0 ? "#fde047" : "#38bdf8";
             ctx.fillRect(sx + 10, sy + 10, 2, 2);
@@ -1082,7 +975,7 @@
 
   function render(time) {
     ctx.clearRect(0, 0, VIEW_W, VIEW_H);
-    if (snake.active) { drawSnake(); return; }
+    if (window.SnakeGame.isActive()) { window.SnakeGame.draw(ctx); return; }
     if (window.Battle.isActive()) { window.Battle.draw(ctx, time); return; }
 
     const map = window.Maps[game.mapId];
@@ -1157,7 +1050,7 @@
     game.lastTime = time;
     if (game.warpCooldown > 0) game.warpCooldown = Math.max(0, game.warpCooldown - dt);
 
-    if (snake.active) { updateSnake(dt); }
+    if (window.SnakeGame.isActive()) { window.SnakeGame.update(dt); }
     else if (game.pinUnlocked && game.started && !game.ingameMenuOpen && !game.settingsOpen && !window.Battle.isActive()) {
       updateActors(dt);
       if (game.cutscene) {
@@ -1262,7 +1155,7 @@
             <span><i class="mm-dot" style="background:#1e1b4b;border:1px solid #6366f1"></i>Fog of War</span>
           </div>
         </div>`;
-      drawRegionalMap(fog);
+      window.RegionalMap.draw(game, fog);
     } else if (tab === "party") {
       body.innerHTML = window.Story.partyOrder.map(id => {
         const p = window.PALETTES[id];
@@ -1288,163 +1181,6 @@
     }
   }
 
-
-  function drawRegionalMap(fog) {
-    const mc = document.getElementById("minimap-canvas");
-    if (!mc) return;
-    const mctx = mc.getContext("2d");
-    mctx.imageSmoothingEnabled = true;
-    const W = mc.width, H = mc.height;
-
-    const visitedSet = new Set(Object.keys(game.explored || {}));
-    visitedSet.add(game.mapId);
-    const seenWest = !fog || visitedSet.has("westside") || ["school", "candy_shop", "neighbor_house", "neighbor_2"].includes(game.mapId);
-    const seenPark = !fog || visitedSet.has("park") || game.questStage >= 7;
-    const seenFort = !fog || visitedSet.has("fortress") || game.questStage >= 10;
-
-    // 1. Lush Illustrated Valley Terrain Background
-    const bg = mctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, "#1c3b2c");
-    bg.addColorStop(0.5, "#2b593c");
-    bg.addColorStop(1, "#1e4230");
-    mctx.fillStyle = bg;
-    mctx.fillRect(0, 0, W, H);
-
-    // Subtle organic forest clusters framing the valley
-    mctx.fillStyle = "#163322";
-    for (let i = 0; i < 38; i++) {
-      const fx = (i * 47) % W;
-      const fy = (i % 2 === 0) ? (12 + (i % 5) * 6) : (H - 16 - (i % 4) * 5);
-      mctx.beginPath(); mctx.arc(fx, fy, 12 + (i % 5) * 2, 0, Math.PI * 2); mctx.fill();
-    }
-
-    // 2. Monument Creek River winding along the bottom
-    mctx.strokeStyle = "#0284c7"; mctx.lineWidth = 14; mctx.lineCap = "round";
-    mctx.beginPath();
-    mctx.moveTo(0, H - 24);
-    mctx.bezierCurveTo(130, H - 10, 320, H - 38, W, H - 20);
-    mctx.stroke();
-    mctx.strokeStyle = "#38bdf8"; mctx.lineWidth = 4;
-    mctx.stroke();
-
-    // 3. Smooth Paved Road Network connecting Westside (Left) <-> East Colorado Springs (Right)
-    mctx.strokeStyle = "#334155"; mctx.lineWidth = 14;
-    mctx.beginPath();
-    // Main Upper Avenue spanning Westside (left) -> East (right)
-    mctx.moveTo(26, 154); mctx.lineTo(W - 22, 154);
-    // Lower Avenue
-    mctx.moveTo(40, 232); mctx.lineTo(W - 26, 232);
-    // Vertical connecting boulevards
-    mctx.moveTo(116, 154); mctx.lineTo(116, 232);
-    mctx.moveTo(192, 154); mctx.lineTo(192, 232);
-    mctx.moveTo(318, 154); mctx.lineTo(318, 232);
-    mctx.moveTo(396, 154); mctx.lineTo(396, 232);
-    // North Trail to Limbach Park
-    mctx.moveTo(356, 154); mctx.lineTo(356, 72);
-    mctx.stroke();
-
-    // Dashed yellow road centerlines
-    mctx.save();
-    mctx.strokeStyle = "#eab308"; mctx.lineWidth = 1.6; mctx.setLineDash([6, 6]);
-    mctx.beginPath();
-    mctx.moveTo(32, 154); mctx.lineTo(W - 28, 154);
-    mctx.moveTo(46, 232); mctx.lineTo(W - 32, 232);
-    mctx.stroke();
-    mctx.restore();
-
-    // District Divider Line & Zone Titles
-    mctx.save();
-    mctx.strokeStyle = "rgba(255,255,255,0.18)"; mctx.setLineDash([4, 4]); mctx.lineWidth = 1.5;
-    mctx.beginPath(); mctx.moveTo(234, 62); mctx.lineTo(234, H - 36); mctx.stroke();
-    mctx.restore();
-
-    mctx.font = "bold 10px system-ui, sans-serif";
-    mctx.fillStyle = "rgba(226, 232, 240, 0.85)";
-    mctx.fillText("WESTSIDE DISTRICT", 22, 84);
-    mctx.fillText("COLORADO SPRINGS (EAST)", 246, 84);
-
-    // Helper: Draw a clean illustrated landmark card on the map
-    const drawPin = (x, y, label, color, active = false) => {
-      mctx.save();
-      mctx.fillStyle = "rgba(0,0,0,0.45)";
-      mctx.beginPath(); mctx.roundRect(x - 20, y - 9, 40, 20, 5); mctx.fill();
-      mctx.fillStyle = color;
-      mctx.strokeStyle = active ? "#facc15" : "#f8fafc";
-      mctx.lineWidth = active ? 2.5 : 1.2;
-      mctx.beginPath(); mctx.roundRect(x - 18, y - 11, 36, 18, 4); mctx.fill(); mctx.stroke();
-
-      mctx.font = "bold 9px system-ui, sans-serif";
-      const tw = mctx.measureText(label).width;
-      mctx.fillStyle = "rgba(9, 12, 24, 0.82)";
-      mctx.beginPath(); mctx.roundRect(x - tw / 2 - 4, y + 9, tw + 8, 13, 3); mctx.fill();
-      mctx.fillStyle = active ? "#fde047" : "#f1f5f9";
-      mctx.fillText(label, x - tw / 2, y + 19);
-      mctx.restore();
-    };
-
-    // 4. East Colorado Springs Landmarks (Right Half)
-    const cur = game.mapId;
-    drawPin(276, 118, "St. Jude Church", "#64748b", cur === "church");
-    drawPin(424, 118, "Jacob's House", "#c2410c", cur === "house" || cur === "dream");
-    drawPin(276, 194, "Hospital", "#0d9488", cur === "hospital");
-    drawPin(356, 194, "Barnes & Noble", "#15803d", cur === "bookstore");
-    drawPin(428, 194, "Party House", "#4f46e5", cur === "party");
-
-    // 5. Westside District Landmarks (Left Half — Fogged until explored!)
-    if (seenWest) {
-      drawPin(66, 118, "CS High School", "#b91c1c", cur === "school");
-      drawPin(150, 118, "Henderson's", "#2563eb", cur === "neighbor_house");
-      drawPin(206, 118, "Arcade Loft", "#7c3aed", cur === "neighbor_2");
-      drawPin(68, 194, "Sweet Tooth", "#db2777", cur === "candy_shop");
-    } else {
-      // Smooth Fog-of-War Mist over Westside hinting there's an entire district to the left!
-      mctx.fillStyle = "rgba(18, 16, 40, 0.84)";
-      mctx.beginPath(); mctx.roundRect(10, 66, 218, 196, 12); mctx.fill();
-      mctx.strokeStyle = "rgba(167, 139, 250, 0.55)"; mctx.lineWidth = 1.5; mctx.stroke();
-      mctx.fillStyle = "#c4b5fd"; mctx.font = "bold 12px system-ui, sans-serif";
-      mctx.fillText("??? WESTSIDE ???", 60, 152);
-      mctx.fillStyle = "#94a3b8"; mctx.font = "10px system-ui, sans-serif";
-      mctx.fillText("Walk west on Upper Ave", 56, 170);
-    }
-
-    // 6. North Purgatorio Realm: Limbach Park & Casa Grande
-    if (seenPark) {
-      drawPin(356, 44, "Limbach Park", "#7c3aed", cur === "park");
-    } else {
-      mctx.fillStyle = "rgba(30, 18, 56, 0.85)";
-      mctx.beginPath(); mctx.roundRect(300, 22, 112, 34, 8); mctx.fill();
-      mctx.strokeStyle = "rgba(167, 139, 250, 0.5)"; mctx.stroke();
-      mctx.fillStyle = "#c4b5fd"; mctx.font = "bold 10px system-ui, sans-serif";
-      mctx.fillText("??? NORTH TRAIL ???", 308, 43);
-    }
-    if (seenFort) {
-      drawPin(440, 44, "Casa Grande", "#991b1b", cur === "fortress");
-    }
-
-    // 7. Pulsing Gold "YOU" Pin (Maps live player position OR current building!)
-    const pinCoords = {
-      church: [276, 118], house: [424, 118], dream: [424, 118],
-      hospital: [276, 194], bookstore: [356, 194], party: [428, 194],
-      school: [66, 118], neighbor_house: [150, 118], neighbor_2: [206, 118], candy_shop: [68, 194],
-      park: [356, 44], fortress: [440, 44]
-    };
-    let pxPin = 356, pyPin = 154;
-    if (cur === "overworld") {
-      pxPin = 242 + (game.player.x / (window.Maps.overworld.w * T)) * 224;
-      pyPin = 86 + (game.player.y / (window.Maps.overworld.h * T)) * 182;
-    } else if (cur === "westside") {
-      pxPin = 18 + (game.player.x / (window.Maps.westside.w * T)) * 212;
-      pyPin = 86 + (game.player.y / (window.Maps.westside.h * T)) * 182;
-    } else if (pinCoords[cur]) {
-      [pxPin, pyPin] = pinCoords[cur];
-    }
-
-    mctx.fillStyle = "rgba(250, 204, 21, 0.35)";
-    mctx.beginPath(); mctx.arc(pxPin, pyPin, 11, 0, Math.PI * 2); mctx.fill();
-    mctx.fillStyle = "#facc15";
-    mctx.strokeStyle = "#111827"; mctx.lineWidth = 2;
-    mctx.beginPath(); mctx.arc(pxPin, pyPin, 5.5, 0, Math.PI * 2); mctx.fill(); mctx.stroke();
-  }
 
   // ---------------------------------------------------------
   // FULL-SCREEN SETTINGS OVERLAY (All Options as Selectable Pills!)
@@ -1649,13 +1385,7 @@
       }
       return;
     }
-    if (snake.active) {
-      if (dir === "up" && snake.dir.y !== 1) snake.nextDir = { x: 0, y: -1 };
-      else if (dir === "down" && snake.dir.y !== -1) snake.nextDir = { x: 0, y: 1 };
-      else if (dir === "left" && snake.dir.x !== 1) snake.nextDir = { x: -1, y: 0 };
-      else if (dir === "right" && snake.dir.x !== -1) snake.nextDir = { x: 1, y: 0 };
-      return;
-    }
+    if (window.SnakeGame.isActive()) { window.SnakeGame.setDir(dir); return; }
     if (window.Battle.isActive()) { window.Battle.moveFocus(dir); return; }
     if (game.choice) {
       if (dir === "up") moveChoice(-1);
@@ -1753,7 +1483,7 @@
     btnB.classList.add("pressed");
     game.input.run = true;
     if (!relOverlay.classList.contains("hidden")) closeReleaseNotes();
-    else if (snake.active) exitSnake();
+    else if (window.SnakeGame.isActive()) window.SnakeGame.exit();
     else if (game.choice) cancelChoice();
     else if (game.settingsOpen) closeSettings();
     else if (game.ingameMenuOpen) closeIngameMenu();
@@ -1804,7 +1534,7 @@
       game.input.run = true;
       if (e.code === "KeyX" && !e.repeat) {
         if (!relOverlay.classList.contains("hidden")) closeReleaseNotes();
-    else if (snake.active) exitSnake();
+    else if (window.SnakeGame.isActive()) window.SnakeGame.exit();
     else if (game.choice) cancelChoice();
         else if (game.settingsOpen) closeSettings();
         else if (game.ingameMenuOpen) closeIngameMenu();
@@ -1812,7 +1542,7 @@
     }
     if (e.code === "Escape") {
       if (!relOverlay.classList.contains("hidden")) closeReleaseNotes();
-    else if (snake.active) exitSnake();
+    else if (window.SnakeGame.isActive()) window.SnakeGame.exit();
     else if (game.choice) cancelChoice();
       else if (game.settingsOpen) closeSettings();
       else if (game.ingameMenuOpen) closeIngameMenu();

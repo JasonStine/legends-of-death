@@ -1,0 +1,135 @@
+/* =========================================================
+   LEGENDS OF DEATH — 32-Bit Handheld Console Styles (v4)
+   Portrait Phone (Screen Top + Centered Controls),
+   Fold 7 Unfolded, & Landscape GBA Advance Mode
+   ========================================================= */
+:root {
+  --gold: #f5c542;
+  --crimson: #ef4444;
+  --teal: #38bdf8;
+  --violet: #a78bfa;
+  --text: #f3f4f6;
+  --muted: #9ca3af;
+
+  /* Default: Burnt Orange / Sunburnt Yellow */
+  --shell-top: #e89b24;
+  --shell-mid: #d47b12;
+  --shell-bot: #b55e08;
+  --shell-border: #f7c552;
+  --shell-text: #261203;
+  --shell-subtext: #4a2406;
+  --topbar-bg: #c26f0c;
+  --pill-bg: #a35806;
+  --pill-border: #592d04;
+  --pill-text: #fff7e6;
+  --well-bg: rgba(65, 28, 0, 0.24);
+  --dpad-bg: #2b1d12;
+  --dpad-border: #140c06;
+  --dpad-text: #fef08a;
+
+  /* Safe Viewport-Clamped Button Sizes (NEVER clip off-screen!) */
+  --dpad-size: clamp(92px, 27vw, 118px);
+  --dpad-font: 14px;
+  --ab-size: clamp(44px, 13.5vw, 54px);
+  --ab-font: 17px;
+  --ab-gap: clamp(8px, 2.5vw, 14px);
+  --pill-pad-y: 6px;
+  --pill-font: 10px;
+}
+
+/* =========================================================
+   7 HANDHELD DEVICE COLOR THEMES
+   ========================================================= */
+#handheld-shell[data-theme="sunburnt-yellow"] {
+  --shell-top: #e89b24; --shell-mid: #d47b12; --shell-bot: #b55e08;
+  --shell-border: #f7c552; --shell-text: #261203; --shell-subtext: #4a2406;
+  --topbar-bg: #c26f0c; --pill-bg: #a35806; --pill-border: #592d04; --pill-text: #fff7e6;
+  --well-bg: rgba(65, 28, 0, 0.24); --dpad-bg: #2b1d12; --dpad-border: #140c06; --dpad-text: #fef08a;
+}
+#handheld-shell[data-theme="default"] {
+  --shell-top: #232a46; --shell-mid: #1a2038; --shell-bot: #12172a;
+  --shell-border: #384470; --shell-text: #e2e8f0; --shell-subtext: #94a3b8;
+  --topbar-bg: #101526; --pill-bg: #232d4d; --pill-border: #48588c; --pill-text: #dbeafe;
+  --well-bg: rgba(7, 10, 20, 0.42); --dpad-bg: #2a3354; --dpad-border: #47568a; --dpad-text: #e2e8f0;
+}
+#handheld-shell[data-theme="dark-purple"] {
+  --shell-top: #311b4d; --shell-mid: #23123a; --shell-bot: #160a26;
+  --shell-border: #5b3291; --shell-text: #f3e8ff; --shell-subtext: #c4b5fd;
+  --topbar-bg: #170b29; --pill-bg: #3b2060; --pill-border: #7c4bc0; --pill-text: #f3e8ff;
+  --well-bg: rgba(14, 5, 28, 0.48); --dpad-bg: #392059; --dpad-border: #6d3fa8; --dpad-text: #f3e8ff;
+}
+#handheld-shell[data-theme="dark-green"] {
+  --shell-top: #15382c; --shell-mid: #0f2b21; --shell-bot: #091d16;
+  --shell-border: #27664e; --shell-text: #d1fae5; --shell-subtext: #6ee7b7;
+  --topbar-bg: #0a1f18; --pill-bg: #184435; --pill-border: #34876a; --pill-text: #ecfdf5;
+  --well-bg: rgba(4, 16, 12, 0.48); --dpad-bg: #194233; --dpad-border: #2e785e; --dpad-text: #d1fae5;
+}
+#handheld-shell[data-theme="light-offwhite"] {
+  --shell-top: #ebe7dc; --shell-mid: #dfd9ca; --shell-bot: #cfc8b6;
+  --shell-border: #b3aa96; --shell-text: #1f2430; --shell-subtext: #525969;
+  --topbar-bg: #d5cfc0; --pill-bg: #c6bfb0; --pill-border: #8d8677; --pill-text: #1f2430;
+  --well-bg: rgba(70, 64, 52, 0.14); --dpad-bg: #2b303d; --dpad-border: #171a22; --dpad-text: #f8fafc;
+}
+#handheld-shell[data-theme="light-green"] {
+  --shell-top: #c7ecd8; --shell-mid: #aee2c7; --shell-bot: #91d2b1;
+  --shell-border: #6cb892; --shell-text: #0f2e22; --shell-subtext: #275e48;
+  --topbar-bg: #a3d9bd; --pill-bg: #8ac9a9; --pill-border: #4e9975; --pill-text: #0b261b;
+  --well-bg: rgba(16, 68, 46, 0.14); --dpad-bg: #1e3b30; --dpad-border: #12261e; --dpad-text: #ecfdf5;
+}
+#handheld-shell[data-theme="light-blue"] {
+  --shell-top: #c8e3f8; --shell-mid: #aed4f2; --shell-bot: #8fc0e8;
+  --shell-border: #6ba5d6; --shell-text: #0f253d; --shell-subtext: #2c527a;
+  --topbar-bg: #a4ccf0; --pill-bg: #8abbe6; --pill-border: #4f88ba; --pill-text: #0c1f33;
+  --well-bg: rgba(15, 45, 80, 0.14); --dpad-bg: #1e334d; --dpad-border: #122033; --dpad-text: #eff6ff;
+}
+
+/* =========================================================
+   3 VIEWPORT-SAFE BUTTON SIZES (Never Clip Off-Screen!)
+   ========================================================= */
+#handheld-shell[data-btn-size="small"] {
+  --dpad-size: clamp(78px, 22vw, 94px);
+  --dpad-font: 12px;
+  --ab-size: clamp(36px, 10.5vw, 44px);
+  --ab-font: 14px;
+  --ab-gap: clamp(6px, 1.8vw, 10px);
+  --pill-pad-y: 4px;
+  --pill-font: 9px;
+}
+#handheld-shell[data-btn-size="medium"] {
+  --dpad-size: clamp(92px, 27vw, 118px);
+  --dpad-font: 14px;
+  --ab-size: clamp(44px, 12.8vw, 54px);
+  --ab-font: 17px;
+  --ab-gap: clamp(8px, 2.2vw, 13px);
+  --pill-pad-y: 6px;
+  --pill-font: 10px;
+}
+#handheld-shell[data-btn-size="large"] {
+  --dpad-size: clamp(104px, 31vw, 138px);
+  --dpad-font: 16px;
+  --ab-size: clamp(48px, 14.2vw, 62px);
+  --ab-font: 19px;
+  --ab-gap: clamp(8px, 2.4vw, 14px);
+  --pill-pad-y: 7px;
+  --pill-font: 10px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #08090f;
+  color: var(--text);
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  overflow: hidden;
+  touch-action: manipulation;
+}
+

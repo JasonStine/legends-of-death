@@ -1,0 +1,457 @@
+/* =========================================================
+   RETRO DEVELOPER ACCESS PIN GATE
+   ========================================================= */
+#pin-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: radial-gradient(circle at 50% 25%, #1e1538 0%, #07080f 80%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pin-card {
+  width: 100%;
+  max-width: 340px;
+  background: #101426;
+  border: 3px solid var(--gold);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 0 0 3px #070912, 0 14px 40px rgba(0, 0, 0, 0.85);
+}
+.pin-card.shake { animation: pinShake 0.35s ease; }
+
+@keyframes pinShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+.pin-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.pin-led {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #ef4444; box-shadow: 0 0 8px #ef4444;
+}
+.pin-emblem { font-size: 22px; color: var(--gold); margin-bottom: 2px; }
+.pin-title {
+  font-family: monospace;
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.pin-msg {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+.pin-display {
+  font-family: monospace;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  color: var(--gold);
+  background: #070a14;
+  border: 2px solid #334155;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.pin-error {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fca5a5;
+  background: rgba(153, 27, 27, 0.35);
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin-bottom: 10px;
+}
+.pin-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+.pin-key {
+  background: #1c2440;
+  border: 2px solid #3d4c7a;
+  color: #f8fafc;
+  font-family: monospace;
+  font-size: 17px;
+  font-weight: 900;
+  padding: 11px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #090c18;
+}
+.pin-key:active { transform: translateY(2px); box-shadow: 0 1px 0 #090c18; }
+.pin-key.pin-fn { background: #3b1c26; border-color: #991b1b; color: #fecaca; font-size: 13px; }
+.pin-key.pin-ok { background: #14532d; border-color: #22c55e; color: #bbf7d0; font-size: 13px; }
+
+/* =========================================================
+   HANDHELD SHELL & PORTRAIT / FOLD 7 / LANDSCAPE GBA LAYOUTS
+   ========================================================= */
+#handheld-shell {
+  width: 100%;
+  height: 100dvh;
+  max-width: 780px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--shell-top) 0%, var(--shell-mid) 52%, var(--shell-bot) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 0 40px rgba(0,0,0,0.85);
+  transition: background 0.3s ease;
+  overflow: hidden;
+}
+
+#top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--topbar-bg);
+  border-bottom: 1.5px solid var(--shell-border);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 900;
+  color: var(--shell-text);
+}
+.brand .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22c55e; box-shadow: 0 0 8px #22c55e;
+}
+
+#location-pill {
+  background: var(--pill-bg);
+  border: 1px solid var(--pill-border);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--pill-text);
+  max-width: 44%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-btn {
+  background: var(--pill-bg);
+  border: 1.5px solid var(--pill-border);
+  color: var(--pill-text);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* PORTRAIT PHONE DEFAULT: Screen at TOP, Controls Centered in remaining space below! */
+#handheld-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas:
+    "screen screen screen"
+    "decor  decor  decor"
+    "left   mid    right";
+  align-items: center;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  gap: 4px 4px;
+  overflow: hidden;
+}
+
+#screen-bezel {
+  grid-area: screen;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.deck-decor {
+  grid-area: decor;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 0;
+}
+
+#left-controls-slot {
+  grid-area: left;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#mid-controls {
+  grid-area: mid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+#right-controls-slot {
+  grid-area: right;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* UNFOLDED FOLD 7 / WIDE SQUARE TABLET: Keep spacious balanced screen + controls */
+@media (min-width: 600px) and (min-height: 541px) {
+  #handheld-body {
+    grid-template-rows: 1fr auto auto;
+    padding: 10px 16px 14px;
+    gap: 8px 12px;
+  }
+  #screen-bezel {
+    height: 100%;
+    align-items: center;
+  }
+  #console-lens {
+    max-width: 560px;
+  }
+}
+
+/* LANDSCAPE PHONE — GAME BOY ADVANCE STYLE (Black Lens Hugs 4:3 Screen Tightly!) */
+@media (orientation: landscape) and (max-height: 540px) {
+  #handheld-shell {
+    max-width: 100%;
+  }
+  #top-bar {
+    padding: 3px 12px;
+    font-size: 11px;
+  }
+  #handheld-body {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left   screen right"
+      "left   mid    right";
+    padding: 4px 12px calc(4px + env(safe-area-inset-bottom));
+    gap: 2px 10px;
+  }
+  .deck-decor { display: none; }
+  #screen-bezel {
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #console-lens {
+    width: fit-content;
+    max-width: 100%;
+    height: fit-content;
+    max-height: 100%;
+    padding: 4px 8px 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .lens-top-strip, .lens-bottom-strip {
+    width: 100%;
+  }
+  #screen-wrap {
+    /* Exact 4:3 width computed directly from available viewport height so black box hugs canvas! */
+    height: min(calc(100dvh - 102px), 340px);
+    width: calc(min(calc(100dvh - 102px), 340px) * 4 / 3);
+    max-width: 100%;
+    aspect-ratio: 4 / 3;
+  }
+  #game-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #mid-controls {
+    flex-direction: row;
+    gap: 10px;
+    padding-bottom: 2px;
+  }
+  #handheld-shell[data-btn-size="small"] { --dpad-size: 84px; --ab-size: 40px; }
+  #handheld-shell[data-btn-size="medium"] { --dpad-size: 102px; --ab-size: 48px; }
+  #handheld-shell[data-btn-size="large"] { --dpad-size: 118px; --ab-size: 54px; }
+}
+
+/* =========================================================
+   DARK GLASS SCREEN LENS & 4:3 GAME VIEWPORT (384x288)
+   ========================================================= */
+#console-lens {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #161924 0%, #0b0d14 100%);
+  border: 2.5px solid var(--shell-border);
+  border-radius: 14px 14px 22px 14px;
+  padding: 6px 9px 7px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 6px 18px rgba(0,0,0,0.45);
+}
+
+.lens-top-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding: 0 2px;
+}
+.lens-led-wrap { display: flex; align-items: center; gap: 5px; }
+.lens-led {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #22c55e; box-shadow: 0 0 7px #22c55e;
+}
+.lens-led-label, .lens-model {
+  font-size: 8px; font-weight: 800; letter-spacing: 0.14em; color: #64748b;
+}
+.lens-bottom-strip { display: flex; justify-content: center; margin-top: 4px; }
+.lens-brand {
+  font-size: 9px; font-weight: 900; font-style: italic;
+  letter-spacing: 0.22em; color: #94a3b8;
+}
+
+#screen-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin: 0 auto;
+  background: #000;
+  border: 2px solid #04050a;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px #1e2438;
+}
+
+#game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+#game-canvas.battle-zooming {
+  transform: scale(1.75);
+}
+
+/* Pokemon-style Battle Flash */
+#battle-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 36;
+}
+#battle-flash.flashing {
+  animation: pokeFlash 0.55s ease-in-out;
+}
+@keyframes pokeFlash {
+  0% { opacity: 0; }
+  20% { opacity: 0.92; }
+  40% { opacity: 0; }
+  65% { opacity: 0.95; }
+  85% { opacity: 0.1; }
+  100% { opacity: 0; }
+}
+
+
+/* =========================================================
+   HANDHELD CONTROLS (Viewport-Safe, Never Clips!)
+   ========================================================= */
+.deck-stamp {
+  font-size: 9px; font-weight: 900; letter-spacing: 0.16em;
+  color: var(--shell-subtext); opacity: 0.85;
+}
+.speaker-grille { display: flex; gap: 4px; transform: skewX(-18deg); }
+.speaker-grille span {
+  width: 3px; height: 11px; border-radius: 2px;
+  background: var(--well-bg); box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+}
+
+#dpad-well {
+  padding: 6px; border-radius: 50%;
+  background: var(--well-bg); box-shadow: inset 0 2px 6px rgba(0,0,0,0.45);
+}
+#dpad {
+  position: relative;
+  width: var(--dpad-size); height: var(--dpad-size);
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+}
+.dpad-btn {
+  background: var(--dpad-bg); border: 2px solid var(--dpad-border);
+  color: var(--dpad-text); font-size: var(--dpad-font); font-weight: 900;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.dpad-btn.up { grid-column: 2; grid-row: 1; border-radius: 8px 8px 0 0; }
+.dpad-btn.left { grid-column: 1; grid-row: 2; border-radius: 8px 0 0 8px; }
+.dpad-center { grid-column: 2; grid-row: 2; background: var(--dpad-bg); }
+.dpad-btn.right { grid-column: 3; grid-row: 2; border-radius: 0 8px 8px 0; }
+.dpad-btn.down { grid-column: 2; grid-row: 3; border-radius: 0 0 8px 8px; }
+.dpad-btn.pressed, .dpad-btn:active { background: #4f46e5; border-color: #a5b4fc; }
+
+.pill-btn {
+  background: var(--pill-bg); border: 1.5px solid var(--pill-border);
+  color: var(--pill-text); font-size: var(--pill-font); font-weight: 900;
+  letter-spacing: 0.06em; padding: var(--pill-pad-y) 9px; border-radius: 999px;
+  cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,0.35); white-space: nowrap;
+}
+.pill-btn.active {
+  background: #5b21b6; border-color: #c4b5fd; color: #fff;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.7);
+}
+
+#ab-well {
+  padding: 8px 8px 5px; border-radius: 34px;
+  background: var(--well-bg); box-shadow: inset 0 2px 6px rgba(0,0,0,0.45);
+}
+#ab-pad { display: flex; align-items: center; gap: var(--ab-gap); }
+.btn-slot { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.slot-a { margin-top: -14px; }
+.slot-b { margin-top: 12px; }
+.btn-micro-label { font-size: 8px; font-weight: 900; letter-spacing: 0.1em; color: var(--shell-subtext); }
+
+.round-btn {
+  width: var(--ab-size); height: var(--ab-size);
+  border-radius: 50%; font-size: var(--ab-font); font-weight: 900; color: #fff;
+  border: 3px solid rgba(255,255,255,0.28); box-shadow: 0 4px 0 rgba(0,0,0,0.55); cursor: pointer;
+}
+.round-btn:active, .round-btn.pressed { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.55); }
+.btn-a { background: radial-gradient(circle at 30% 30%, #ef4444, #991b1b); }
+.btn-b { background: radial-gradient(circle at 30% 30%, #f59e0b, #b45309); }
+
+.pill-btn.locked {
+  opacity: 0.62;
+  border-style: dashed;
+  letter-spacing: 0.14em;
+}
+

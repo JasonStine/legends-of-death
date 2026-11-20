@@ -1,10 +1,23 @@
-# Legends of Death & the Reapers of Time (32-Bit RPG — v3)
+# Legends of Death & the Reapers of Time (v11)
 
-Complete 5-Act, 15-Chapter 32-bit GBA-style handheld RPG adaptation of *Legends of Death and the Reapers of Time*.
+Modular 32-bit handheld web RPG built for GitHub Pages (zero build step required).
 
-## What's New in v3
-- **B Button = Run + Run-by-Default Swap:** Hold **B** (or `Shift`/`X` on keyboard) to sprint. Toggle **Run by Default** in Settings to auto-run and hold **B** to walk.
-- **Gamepad Console Shell Vibe:** Replaces empty black phone margins with a molded handheld console shell, dark glass screen lens with power LED, recessed D-pad/A-B wells, and speaker grille.
-- **Full-Screen Menu & Settings:** Story, Party, Lore, Settings, and Save now open full-screen for comfortable reading and tapping on phones.
-- **Button Size Toggle (`SMALL` / `MEDIUM` / `LARGE`):** Scales the D-pad and A/B buttons while dynamically adjusting gameplay screen spacing.
-- **7 Device Color Styles:** Midnight Blue (Default), Dark Purple, Dark Green, Light Off-White, Light Green, Light Blue, and **Sunburnt Yellow ★ (Special Edition)**.
+## Project Folder Structure
+- `index.html` — Handheld shell, PIN gate, overlays & script loader
+- `styles/`
+  - `themes.css` — 7 console color themes & viewport-safe button sizes
+  - `handheld.css` — PIN gate, portrait / Fold / landscape GBA handheld layout
+  - `overlays.css` — Dialogue, Battle UI, In-Game Menu, Regional Map, Settings & Release Notes
+- `people/`
+  - `palettes.js` — Character palettes, roles & visual traits
+  - `sprites.js` — Organic human sprites, 96×96 book-accurate portraits & battle models
+- `art/`
+  - `exterior_art.js` — Lush grass, natural pathways w/ encroaching grass, buildings, fences & portals
+  - `interior_art.js` — Dynamic multi-room auto-tiled walls, floors & furniture props
+- `regions/`
+  - `map_helpers.js` — Shared `buildDynamicRoom()` & `solid()` utilities
+  - `east_town.js` & `westside.js` — Playable Colorado Springs overworld districts
+  - `buildings/` — One dedicated file per building (`jacobs_house.js`, `st_jude_church.js`, `hospital.js`, `barnes_noble.js`, `party_house.js`, `high_school.js`, `sweet_tooth.js`, `neighbor_houses.js`)
+  - `realms/` — `dream_realm.js`, `limbach_park.js`, `casa_grande.js`
+- `scripts/`
+  - `audio.js`, `story.js`, `snake.js`, `regional_map.js`, `battle.js`, `engine.js`

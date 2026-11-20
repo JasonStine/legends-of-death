@@ -6,7 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Legends of Death &amp; the Reapers of Time</title>
-  <link rel="stylesheet" href="styles/game.css" />
+  <link rel="stylesheet" href="styles/themes.css" />
+  <link rel="stylesheet" href="styles/handheld.css" />
+  <link rel="stylesheet" href="styles/overlays.css" />
 </head>
 <body>
   <!-- Retro Developer Access PIN Gate (Before Game Loads) -->
@@ -14,7 +16,7 @@
     <div class="pin-card">
       <div class="pin-header">
         <span class="pin-led"></span>
-        <span>RESTRICTED CARTRIDGE // VER 10.0</span>
+        <span>RESTRICTED CARTRIDGE // VER 11.0</span>
       </div>
       <div class="pin-emblem">✦ ⚔ ✦</div>
       <h1 class="pin-title">ACCESS REQUIRED</h1>
@@ -230,20 +232,24 @@
     </div>
     <!-- Almost-Hidden Subtle Release Notes Link -->
     <div id="release-footer">
-      <button id="btn-release-notes" class="release-link" aria-label="Release Updates">v10 • release updates</button>
+      <button id="btn-release-notes" class="release-link" aria-label="Release Updates">v11 • release updates</button>
     </div>
 
     <!-- Release Notes / Changelog Modal -->
     <div id="release-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Release Updates">
       <div class="settings-panel">
         <div class="settings-header">
-          <span>✦ RELEASE UPDATES (v1 – v10)</span>
+          <span>✦ RELEASE UPDATES (v1 – v11)</span>
           <button id="release-close" class="tab-close" aria-label="Close Release Notes">✕</button>
         </div>
         <div id="release-body">
           <div class="setting-section focused">
-            <div class="setting-title">v10 — Dynamic Non-Cubic Interiors, Full High School, Lived-In Sweet Tooth &amp; Regional Atlas Map</div>
+            <div class="setting-title">v11 — Modular Architecture, Refreshed Outside Pathways &amp; Polished Interiors</div>
             <div class="setting-desc">Current Build</div>
+            <p class="rn-text">• Fixed the building entrance bug: entering any building now spawns Jacob 1 tile inside facing up so you never accidentally trigger the exit mat.<br>• Centered the St. Jude Church Altar (4-tile symmetrical table dead-center on the red carpet), fixed interior floating windows in Jacob's House, mounted Room 103's door cleanly in High School, and gave the Party House a multi-wing layout.<br>• Refreshed the entire overworld outside with lush textured grass, wildflowers, and natural cobblestone/earth pathways with encroaching grass along the edges.<br>• Reorganized the entire codebase into clean modular folders (people/*, art/*, regions/buildings/*, regions/realms/*, styles/*, scripts/*) for easy editing &amp; AI review.</p>
+          </div>
+          <div class="setting-section">
+            <div class="setting-title">v10 — Dynamic Non-Cubic Interiors, Full High School, Lived-In Sweet Tooth &amp; Regional Atlas Map</div>
             <p class="rn-text">• Fixed the root cause of black/green wall tiles appearing behind desks, beds, chairs, and pews (dedicated invisible furniture collision layer).<br>• Upgraded interiors to dynamic, Stardew-style connected wings &amp; hallways surrounded by clean auto-tiled contours (no more flat cubes!).<br>• Expanded Colorado Springs High School into a full multi-room zone (Locker Hallway, closed Physics/Latin/Gym doors, AP Calculus Rm 102, Trophy Case &amp; Student Lounge).<br>• Revamped Sweet Tooth Candy Store with a staff service counter behind Chloe, seating, customers, gumball machine, and a melting dropped ice cream cone in the corner.<br>• Replaced the blocky mini-map with a smooth, high-resolution Regional Atlas showing both Westside (left) and East Colorado Springs (right) with Fog of War.</p>
           </div>
           <div class="setting-section">
@@ -282,11 +288,35 @@
 
   <!-- Modular Project Scripts -->
   <script src="scripts/audio.js"></script>
-  <script src="models/palettes.js"></script>
-  <script src="models/sprites.js"></script>
-  <script src="models/world_art.js"></script>
+
+  <!-- People (Character Palettes & Organic Sprites/Portraits) -->
+  <script src="people/palettes.js"></script>
+  <script src="people/sprites.js"></script>
+
+  <!-- Art Renderers (Exterior & Interior) -->
+  <script src="art/exterior_art.js"></script>
+  <script src="art/interior_art.js"></script>
+
+  <!-- Regions, Realms & Individual Building Designs -->
+  <script src="regions/map_helpers.js"></script>
+  <script src="regions/east_town.js"></script>
+  <script src="regions/westside.js"></script>
+  <script src="regions/buildings/jacobs_house.js"></script>
+  <script src="regions/buildings/st_jude_church.js"></script>
+  <script src="regions/buildings/hospital.js"></script>
+  <script src="regions/buildings/barnes_noble.js"></script>
+  <script src="regions/buildings/party_house.js"></script>
+  <script src="regions/buildings/high_school.js"></script>
+  <script src="regions/buildings/sweet_tooth.js"></script>
+  <script src="regions/buildings/neighbor_houses.js"></script>
+  <script src="regions/realms/dream_realm.js"></script>
+  <script src="regions/realms/limbach_park.js"></script>
+  <script src="regions/realms/casa_grande.js"></script>
+
+  <!-- Story, Mini-Games, Atlas, Battle & Core Engine -->
   <script src="scripts/story.js"></script>
-  <script src="scripts/maps.js"></script>
+  <script src="scripts/snake.js"></script>
+  <script src="scripts/regional_map.js"></script>
   <script src="scripts/battle.js"></script>
   <script src="scripts/engine.js"></script>
 </body>
