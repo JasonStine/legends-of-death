@@ -6,6 +6,7 @@ window.Story = {
   // 15 Playable Story Chapters spanning all 5 Acts of the novel
   quests: [
     { act: "ACT I", ch: "Ch. I", title: "Starlit Funeral", objective: "Walk into St. Jude Church (top-left) and comfort Cyrine.", mapHint: "church" },
+    { act: "ACT I", ch: "Ch. I (cont.)", title: "Stars Outside Barnes & Noble", objective: "Walk south to Barnes & Noble and talk with Cyrine.", mapHint: "bookstore" },
     { act: "ACT I", ch: "Ch. II", title: "Alter & Twilight Fireflies", objective: "Go inside Jacob's House (top-right) and talk to Navi in the kitchen.", mapHint: "house" },
     { act: "ACT I", ch: "Ch. IV", title: "A Night's Rest", objective: "Rest on Jacob's living room Couch or Bed inside Jacob's House.", mapHint: "house" },
     { act: "ACT I", ch: "Ch. IV–V", title: "The Dreamer's Reign", objective: "Walk across the glowing Cherry Blossom Lake and speak to Letonin.", mapHint: "dream" },
@@ -98,6 +99,27 @@ window.Story = {
       ]
     },
     {
+      id: "twilight_fireflies",
+      title: "Secret: Twilight Fireflies",
+      tiers: [
+        "Discovered at Barnes & Noble: A children's book written by Cyrine's mother about a hot-headed red spirit whose jealousy burned the forest, and a stubborn yellow spirit who embraced it to calm the flames—foreshadowing Cyrine and Jacob."
+      ]
+    },
+    {
+      id: "church_memorial",
+      title: "Secret: St. Jude Inscription",
+      tiers: [
+        "Discovered in St. Jude Church: The Huesic memorial plaque notes that church bells ringing at night are secretly used by Reapers to signal the start of their nightly demon hunt."
+      ]
+    },
+    {
+      id: "hospital_toxicology",
+      title: "Secret: Belladonna & Iris Report",
+      tiers: [
+        "Discovered in Colorado Springs Hospital: Dr. Menos's toxicology note confirms the poison found at the Corpse Circus contained an unknown alchemical compound—identical to Envy's venom."
+      ]
+    },
+    {
       id: "deicide_profugo",
       title: "Cyrine: Deicide Profugo",
       tiers: [
@@ -119,7 +141,13 @@ window.Story = {
       { id: "cyrine", mood: "sad", text: "I couldn't even say goodbye, Jacob... The detectives said each of them was killed by a forked weapon laced with Iris and Belladonna poison." },
       { id: "cyrine", mood: "angry", text: "What if the man who killed them comes for me too? Staying with you puts you and your mom in danger!" },
       { id: "jacob", mood: "neutral", text: "You're not going anywhere, Cyrine. You have me, my mom, and your older brother Navi right here. We'll be alright—I promise." },
-      { id: "cyrine", mood: "sad", text: "...Whatever you gotta tell yourself, Jacob. Let's head back to your house. Navi's already in the kitchen." }
+      { id: "cyrine", mood: "sad", text: "Let's get some air first... Meet me down at Barnes & Noble. I don't want to go straight back yet." }
+    ],
+
+    bookstoreCyrine: [
+      { id: "cyrine", mood: "sad", text: "Hey Jacob... I don't want you to die or get killed because of me. You can't just promise it won't happen." },
+      { id: "jacob", mood: "neutral", text: "Remember how we always look up at the constellations here? We'll be alright, Cyrine. I'm not leaving you alone." },
+      { id: "cyrine", mood: "happy", text: "...Whatever you gotta tell yourself, Jacob. Alright—let's head back to your house. Navi's probably already cooking in the kitchen." }
     ],
 
     naviKitchen: [

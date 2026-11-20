@@ -40,6 +40,113 @@
 
   let toastTimer = null;
 
+  // Playable Retro Snake Mini-Game on Jacob's Bedroom PC!
+  const snake = {
+    active: false,
+    gridW: 24,
+    gridH: 15,
+    body: [],
+    dir: { x: 1, y: 0 },
+    nextDir: { x: 1, y: 0 },
+    food: { x: 15, y: 7 },
+    score: 0,
+    best: Number(localStorage.getItem("lod_snake_best") || 0),
+    timer: 0,
+    over: false
+  };
+
+  function startSnake() {
+    snake.active = true;
+    snake.over = false;
+    snake.score = 0;
+    snake.dir = { x: 1, y: 0 };
+    snake.nextDir = { x: 1, y: 0 };
+    snake.body = [{ x: 8, y: 7 }, { x: 7, y: 7 }, { x: 6, y: 7 }];
+    snake.food = { x: 16, y: 7 };
+    snake.timer = 0;
+    window.AudioFX.confirm();
+  }
+
+  function exitSnake() {
+    snake.active = false;
+    window.AudioFX.cancel();
+  }
+
+  function updateSnake(dt) {
+    if (!snake.active || snake.over) return;
+    snake.timer += dt;
+    if (snake.timer < 0.13) return;
+    snake.timer = 0;
+    snake.dir = { ...snake.nextDir };
+    const head = { x: snake.body[0].x + snake.dir.x, y: snake.body[0].y + snake.dir.y };
+    if (head.x < 0 || head.y < 0 || head.x >= snake.gridW || head.y >= snake.gridH ||
+        snake.body.some(s => s.x === head.x && s.y === head.y)) {
+      snake.over = true;
+      window.AudioFX.hit();
+      return;
+    }
+    snake.body.unshift(head);
+    if (head.x === snake.food.x && head.y === snake.food.y) {
+      snake.score += 10;
+      if (snake.score > snake.best) {
+        snake.best = snake.score;
+        try { localStorage.setItem("lod_snake_best", String(snake.best)); } catch (_) {}
+      }
+      window.AudioFX.heal();
+      snake.food = {
+        x: Math.floor(Math.random() * snake.gridW),
+        y: Math.floor(Math.random() * snake.gridH)
+      };
+    } else {
+      snake.body.pop();
+    }
+  }
+
+  function drawSnake() {
+    ctx.fillStyle = "#051a0f";
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    // Retro CRT header
+    ctx.fillStyle = "#0a2e1a";
+    ctx.fillRect(0, 0, VIEW_W, 28);
+    ctx.fillStyle = "#4ade80";
+    ctx.font = "bold 11px monospace";
+    ctx.fillText(`SNAKE.EXE  SCORE:${snake.score}  BEST:${snake.best}`, 12, 18);
+    ctx.fillStyle = "#86efac";
+    ctx.font = "9px monospace";
+    ctx.fillText("B: EXIT", 332, 18);
+
+    // Playfield border (24x15 cells of 14px each, centered)
+    const ox = 24, oy = 38, cs = 14;
+    ctx.strokeStyle = "#22c55e";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(ox - 2, oy - 2, snake.gridW * cs + 4, snake.gridH * cs + 4);
+
+    // Apple
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(ox + snake.food.x * cs + 2, oy + snake.food.y * cs + 2, cs - 4, cs - 4);
+    ctx.fillStyle = "#fde047";
+    ctx.fillRect(ox + snake.food.x * cs + 5, oy + snake.food.y * cs + 1, 3, 2);
+
+    // Snake segments
+    snake.body.forEach((seg, i) => {
+      ctx.fillStyle = i === 0 ? "#86efac" : "#22c55e";
+      ctx.fillRect(ox + seg.x * cs + 1, oy + seg.y * cs + 1, cs - 2, cs - 2);
+    });
+
+    if (snake.over) {
+      ctx.fillStyle = "rgba(0,0,0,0.72)";
+      ctx.fillRect(72, 108, 240, 74);
+      ctx.strokeStyle = "#f5c542";
+      ctx.strokeRect(72, 108, 240, 74);
+      ctx.fillStyle = "#f5c542";
+      ctx.font = "bold 16px monospace";
+      ctx.fillText("GAME OVER!", 142, 134);
+      ctx.fillStyle = "#e2e8f0";
+      ctx.font = "11px monospace";
+      ctx.fillText("PRESS A TO RETRY • B TO EXIT", 94, 162);
+    }
+  }
+
   const game = {
     pinUnlocked: false,
     started: false,
@@ -464,10 +571,23 @@
     const D = window.Story.dialogues;
 
     if (eventName === "churchCyrine") {
-      startDialogue(D.churchCyrine, () => advanceStage(1));
+      startDialogue(D.churchCyrine, () => { advanceStage(1); rebuildActors(); });
+    } else if (eventName === "bookstoreCyrine") {
+      startDialogue(D.bookstoreCyrine, () => { advanceStage(2); rebuildActors(); });
     } else if (eventName === "naviHouse") {
-      if (game.questStage <= 1) startDialogue(D.naviKitchen, () => advanceStage(2));
+      if (game.questStage <= 2) startDialogue(D.naviKitchen, () => advanceStage(3));
       else startDialogue([{ id: "navi", mood: "neutral", text: "I'm keeping the kitchen stocked for everyone. Rest on the couch or bed whenever you need, Jacob." }]);
+    } else if (eventName === "playSnake") {
+      showChoices([
+        { label: "Play SNAKE.EXE", action: () => startSnake() },
+        { label: "Step Away", action: () => {} }
+      ]);
+    } else if (eventName === "loreTwilightFireflies") {
+      startDialogue([{ id: "sign", mood: "neutral", text: "You flip through 'Twilight Fireflies'—the story of a red spirit whose anger burned the forest and a yellow spirit who calmed it.", unlockLore: { id: "twilight_fireflies", tier: 1 } }]);
+    } else if (eventName === "loreChurchPlaque") {
+      startDialogue([{ id: "sign", mood: "neutral", text: "Memorial Plaque: 'In loving memory of the Huesic Family.' On the margin, a tiny Latin engraving notes that midnight church bells summon the Reapers' hunt.", unlockLore: { id: "church_memorial", tier: 1 } }]);
+    } else if (eventName === "loreHospitalChart") {
+      startDialogue([{ id: "sign", mood: "neutral", text: "Dr. Menos's Toxicology Note: 'Concentrated Iris and Belladonna compound from the Huesic case does not match any known terrestrial plant...'", unlockLore: { id: "hospital_toxicology", tier: 1 } }]);
     } else if (eventName === "hospitalHeal") {
       window.AudioFX.heal();
       startDialogue([{ id: "mom", mood: "happy", text: "Welcome to Colorado Springs Medical Center, sweetheart! All HP and spirit energy fully restored!" }]);
@@ -476,13 +596,13 @@
         {
           label: "Sleep & Rest Here",
           action: () => {
-            if (game.questStage === 2 || game.questStage === 3) {
+            if (game.questStage === 3 || game.questStage === 4) {
               startDialogue(D.sleepPrompt, () => {
-                advanceStage(3);
+                advanceStage(4);
                 loadMap("dream", 7, 8);
               });
-            } else if (game.questStage < 2) {
-              startDialogue([{ id: "jacob", mood: "neutral", text: "I should talk to Cyrine at church and meet Navi in the kitchen before going to sleep!" }]);
+            } else if (game.questStage < 3) {
+              startDialogue([{ id: "jacob", mood: "neutral", text: "I should talk to Cyrine and meet Navi in the kitchen before going to sleep!" }]);
             } else {
               window.AudioFX.heal();
               startDialogue([{ id: "jacob", mood: "happy", text: "Zzz... That felt great! Feeling completely rested." }]);
@@ -493,11 +613,10 @@
       ]);
     } else if (eventName === "dreamLetonin") {
       startDialogue(D.dreamLetonin, () => {
-        advanceStage(4);
+        advanceStage(5);
         loadMap("house", 5, 6, () => startDialogue(D.afterDreamWake));
       });
     } else if (eventName === "partyBattle") {
-      // Party House: Navi & Illicero step up in front of Sendex, then Pokémon zoom-in!
       startDialogue(D.partyConfrontation, () => {
         launchBattleWithStepIn(
           "partySendex",
@@ -506,7 +625,7 @@
             { actorId: "illicero", tx: 8, ty: 5, speed: 62 }
           ],
           () => {
-            advanceStage(5);
+            advanceStage(6);
             runCutscene([
               { type: "dialogue", lines: D.partyPostBattle },
               { type: "walk", actorId: "sendex", tx: 7, ty: 10, speed: 52, hideAtEnd: true },
@@ -517,18 +636,18 @@
         );
       });
     } else if (eventName === "snowCatCrista") {
-      if (game.questStage === 5) startDialogue(D.snowCatCrista, () => advanceStage(6));
+      if (game.questStage === 6) startDialogue(D.snowCatCrista, () => { advanceStage(7); rebuildActors(); });
       else startDialogue([{ id: "crista", mood: "happy", text: "Purr~ (Crista rubs against your leg calmly.)" }]);
     } else if (eventName === "parkAction") {
-      if (game.questStage === 6) {
-        startDialogue(D.parkSummonLetonin, () => { advanceStage(7); triggerEvent("parkAction"); });
-      } else if (game.questStage === 7) {
+      if (game.questStage === 7) {
+        startDialogue(D.parkSummonLetonin, () => { advanceStage(8); triggerEvent("parkAction"); });
+      } else if (game.questStage === 8) {
         startDialogue(D.parkSoulFusion, () => {
           launchBattleWithStepIn(
             "parkSendex",
             [{ actorId: "letonin", tx: 6, ty: 4, speed: 62 }],
             () => {
-              advanceStage(8);
+              advanceStage(9);
               rebuildActors();
               runCutscene([
                 { type: "dialogue", lines: D.parkPostBattle },
@@ -541,10 +660,10 @@
         startDialogue([{ id: "letonin", mood: "happy", text: "Go speak to Lord Death over on the left!" }]);
       }
     } else if (eventName === "deathStory") {
-      if (game.questStage === 8) startDialogue(D.deathStory, () => advanceStage(9));
+      if (game.questStage === 9) startDialogue(D.deathStory, () => advanceStage(10));
       else startDialogue([{ id: "death", mood: "neutral", text: "Step through the Crimson Portal on the right to confront Crepsus in Casa Grande, Arizona." }]);
     } else if (eventName === "fortressEmillia") {
-      if (game.questStage === 9) startDialogue(D.fortressEmilliaDream, () => { advanceStage(10); rebuildActors(); });
+      if (game.questStage === 10) startDialogue(D.fortressEmilliaDream, () => { advanceStage(11); rebuildActors(); });
       else startDialogue([{ id: "emillia", mood: "intense", text: "Let's finish Envy and Crepsus so we can finally go home!" }]);
     } else if (eventName === "envyBattle") {
       startDialogue(D.fortressEnvyIntro, () => {
@@ -552,7 +671,7 @@
           "fortressEnvy",
           [{ actorId: "emillia", tx: 6, ty: 7, speed: 65 }],
           () => {
-            advanceStage(11);
+            advanceStage(12);
             runCutscene([
               { type: "dialogue", lines: D.fortressEnvyPost },
               { type: "walk", actorId: "envy", tx: 13, ty: 6, speed: 46, hideAtEnd: true }
@@ -562,11 +681,11 @@
       });
     } else if (eventName === "danielAscend") {
       startDialogue(D.fortressDanielAscend, () => {
-        advanceStage(12);
+        advanceStage(13);
         runCutscene([{ type: "walk", actorId: "sendex", tx: 10, ty: 2, speed: 62, hideAtEnd: true }], () => rebuildActors());
       });
     } else if (eventName === "crepsusBattle") {
-      if (game.questStage < 12) {
+      if (game.questStage < 13) {
         startDialogue([{ id: "crepsus", mood: "angry", text: "You aren't ready for me yet! Deal with my Sin and your little allies first!" }]);
         return;
       }
@@ -575,7 +694,7 @@
           "fortressCrepsus",
           [{ actorId: "crepsus", tx: 7, ty: 4, speed: 50 }],
           () => {
-            advanceStage(13);
+            advanceStage(14);
             runCutscene([
               { type: "dialogue", lines: D.fortressCrepsusPost },
               { type: "walk", actorId: "crepsus", tx: 7, ty: 1, speed: 40, hideAtEnd: true }
@@ -584,7 +703,7 @@
         );
       });
     } else if (eventName === "griefResolve") {
-      startDialogue(D.griefAndResolve, () => { advanceStage(14); loadMap("overworld", 12, 10); });
+      startDialogue(D.griefAndResolve, () => { advanceStage(15); loadMap("overworld", 12, 8); });
     } else if (eventName === "epilogueReunion") {
       startDialogue(D.epilogueReunion);
     }
@@ -632,6 +751,7 @@
 
   function interact() {
     if (!game.pinUnlocked) return;
+    if (snake.active) { if (snake.over) startSnake(); return; }
     if (!game.started) { confirmTitle(); return; }
     if (window.Battle.isActive()) { window.Battle.confirmMove(); return; }
     if (game.choice) { confirmChoice(); return; }
@@ -709,8 +829,9 @@
         if (tile === 3) {
           window.WorldArt.drawRoadTile(ctx, map, x, y, sx, sy);
         } else if (tile === 1 && map.id !== "overworld") {
-          ctx.fillStyle = "#1e293b"; ctx.fillRect(sx, sy, T, T);
-          ctx.fillStyle = "#334155"; ctx.fillRect(sx, sy + T - 4, T, 4);
+          window.WorldArt.drawInteriorWallTile(ctx, map, x, y, sx, sy);
+        } else if (map.id !== "overworld" && window.WorldArt.drawInteriorFloorTile(ctx, map.floorType, x, y, sx, sy, time)) {
+          // Drawn by refined interior floor renderer!
         } else {
           ctx.fillStyle = (x + y) % 2 === 0 ? c1 : c2;
           ctx.fillRect(sx, sy, T, T);
@@ -733,37 +854,40 @@
 
     if (map.id === "overworld") {
       if (q.mapHint === "church") { worldX = 5 * T + 12; worldY = 5 * T; }
+      else if (q.mapHint === "bookstore") { worldX = 12 * T + 12; worldY = 12 * T; }
       else if (q.mapHint === "house") { worldX = 19 * T + 12; worldY = 5 * T; }
-      else if (q.mapHint === "party") { worldX = 19 * T + 12; worldY = 14 * T; }
+      else if (q.mapHint === "party") { worldX = 19 * T + 12; worldY = 12 * T; }
       else if (q.mapHint === "park" || q.mapHint === "fortress") { worldX = 12 * T + 12; worldY = 2 * T; }
       else if (q.mapHint === "overworld") {
         const a = findActor("letonin");
         if (a) { worldX = a.x + 12; worldY = a.y - 4; }
       }
     } else if (map.id === "house" && q.mapHint === "house") {
-      if (game.questStage === 1) {
+      if (game.questStage === 2) {
         const a = findActor("navi");
         if (a) { worldX = a.x + 12; worldY = a.y - 4; }
-      } else if (game.questStage === 2 || game.questStage === 3) {
+      } else if (game.questStage === 3 || game.questStage === 4) {
         worldX = 3 * T + 12; worldY = 4 * T;
-      } else if (game.questStage === 5) {
+      } else if (game.questStage === 6) {
         const a = findActor("crista");
         if (a) { worldX = a.x + 12; worldY = a.y - 2; }
       }
     } else if (map.id === "church" && q.mapHint === "church") {
+      const a = findActor("cyrine"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
+    } else if (map.id === "bookstore" && q.mapHint === "bookstore") {
       const a = findActor("cyrine"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
     } else if (map.id === "dream" && q.mapHint === "dream") {
       const a = findActor("letonin"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
     } else if (map.id === "party" && q.mapHint === "party") {
       const a = findActor("sendex"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
     } else if (map.id === "park") {
-      if (game.questStage === 6 || game.questStage === 7) {
+      if (game.questStage === 7 || game.questStage === 8) {
         const a = findActor("letonin"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
-      } else if (game.questStage === 8) {
+      } else if (game.questStage === 9) {
         const a = findActor("death"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
-      } else if (game.questStage >= 9) { worldX = 12 * T + 12; worldY = 5 * T; }
+      } else if (game.questStage >= 10) { worldX = 12 * T + 12; worldY = 5 * T; }
     } else if (map.id === "fortress") {
-      const targetId = { 9: "emillia", 10: "envy", 11: "sendex", 12: "crepsus", 13: "death" }[game.questStage];
+      const targetId = { 10: "emillia", 11: "envy", 12: "sendex", 13: "crepsus", 14: "death" }[game.questStage];
       const a = targetId ? findActor(targetId) : null;
       if (a) { worldX = a.x + 12; worldY = a.y - 4; }
     }
@@ -780,6 +904,7 @@
 
   function render(time) {
     ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+    if (snake.active) { drawSnake(); return; }
     if (window.Battle.isActive()) { window.Battle.draw(ctx, time); return; }
 
     const map = window.Maps[game.mapId];
@@ -846,7 +971,8 @@
     game.lastTime = time;
     if (game.warpCooldown > 0) game.warpCooldown = Math.max(0, game.warpCooldown - dt);
 
-    if (game.pinUnlocked && game.started && !game.ingameMenuOpen && !game.settingsOpen && !window.Battle.isActive()) {
+    if (snake.active) { updateSnake(dt); }
+    else if (game.pinUnlocked && game.started && !game.ingameMenuOpen && !game.settingsOpen && !window.Battle.isActive()) {
       updateActors(dt);
       if (game.cutscene) {
         updateCutscene(dt);
@@ -1108,6 +1234,13 @@
       }
       return;
     }
+    if (snake.active) {
+      if (dir === "up" && snake.dir.y !== 1) snake.nextDir = { x: 0, y: -1 };
+      else if (dir === "down" && snake.dir.y !== -1) snake.nextDir = { x: 0, y: 1 };
+      else if (dir === "left" && snake.dir.x !== 1) snake.nextDir = { x: -1, y: 0 };
+      else if (dir === "right" && snake.dir.x !== -1) snake.nextDir = { x: 1, y: 0 };
+      return;
+    }
     if (window.Battle.isActive()) { window.Battle.moveFocus(dir); return; }
     if (game.choice) {
       if (dir === "up") moveChoice(-1);
@@ -1162,7 +1295,7 @@
     game.questStage = 0;
     game.discoveredParty = ["jacob"];
     game.loreTiers = {};
-    loadMap("overworld", 12, 9, () => startDialogue(window.Story.dialogues.intro));
+    loadMap("overworld", 12, 7, () => startDialogue(window.Story.dialogues.intro));
   }
 
   function startContinue() {
@@ -1200,7 +1333,8 @@
     e.preventDefault();
     btnB.classList.add("pressed");
     game.input.run = true;
-    if (game.choice) cancelChoice();
+    if (snake.active) exitSnake();
+    else if (game.choice) cancelChoice();
     else if (game.settingsOpen) closeSettings();
     else if (game.ingameMenuOpen) closeIngameMenu();
     else if (game.dialogue) advanceDialogue();
@@ -1234,13 +1368,15 @@
     if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyX") {
       game.input.run = true;
       if (e.code === "KeyX" && !e.repeat) {
-        if (game.choice) cancelChoice();
+        if (snake.active) exitSnake();
+    else if (game.choice) cancelChoice();
         else if (game.settingsOpen) closeSettings();
         else if (game.ingameMenuOpen) closeIngameMenu();
       }
     }
     if (e.code === "Escape") {
-      if (game.choice) cancelChoice();
+      if (snake.active) exitSnake();
+    else if (game.choice) cancelChoice();
       else if (game.settingsOpen) closeSettings();
       else if (game.ingameMenuOpen) closeIngameMenu();
     }

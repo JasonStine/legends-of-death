@@ -271,11 +271,117 @@ window.WorldArt = (() => {
       const glow = Math.floor(time / 300) % 2 === 0 ? "#ec4899" : "#22d3ee";
       px(ctx, x + 8, y + 6, 6, 8, "#ef4444"); px(ctx, x + 20, y + 8, 6, 8, "#ef4444");
       px(ctx, x + 48, y + 4, 16, 14, "#09090b"); px(ctx, x + 52, y + 8, 8, 6, glow);
+    } else if (prop.kind === "pc_desk") {
+      // Jacob's Bedroom Computer Desk (Playable SNAKE.EXE!)
+      px(ctx, x, y + 6, 44, 18, "#78350f");
+      px(ctx, x + 2, y + 8, 40, 14, "#92400e");
+      // Glowing Retro Monitor
+      px(ctx, x + 10, y - 4, 24, 15, "#1e293b");
+      const scr = Math.floor(time / 500) % 2 === 0 ? "#16a34a" : "#22c55e";
+      px(ctx, x + 12, y - 2, 20, 11, "#052e16");
+      px(ctx, x + 15, y + 2, 8, 2, scr); // tiny snake on screen!
+      px(ctx, x + 26, y + 5, 2, 2, "#ef4444"); // tiny apple!
+      // Keyboard
+      px(ctx, x + 12, y + 13, 20, 4, "#cbd5e1");
+    } else if (prop.kind === "fridge") {
+      px(ctx, x + 2, y - 4, 20, 28, "#cbd5e1");
+      px(ctx, x + 4, y - 2, 16, 10, "#f8fafc");
+      px(ctx, x + 4, y + 10, 16, 12, "#e2e8f0");
+      px(ctx, x + 17, y + 2, 2, 5, "#64748b");
+      px(ctx, x + 17, y + 12, 2, 6, "#64748b");
+    } else if (prop.kind === "plaque") {
+      px(ctx, x + 4, y + 4, 16, 14, "#78350f");
+      px(ctx, x + 6, y + 6, 12, 10, "#f5c542");
+      px(ctx, x + 8, y + 9, 8, 1, "#78350f");
+      px(ctx, x + 8, y + 12, 6, 1, "#78350f");
     } else if (prop.kind === "exit_mat") {
       px(ctx, x, y + 4, 48, 16, "#991b1b"); px(ctx, x + 3, y + 7, 42, 10, "#f5c542");
       ctx.font = "bold 7px monospace"; ctx.fillStyle = "#111"; ctx.fillText("EXIT", x + 15, y + 14);
     }
   }
 
-  return { T, drawRoadTile, drawTree, drawSignpost, drawBuilding, drawPortal, drawProp };
+
+  // REFINED INTERIOR FLOOR (Warm hardwood planks, stone slabs, clean tile — NO loud grid!)
+  function drawInteriorFloorTile(ctx, floorType, x, y, sx, sy, time = 0) {
+    if (floorType === "wood") {
+      // Warm horizontal hardwood planks with subtle seams
+      px(ctx, sx, sy, T, T, "#9c6d44");
+      px(ctx, sx, sy + 7, T, 1, "#855834");
+      px(ctx, sx, sy + 15, T, 1, "#855834");
+      px(ctx, sx, sy + 23, T, 1, "#7c502e");
+      px(ctx, sx, sy + 1, T, 1, "#ab7b50");
+      // Staggered vertical plank joints
+      const j = ((x * 7 + y * 3) % 3) * 8 + 4;
+      px(ctx, sx + j, sy, 1, 8, "#855834");
+      px(ctx, sx + ((j + 12) % T), sy + 8, 1, 8, "#855834");
+    } else if (floorType === "stone") {
+      // St. Jude Church: Smooth slate stone slabs + soft stained-glass light
+      px(ctx, sx, sy, T, T, "#475569");
+      px(ctx, sx + 1, sy + 1, T - 2, T - 2, (x + y) % 2 === 0 ? "#4e5d73" : "#49576b");
+      px(ctx, sx, sy + T - 1, T, 1, "#334155");
+      // Colored light beams near church pews
+      if (y === 4 || y === 6) {
+        if (x === 3 || x === 12) px(ctx, sx + 4, sy + 4, 16, 16, "rgba(56, 189, 248, 0.14)");
+        if (x === 4 || x === 11) px(ctx, sx + 4, sy + 4, 16, 16, "rgba(250, 204, 21, 0.12)");
+      }
+    } else if (floorType === "tile") {
+      // Clean Hospital linoleum
+      px(ctx, sx, sy, T, T, "#e2e8f0");
+      px(ctx, sx + 1, sy + 1, T - 1, T - 1, "#edf2f7");
+    } else if (floorType === "party") {
+      // Dark Party hardwood with subtle neon reflection
+      px(ctx, sx, sy, T, T, "#1e1b4b");
+      px(ctx, sx, sy + 11, T, 1, "#2a2566");
+      if ((x + y) % 4 === 0) {
+        const pulse = Math.floor(time / 450) % 2 === 0 ? "rgba(236,72,153,0.12)" : "rgba(34,211,238,0.12)";
+        px(ctx, sx + 2, sy + 2, T - 4, T - 4, pulse);
+      }
+    } else {
+      return false;
+    }
+    return true;
+  }
+
+  // REFINED 3D INTERIOR WALLS (Crown Molding, Wallpaper/Stone, Wainscoting & Baseboards)
+  function drawInteriorWallTile(ctx, map, x, y, sx, sy) {
+    const isTopWall = y === 0 || y === 1;
+    const isBottomWall = y === map.h - 1;
+    const ft = map.floorType;
+
+    const wallCol = ft === "stone" ? "#334155" : (ft === "tile" ? "#cbd5e1" : (ft === "party" ? "#17143a" : "#4a3b5c"));
+    const trimCol = ft === "stone" ? "#64748b" : (ft === "tile" ? "#0f766e" : (ft === "party" ? "#6366f1" : "#78350f"));
+    const baseCol = ft === "stone" ? "#1e293b" : (ft === "tile" ? "#94a3b8" : "#291d36");
+
+    if (y === 0) {
+      // Upper ceiling cap + crown molding
+      px(ctx, sx, sy, T, T, "#0f1322");
+      px(ctx, sx, sy + T - 5, T, 5, trimCol);
+      px(ctx, sx, sy + T - 2, T, 2, "#1e293b");
+    } else if (y === 1) {
+      // Main visible back wall with wainscoting & baseboard
+      px(ctx, sx, sy, T, T, wallCol);
+      px(ctx, sx, sy + T - 7, T, 7, baseCol);
+      px(ctx, sx, sy + T - 8, T, 1, trimCol);
+      // Decorative stained glass on Church back wall or windows on House
+      if (ft === "stone" && (x === 3 || x === 12)) {
+        px(ctx, sx + 4, sy + 2, 16, 14, "#0f172a");
+        px(ctx, sx + 6, sy + 4, 6, 5, "#38bdf8"); px(ctx, sx + 12, sy + 4, 6, 5, "#f43f5e");
+        px(ctx, sx + 6, sy + 9, 6, 5, "#facc15"); px(ctx, sx + 12, sy + 9, 6, 5, "#a855f7");
+      } else if (ft === "wood" && (x === 3 || x === 13)) {
+        px(ctx, sx + 4, sy + 3, 16, 12, "#78350f");
+        px(ctx, sx + 6, sy + 5, 12, 8, "#bae6fd");
+        px(ctx, sx + 11, sy + 5, 2, 8, "#78350f");
+      }
+    } else if (isBottomWall) {
+      px(ctx, sx, sy, T, 5, trimCol);
+      px(ctx, sx, sy + 5, T, T - 5, "#0f1322");
+    } else {
+      // Side walls & Interior Room Partition Walls!
+      px(ctx, sx, sy, T, T, "#1e2236");
+      px(ctx, sx + 2, sy, T - 4, T, wallCol);
+      px(ctx, sx + 2, sy + T - 4, T - 4, 4, baseCol);
+    }
+  }
+
+  return { T, drawRoadTile, drawInteriorFloorTile, drawInteriorWallTile, drawTree, drawSignpost, drawBuilding, drawPortal, drawProp };
 })();

@@ -375,49 +375,68 @@ html, body {
   }
 }
 
-/* LANDSCAPE PHONE — GAME BOY ADVANCE STYLE (D-Pad Left | Screen Center | A/B Right!) */
+/* LANDSCAPE PHONE — GAME BOY ADVANCE STYLE (Crisp Unstretched 4:3 Screen Centered!) */
 @media (orientation: landscape) and (max-height: 540px) {
   #handheld-shell {
     max-width: 100%;
   }
   #top-bar {
-    padding: 4px 12px;
+    padding: 3px 12px;
     font-size: 11px;
   }
   #handheld-body {
-    grid-template-columns: auto 1fr auto;
-    grid-template-rows: 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
     grid-template-areas:
       "left   screen right"
       "left   mid    right";
     padding: 4px 10px calc(4px + env(safe-area-inset-bottom));
-    gap: 2px 10px;
+    gap: 2px 8px;
   }
   .deck-decor { display: none; }
   #screen-bezel {
     height: 100%;
+    width: 100%;
     min-height: 0;
+    min-width: 0;
+    display: flex;
     align-items: center;
+    justify-content: center;
   }
   #console-lens {
     height: 100%;
     max-height: 100%;
     width: auto;
-    padding: 4px 8px 5px;
+    max-width: 100%;
+    padding: 4px 8px 4px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .lens-top-strip, .lens-bottom-strip {
+    width: 100%;
   }
   #screen-wrap {
-    height: calc(100% - 22px);
+    height: calc(100% - 24px);
     width: auto;
+    aspect-ratio: 4 / 3;
     max-width: 100%;
+    flex-shrink: 1;
+  }
+  #game-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
   #mid-controls {
     flex-direction: row;
     gap: 10px;
     padding-bottom: 2px;
   }
-  #handheld-shell[data-btn-size="small"] { --dpad-size: 86px; --ab-size: 40px; }
-  #handheld-shell[data-btn-size="medium"] { --dpad-size: 104px; --ab-size: 48px; }
-  #handheld-shell[data-btn-size="large"] { --dpad-size: 120px; --ab-size: 56px; }
+  #handheld-shell[data-btn-size="small"] { --dpad-size: 84px; --ab-size: 40px; }
+  #handheld-shell[data-btn-size="medium"] { --dpad-size: 102px; --ab-size: 48px; }
+  #handheld-shell[data-btn-size="large"] { --dpad-size: 118px; --ab-size: 54px; }
 }
 
 /* =========================================================
@@ -727,51 +746,53 @@ html, body {
 }
 .settings-panel {
   width: 100%; max-width: 720px; height: 100%;
-  background: #111629;
-  border-left: 1px solid #2e385c; border-right: 1px solid #2e385c;
+  background: linear-gradient(180deg, var(--shell-top) 0%, var(--shell-mid) 55%, var(--shell-bot) 100%);
+  border-left: 1.5px solid var(--shell-border); border-right: 1.5px solid var(--shell-border);
   display: flex; flex-direction: column; overflow: hidden;
+  transition: background 0.3s ease;
 }
 .settings-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px; background: #0a0e1a; border-bottom: 1px solid #283254;
-  color: var(--gold); font-weight: 900; font-size: 14px; letter-spacing: 0.08em;
+  padding: 12px 14px; background: var(--topbar-bg); border-bottom: 1.5px solid var(--shell-border);
+  color: var(--shell-text); font-weight: 900; font-size: 14px; letter-spacing: 0.08em;
 }
 .tab-close {
   width: 34px; height: 30px; border-radius: 6px;
-  background: #451423; border: 1px solid #991b1b; color: #fecaca;
+  background: #7f1d1d; border: 1.5px solid #ef4444; color: #fecaca;
   font-weight: 900; cursor: pointer;
 }
 #settings-body { flex: 1; overflow-y: auto; padding: 14px; }
 .settings-footer {
-  background: #0a0e1a; border-top: 1px solid #283254;
-  color: #94a3b8; font-size: 10px; text-align: center; padding: 8px;
+  background: var(--topbar-bg); border-top: 1.5px solid var(--shell-border);
+  color: var(--shell-subtext); font-size: 10px; font-weight: 700; text-align: center; padding: 8px;
 }
 
 .setting-section {
-  background: #181f38;
-  border: 1.5px solid #2f3b66;
+  background: var(--well-bg);
+  border: 1.5px solid var(--shell-border);
   border-radius: 10px;
   padding: 11px 12px;
   margin-bottom: 11px;
+  backdrop-filter: blur(4px);
 }
 .setting-section.focused {
   border-color: var(--gold);
-  box-shadow: 0 0 10px rgba(245, 197, 66, 0.25);
+  box-shadow: 0 0 12px rgba(245, 197, 66, 0.35);
 }
 .setting-title {
-  font-size: 13px; font-weight: 900; color: var(--gold); margin-bottom: 2px;
+  font-size: 13px; font-weight: 900; color: var(--shell-text); margin-bottom: 2px;
 }
 .setting-desc {
-  font-size: 11px; color: #94a3b8; margin-bottom: 9px;
+  font-size: 11px; color: var(--shell-subtext); margin-bottom: 9px;
 }
 .option-pills {
   display: flex; flex-wrap: wrap; gap: 7px;
 }
 .opt-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  background: #0e1426;
-  border: 1.5px solid #3c4b7a;
-  color: #cbd5e1;
+  background: var(--pill-bg);
+  border: 1.5px solid var(--pill-border);
+  color: var(--pill-text);
   font-size: 11px; font-weight: 800;
   padding: 6px 11px; border-radius: 999px; cursor: pointer;
   transition: transform 0.1s, border-color 0.15s;

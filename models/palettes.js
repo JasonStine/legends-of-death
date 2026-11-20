@@ -154,4 +154,71 @@ window.PALETTES = {
     eyes: "#111", top: "#78350f", topShade: "#451a03", accent: "#fef3c7",
     pants: "#451a03", shoes: "#451a03", aura: null, wings: null, weapon: null
   }
+,
+  suzanna: {
+    name: "Mrs. Suzanna",
+    role: "Calculus Teacher",
+    trueRole: "Colorado Springs High Faculty",
+    skin: "#f2c9ac", skinShade: "#d4a485",
+    hair: "#7c2d12", hairHi: "#9a3412", hairStyle: "bun",
+    eyes: "#15803d",
+    top: "#0f766e", topShade: "#115e59", accent: "#f8fafc",
+    pants: "#1e293b", shoes: "#334155",
+    aura: null, wings: null, weapon: null
+  },
+  lucia: {
+    name: "Lucia Verde",
+    role: "Morte Discipuli (Illicero)",
+    trueRole: "Elite Reaper Soldier",
+    skin: "#e3b38e", skinShade: "#c4916a",
+    hair: "#1c1917", hairHi: "#44403c", hairStyle: "long",
+    eyes: "#16a34a",
+    top: "#7f1d1d", topShade: "#450a0a", accent: "#22c55e",
+    pants: "#18181b", shoes: "#27272a",
+    aura: "#22c55e", wings: "dark", weapon: null
+  },
+  vrotney: {
+    name: "Vrotney",
+    role: "Morte Discipuli (Letonin)",
+    trueRole: "Letonin's Aerial Shuttle",
+    skin: "#8d5524", skinShade: "#6b3e18",
+    hair: "#111827", hairHi: "#374151", hairStyle: "bun",
+    eyes: "#78350f",
+    top: "#18181b", topShade: "#09090b", accent: "#ef4444",
+    pants: "#18181b", shoes: "#09090b",
+    aura: "#a78bfa", wings: "dark", weapon: null
+  },
+  damian: {
+    name: "Damian",
+    role: "Morte Discipuli (Illicero)",
+    trueRole: "Celestial Brass Knuckles",
+    skin: "#ecc2a2", skinShade: "#cb9b78",
+    hair: "#3f3f46", hairHi: "#71717a", hairStyle: "spiky",
+    eyes: "#f59e0b",
+    top: "#991b1b", topShade: "#450a0a", accent: "#facc15",
+    pants: "#1f2937", shoes: "#111827",
+    aura: "#facc15", wings: "dark", weapon: null
+  },
+  detective: {
+    name: "Det. Miller",
+    role: "Colorado Springs PD",
+    trueRole: "Lead Investigator",
+    skin: "#eac0a2", skinShade: "#c89a7a",
+    hair: "#52525b", hairHi: "#a1a1aa", hairStyle: "messy",
+    eyes: "#334155",
+    top: "#78716c", topShade: "#57534e", accent: "#fef3c7",
+    pants: "#292524", shoes: "#1c1917",
+    aura: null, wings: null, weapon: null
+  },
+  clerk: {
+    name: "Barnes & Noble Clerk",
+    role: "Bookseller",
+    trueRole: "Bookseller",
+    skin: "#f5cfb4", skinShade: "#d6ab8c",
+    hair: "#6b4423", hairHi: "#8c5c32", hairStyle: "wavy",
+    eyes: "#0284c7",
+    top: "#14532d", topShade: "#052e16", accent: "#fde68a",
+    pants: "#1f2937", shoes: "#27272a",
+    aura: null, wings: null, weapon: null
+  }
 };
