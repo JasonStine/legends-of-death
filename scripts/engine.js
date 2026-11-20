@@ -14,7 +14,7 @@
   const PIN_CODE = "72800";
   const WALK_SPEED = 62;
   const RUN_SPEED = 112;
-  const IG_TABS = ["quests", "party", "lore"];
+  const IG_TABS = ["quests", "side", "map", "party", "lore"];
 
   const THEMES = [
     { id: "sunburnt-yellow", label: "Burnt Orange ★", swatch: "#e89b24" },
@@ -93,6 +93,7 @@
         try { localStorage.setItem("lod_snake_best", String(snake.best)); } catch (_) {}
       }
       window.AudioFX.heal();
+      if (snake.score >= 30) setSideQuest("snake_champ", "done");
       snake.food = {
         x: Math.floor(Math.random() * snake.gridW),
         y: Math.floor(Math.random() * snake.gridH)
@@ -167,7 +168,12 @@
     settingFocusRow: 0,
     discoveredParty: ["jacob"],
     loreTiers: {},
-    sideQuests: { hasLindor: false, tylerDone: false },
+    sideQuests: {
+      hasLindor: false,
+      status: {} // { questId: "active" | "done" }
+    },
+    explored: {}, // { mapId: ["x,y", ...] }
+    openInfoRow: -1,
     settings: {
       volume: true,
       runByDefault: false,
@@ -310,6 +316,38 @@
     if (changed) saveProgress();
   }
 
+  function setSideQuest(id, status) {
+    const prev = game.sideQuests.status[id];
+    if (prev === "done") return;
+    if (prev !== status) {
+      game.sideQuests.status[id] = status;
+      const def = (window.Story.sideQuestDefs || []).find(q => q.id === id);
+      if (def) showLoreToast(status === "done" ? "SIDE QUEST DONE" : "SIDE QUEST", def.title);
+      saveProgress();
+    }
+  }
+
+  function markExplored(mapId, px, py) {
+    const map = window.Maps[mapId];
+    if (!map) return;
+    if (!game.explored[mapId]) game.explored[mapId] = [];
+    const set = new Set(game.explored[mapId]);
+    const cx = Math.floor((px + 12) / T);
+    const cy = Math.floor((py + 12) / T);
+    const rad = 3;
+    let added = false;
+    for (let dy = -rad; dy <= rad; dy++) {
+      for (let dx = -rad; dx <= rad; dx++) {
+        const tx = cx + dx, ty = cy + dy;
+        if (tx >= 0 && ty >= 0 && tx < map.w && ty < map.h) {
+          const key = `${tx},${ty}`;
+          if (!set.has(key)) { set.add(key); added = true; }
+        }
+      }
+    }
+    if (added) game.explored[mapId] = Array.from(set);
+  }
+
   function updateProgressHud() {
     const total = window.Story.quests.length - 1;
     const q = window.Story.quests[Math.min(game.questStage, total)];
@@ -332,6 +370,7 @@
       game.player.y = ty * T;
       game.player.frame = 0;
       rebuildActors();
+      markExplored(mapId, game.player.x, game.player.y);
       document.getElementById("location-pill").textContent = window.Maps[mapId].name + (game.purgatorio ? " (Purgatorio)" : "");
       updatePurgatorioBtn();
       updateProgressHud();
@@ -602,6 +641,7 @@
       if (game.questStage <= 2) startDialogue(D.naviKitchen, () => advanceStage(3));
       else startDialogue([{ id: "navi", mood: "neutral", text: "I'm keeping the kitchen stocked for everyone. Rest on the couch or bed whenever you need, Jacob." }]);
     } else if (eventName === "playSnake") {
+      if (!game.sideQuests.status.snake_champ) setSideQuest("snake_champ", "active");
       showChoices([
         { label: "Play SNAKE.EXE", action: () => startSnake() },
         { label: "Step Away", action: () => {} }
@@ -624,7 +664,13 @@
       startDialogue([{ id: "jacob", mood: "intense", text: "Whoa... in Purgatorio, I can see faint black-green Envy toxin glowing on the floor—just like Navi saw at Cyrine's house!", unlockLore: { id: "purgatorio_secrets", tier: 1 } }]);
     } else if (eventName === "lorePurgBookstore") {
       startDialogue([{ id: "sign", mood: "intense", text: "Hidden Reaperian Text: 'When a Reaper disguises themselves as an animal, their form reflects their soul—like Illicero's platinum cat form, Crista.'", unlockLore: { id: "crista_cat", tier: 2 } }]);
+    } else if (eventName === "loreCloset") {
+      setSideQuest("closet_easter_egg", "done");
+      startDialogue([
+        { id: "jacob", mood: "happy", text: "My closet! Found my favorite faded purple pants, cozy cardigan, and a spare camping lantern—classic." }
+      ]);
     } else if (eventName === "kidPlaySection") {
+      setSideQuest("leo_sight", "done");
       startDialogue([
         { id: "kid", mood: "happy", text: "Hi! Did you see the shiny man with black wings standing by the café? Grown-ups say I'm imagining things, but he waved at me!", unlockLore: { id: "kids_purgatorio", tier: 1 } }
       ]);
@@ -652,20 +698,22 @@
         { id: "jacob", mood: "happy", text: "Picked up a box of Lindor Dark Chocolate—my absolute favorite! (Tyler outside in Westside might love some too.)" }
       ]);
     } else if (eventName === "sideQuestChocolate") {
-      if (game.sideQuests.tylerDone) {
+      if (game.sideQuests.status.tyler_lindor === "done") {
         startDialogue([{ id: "student_b", mood: "happy", text: "Thanks again for the Lindor chocolates, Jacob! You're a lifesaver!" }]);
       } else if (game.sideQuests.hasLindor) {
-        game.sideQuests.tylerDone = true;
+        setSideQuest("tyler_lindor", "done");
         window.AudioFX.heal();
         startDialogue([
           { id: "student_b", mood: "happy", text: "Whoa—you actually brought Lindor Dark Chocolate from Sweet Tooth?! Side Quest Complete! Here's a tip: check the Arcade Loft next door for SNAKE.EXE!" }
         ]);
       } else {
+        setSideQuest("tyler_lindor", "active");
         startDialogue([
           { id: "student_b", mood: "sad", text: "SIDE QUEST: Hey Jacob, I promised my date Lindor Dark Chocolate from Sweet Tooth Candy Store down the street, but I'm stuck waiting for my ride! Could you grab a box for me?" }
         ]);
       }
     } else if (eventName === "loreNeighborHistory") {
+      setSideQuest("henderson_folklore", "done");
       startDialogue([
         { id: "neighbor", mood: "neutral", text: "Local Folklore Archive: 'For decades, hikers near Limbach Park have reported seeing dark-winged figures vanish into thin air—and hearing faint piano music on moonlit nights.'", unlockLore: { id: "westside_secrets", tier: 1 } }
       ]);
@@ -734,6 +782,7 @@
             () => {
               advanceStage(9);
               rebuildActors();
+      markExplored(mapId, game.player.x, game.player.y);
               runCutscene([
                 { type: "dialogue", lines: D.parkPostBattle },
                 { type: "walk", actorId: "sendex", tx: 12, ty: 5, speed: 56, hideAtEnd: true }
@@ -937,7 +986,7 @@
         } else if (tile === 8) {
           window.WorldArt.drawDistantCityTile(ctx, x, y, sx, sy, game.purgatorio);
         } else if (tile === 9) {
-          window.WorldArt.drawFenceTile(ctx, sx, sy, game.purgatorio);
+          window.WorldArt.drawFenceTile(ctx, map, x, y, sx, sy, game.purgatorio);
         } else if (tile === 10) {
           window.WorldArt.drawWaterTile(ctx, x, y, sx, sy, time, map.id === "dream");
         } else if ((tile === 1 || tile === 6) && !isExterior) {
@@ -981,7 +1030,7 @@
         const a = findActor("navi");
         if (a) { worldX = a.x + 12; worldY = a.y - 4; }
       } else if (game.questStage === 3 || game.questStage === 4) {
-        worldX = 3 * T + 12; worldY = 4 * T;
+        worldX = 3 * T + 12; worldY = 6 * T;
       } else if (game.questStage === 6) {
         const a = findActor("crista");
         if (a) { worldX = a.x + 12; worldY = a.y - 2; }
@@ -1110,7 +1159,7 @@
           const sp = isRunning ? RUN_SPEED : WALK_SPEED;
           const nx = game.player.x + vx * sp * dt;
           const ny = game.player.y + vy * sp * dt;
-          if (!isBlocked(nx, ny)) { game.player.x = nx; game.player.y = ny; }
+          if (!isBlocked(nx, ny)) { game.player.x = nx; game.player.y = ny; markExplored(game.mapId, nx, ny); }
           game.player.walkTimer += dt;
           if (game.player.walkTimer > (isRunning ? 0.10 : 0.17)) {
             game.player.walkTimer = 0;
@@ -1162,6 +1211,43 @@
           <p>${q.objective}</p>
         </div>`;
       }).join("");
+    } else if (tab === "side") {
+      const defs = window.Story.sideQuestDefs || [];
+      body.innerHTML = defs.map(sq => {
+        const st = game.sideQuests.status[sq.id] || null;
+        if (fog && !st) {
+          return `<div class="menu-card fogged"><h4><span>🔒 ???</span><span class="sq-badge locked">UNDISCOVERED</span></h4><p>Explore Colorado Springs &amp; Westside to discover this side quest.</p></div>`;
+        }
+        const badge = st === "done"
+          ? `<span class="sq-badge done">✓ COMPLETED</span>`
+          : st === "active"
+            ? `<span class="sq-badge active">▶ ACTIVE</span>`
+            : `<span class="sq-badge locked">AVAILABLE</span>`;
+        return `<div class="menu-card ${st === "active" ? "focused" : ""}">
+          <h4><span>${sq.title}</span>${badge}</h4>
+          <p><strong>${sq.giver}:</strong> ${sq.objective}</p>
+        </div>`;
+      }).join("");
+    } else if (tab === "map") {
+      const map = window.Maps[game.mapId];
+      const visited = new Set(game.explored[game.mapId] || []);
+      const totalWalk = map.w * map.h;
+      const expPct = fog ? Math.min(100, Math.round((visited.size / totalWalk) * 100)) : 100;
+      body.innerHTML = `
+        <div class="minimap-wrap">
+          <div class="minimap-header">
+            <span>📍 ${map.name}</span>
+            <span>${fog ? `Explored: ${expPct}%` : "Fog of War: OFF"}</span>
+          </div>
+          <canvas id="minimap-canvas" width="240" height="180"></canvas>
+          <div class="minimap-legend">
+            <span><i class="mm-dot" style="background:#facc15"></i>You</span>
+            <span><i class="mm-dot" style="background:#ef4444"></i>Buildings</span>
+            <span><i class="mm-dot" style="background:#a855f7"></i>Portals</span>
+            <span><i class="mm-dot" style="background:#1e1b4b;border:1px solid #6366f1"></i>??? Unexplored</span>
+          </div>
+        </div>`;
+      drawMinimapCanvas(map, visited, fog);
     } else if (tab === "party") {
       body.innerHTML = window.Story.partyOrder.map(id => {
         const p = window.PALETTES[id];
@@ -1184,6 +1270,73 @@
           ${entries}
         </div>`;
       }).join("");
+    }
+  }
+
+
+  function drawMinimapCanvas(map, visited, fog) {
+    const mc = document.getElementById("minimap-canvas");
+    if (!mc) return;
+    const mctx = mc.getContext("2d");
+    mctx.imageSmoothingEnabled = false;
+    mctx.fillStyle = "#080b16";
+    mctx.fillRect(0, 0, mc.width, mc.height);
+
+    const cw = Math.floor(Math.min(mc.width / map.w, mc.height / map.h));
+    const ox = Math.floor((mc.width - cw * map.w) / 2);
+    const oy = Math.floor((mc.height - cw * map.h) / 2);
+
+    for (let y = 0; y < map.h; y++) {
+      for (let x = 0; x < map.w; x++) {
+        const sx = ox + x * cw, sy = oy + y * cw;
+        const seen = !fog || visited.has(`${x},${y}`);
+        if (!seen) {
+          // Mysterious Fog of War shroud hinting there is something to explore!
+          mctx.fillStyle = (x + y) % 2 === 0 ? "#141329" : "#1a1836";
+          mctx.fillRect(sx, sy, cw, cw);
+          if ((x * 7 + y * 11) % 13 === 0) {
+            mctx.fillStyle = "rgba(167, 139, 250, 0.35)";
+            mctx.fillRect(sx + 2, sy + 2, 2, 2);
+          }
+          continue;
+        }
+        const t = map.grid[y][x];
+        let col = "#2e6f3a"; // grass / walkable
+        if (map.id !== "overworld" && map.id !== "westside") col = "#8c5e38";
+        if (t === 1 || t === 6) col = "#b91c1c"; // buildings / walls
+        else if (t === 2) col = "#14532d"; // forest trees
+        else if (t === 3) col = "#475569"; // asphalt roads
+        else if (t === 4 || t === 5) col = "#cbd5e1"; // doors & sidewalks
+        else if (t === 7) col = "#d6c7a9"; // secondary floor
+        else if (t === 9) col = "#92400e"; // wooden fences
+        else if (t === 10) col = "#0284c7"; // creek / dream lake
+        mctx.fillStyle = col;
+        mctx.fillRect(sx, sy, cw, cw);
+      }
+    }
+
+    // Highlight Portals & Exits
+    (map.portals || []).forEach(p => {
+      if (p.minQuest !== undefined && game.questStage < p.minQuest) return;
+      if (!fog || visited.has(`${p.tx},${p.ty}`)) {
+        mctx.fillStyle = "#c084fc";
+        mctx.fillRect(ox + p.tx * cw - 1, oy + p.ty * cw - 1, cw + 2, cw + 2);
+      }
+    });
+
+    // Draw Player Marker (Bright Gold Dot)
+    const ptx = Math.floor((game.player.x + 12) / T);
+    const pty = Math.floor((game.player.y + 12) / T);
+    mctx.fillStyle = "#facc15";
+    mctx.fillRect(ox + ptx * cw - 1, oy + pty * cw - 1, cw + 2, cw + 2);
+    mctx.strokeStyle = "#111";
+    mctx.strokeRect(ox + ptx * cw - 1, oy + pty * cw - 1, cw + 2, cw + 2);
+
+    // Subtle "???" hint if plenty remains unexplored under Fog of War
+    if (fog && visited.size < map.w * map.h * 0.75) {
+      mctx.fillStyle = "rgba(196, 181, 253, 0.75)";
+      mctx.font = "bold 9px monospace";
+      mctx.fillText("??? UNEXPLORED AREAS ???", 54, mc.height - 6);
     }
   }
 
@@ -1213,7 +1366,8 @@
     const sections = [
       {
         title: "Audio Volume",
-        desc: "Enable or mute 32-bit retro sound effects.",
+        desc: "Toggle 32-bit retro sound effects.",
+        info: "Controls all synthesized GBA-style sound effects including menu clicks, dialogue blips, battle attacks, healing chimes, portal warps, and Lore/Quest popups.",
         pills: [
           { label: "ON", active: s.volume, onClick: () => { s.volume = true; window.AudioFX.setEnabled(true); } },
           { label: "OFF", active: !s.volume, onClick: () => { s.volume = false; window.AudioFX.setEnabled(false); } }
@@ -1222,6 +1376,7 @@
       {
         title: "Run Mode (B Button)",
         desc: s.runByDefault ? "Running by default — hold B to walk." : "Walking normally — hold B to sprint.",
+        info: "When OFF, Jacob walks normally and sprints while you hold B (or Shift). Turn ON to auto-run everywhere and hold B whenever you want to walk slowly.",
         pills: [
           { label: "Hold B to Run", active: !s.runByDefault, onClick: () => { s.runByDefault = false; applyAppearance(); } },
           { label: "Run by Default", active: s.runByDefault, onClick: () => { s.runByDefault = true; applyAppearance(); } }
@@ -1229,7 +1384,8 @@
       },
       {
         title: "Gamepad Button Size",
-        desc: "All sizes automatically scale to stay cleanly on screen.",
+        desc: "Adjusts D-Pad & A/B button scale.",
+        info: "Resizes the on-screen handheld D-pad and A/B buttons for comfort on small phones, Fold displays, or landscape GBA mode—always clamped to stay on screen.",
         pills: [
           { label: "Small", active: s.buttonSize === "small", onClick: () => { s.buttonSize = "small"; applyAppearance(); } },
           { label: "Medium", active: s.buttonSize === "medium", onClick: () => { s.buttonSize = "medium"; applyAppearance(); } },
@@ -1238,7 +1394,8 @@
       },
       {
         title: "Device Color Style",
-        desc: "Pick your handheld console shell finish.",
+        desc: "Change handheld shell & settings theme.",
+        info: "Customizes the color of the entire handheld console shell, top bar, buttons, and this Settings screen. Burnt Orange ★ is the default special edition finish.",
         pills: THEMES.map(t => ({
           label: t.label,
           swatch: t.swatch,
@@ -1248,7 +1405,8 @@
       },
       {
         title: "Enable Fog of War",
-        desc: "Hide undiscovered chapters, unmet party members, and unlearned lore as ???.",
+        desc: "Controls mystery fog across Menus & Mini-Map.",
+        info: "When ON (default), undiscovered Story chapters, Side Quests, unmet Party members, unlearned Lore, the Purgatorio button, and unexplored Mini-Map areas appear as ??? until you discover them. Turn OFF to reveal everything immediately.",
         pills: [
           { label: "ON (Default)", active: s.fogOfWar, onClick: () => { s.fogOfWar = true; updatePurgatorioBtn(); } },
           { label: "OFF (Reveal All)", active: !s.fogOfWar, onClick: () => { s.fogOfWar = false; updatePurgatorioBtn(); } }
@@ -1256,7 +1414,8 @@
       },
       {
         title: "Reset Save Data",
-        desc: "Your progress auto-saves automatically. Use this to start a fresh playthrough.",
+        desc: "Erase saved progress & restart from Ch. I.",
+        info: "Your game auto-saves whenever you enter a building, complete a chapter, discover lore, or change settings. Use this button to wipe your save and start a fresh journey.",
         pills: [
           {
             label: "Reset Save & Play Again",
@@ -1277,7 +1436,35 @@
     sections.forEach((sec, rIdx) => {
       const card = document.createElement("div");
       card.className = "setting-section" + (rIdx === game.settingFocusRow ? " focused" : "");
-      card.innerHTML = `<div class="setting-title">${rIdx === game.settingFocusRow ? "▶ " : ""}${sec.title}</div><div class="setting-desc">${sec.desc}</div>`;
+      const isInfoOpen = game.openInfoRow === rIdx;
+
+      const head = document.createElement("div");
+      head.className = "setting-head-row";
+      head.innerHTML = `<div class="setting-title">${rIdx === game.settingFocusRow ? "▶ " : ""}${sec.title}</div>`;
+      const infoBtn = document.createElement("button");
+      infoBtn.className = "info-btn" + (isInfoOpen ? " open" : "");
+      infoBtn.textContent = "i";
+      infoBtn.title = "More info about " + sec.title;
+      infoBtn.onclick = e => {
+        e.stopPropagation();
+        window.AudioFX.cursor();
+        game.openInfoRow = isInfoOpen ? -1 : rIdx;
+        renderSettings();
+      };
+      head.appendChild(infoBtn);
+      card.appendChild(head);
+
+      const descEl = document.createElement("div");
+      descEl.className = "setting-desc";
+      descEl.textContent = sec.desc;
+      card.appendChild(descEl);
+
+      if (isInfoOpen) {
+        const box = document.createElement("div");
+        box.className = "setting-info-box";
+        box.textContent = sec.info;
+        card.appendChild(box);
+      }
       const row = document.createElement("div");
       row.className = "option-pills";
       sec.pills.forEach(p => {
@@ -1406,6 +1593,8 @@
         y: game.player.y,
         discoveredParty: game.discoveredParty,
         loreTiers: game.loreTiers,
+        sideQuests: game.sideQuests,
+        explored: game.explored,
         settings: game.settings
       }));
     } catch (_) {}
@@ -1427,6 +1616,8 @@
     game.questStage = s.questStage || 0;
     game.discoveredParty = s.discoveredParty || ["jacob"];
     game.loreTiers = s.loreTiers || {};
+    if (s.sideQuests) game.sideQuests = { hasLindor: !!s.sideQuests.hasLindor, status: s.sideQuests.status || {} };
+    game.explored = s.explored || {};
     if (s.settings) {
       game.settings = { ...game.settings, ...s.settings };
       window.AudioFX.setEnabled(game.settings.volume);
@@ -1455,7 +1646,8 @@
     e.preventDefault();
     btnB.classList.add("pressed");
     game.input.run = true;
-    if (snake.active) exitSnake();
+    if (!relOverlay.classList.contains("hidden")) closeReleaseNotes();
+    else if (snake.active) exitSnake();
     else if (game.choice) cancelChoice();
     else if (game.settingsOpen) closeSettings();
     else if (game.ingameMenuOpen) closeIngameMenu();
@@ -1489,6 +1681,13 @@
 
   document.getElementById("btn-settings-top").addEventListener("click", () => game.settingsOpen ? closeSettings() : openSettings());
   document.getElementById("settings-close").addEventListener("click", closeSettings);
+  // Release Notes Modal Wiring
+  const relOverlay = document.getElementById("release-overlay");
+  const openReleaseNotes = () => { window.AudioFX.confirm(); relOverlay.classList.remove("hidden"); };
+  const closeReleaseNotes = () => { window.AudioFX.cancel(); relOverlay.classList.add("hidden"); };
+  document.getElementById("btn-release-notes").addEventListener("click", openReleaseNotes);
+  document.getElementById("release-close").addEventListener("click", closeReleaseNotes);
+
 
   const keyMap = { ArrowUp: "up", KeyW: "up", ArrowDown: "down", KeyS: "down", ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right" };
   window.addEventListener("keydown", e => {
@@ -1498,14 +1697,16 @@
     if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyX") {
       game.input.run = true;
       if (e.code === "KeyX" && !e.repeat) {
-        if (snake.active) exitSnake();
+        if (!relOverlay.classList.contains("hidden")) closeReleaseNotes();
+    else if (snake.active) exitSnake();
     else if (game.choice) cancelChoice();
         else if (game.settingsOpen) closeSettings();
         else if (game.ingameMenuOpen) closeIngameMenu();
       }
     }
     if (e.code === "Escape") {
-      if (snake.active) exitSnake();
+      if (!relOverlay.classList.contains("hidden")) closeReleaseNotes();
+    else if (snake.active) exitSnake();
     else if (game.choice) cancelChoice();
       else if (game.settingsOpen) closeSettings();
       else if (game.ingameMenuOpen) closeIngameMenu();

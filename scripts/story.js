@@ -23,6 +23,45 @@ window.Story = {
     { act: "EPILOGUE", ch: "Ch. XXIII–XXV", title: "Reset; Start", objective: "Return to Colorado Springs and reunite with Letonin & Cyrine for Senior Year!", mapHint: "overworld" }
   ],
 
+  // Structured Side Quests for the new SIDE Management Tab!
+  sideQuestDefs: [
+    {
+      id: "tyler_lindor",
+      title: "Sweet Delivery (Lindor Chocolate)",
+      giver: "Tyler (Westside)",
+      objective: "Pick up Lindor Dark Chocolate inside Sweet Tooth Candy Store (Westside) and deliver it to Tyler outside.",
+      hint: "Explore Westside (walk west down Upper Avenue)."
+    },
+    {
+      id: "leo_sight",
+      title: "Through a Child's Eyes",
+      giver: "Little Leo (Barnes & Noble)",
+      objective: "Visit the Kids' Play Corner inside Barnes & Noble and talk to Little Leo about what he saw.",
+      hint: "Check the bottom-left corner of Barnes & Noble."
+    },
+    {
+      id: "snake_champ",
+      title: "SNAKE.EXE High Score",
+      giver: "Arcade Loft / Jacob's PC",
+      objective: "Score 30 or more points on SNAKE.EXE (Jacob's Bedroom PC or Westside Arcade Loft).",
+      hint: "Walk up to Jacob's PC desk in his bedroom or the Arcade Cabinet in Westside."
+    },
+    {
+      id: "henderson_folklore",
+      title: "Colorado Springs Folklore",
+      giver: "Mr. Henderson (Westside)",
+      objective: "Inspect Mr. Henderson's folklore bookshelf inside his Westside home to uncover Limbach Park legends.",
+      hint: "Visit the blue neighbor house in Westside."
+    },
+    {
+      id: "closet_easter_egg",
+      title: "What's in Jacob's Closet?",
+      giver: "Jacob's House",
+      objective: "Explore Jacob's top-right Closet and inspect his wardrobe & constellation box.",
+      hint: "Walk into the top-right room of Jacob's House."
+    }
+  ],
+
   // Party roster with Fog of War discovery & evolving trueRole
   partyOrder: ["jacob", "cyrine", "navi", "letonin", "illicero", "sendex", "emillia", "death"],
 

@@ -104,10 +104,11 @@ window.WorldArt = (() => {
     }
 
     if (floorType === "wood" || floorType === "bookstore") {
-      // Warm Stardew-style horizontal hardwood planks
-      const base = purgatorio ? "#3d3054" : "#b58352";
-      const hi   = purgatorio ? "#4b3b66" : "#c49362";
-      const seam = purgatorio ? "#2a203b" : "#96673b";
+      // Modern Colorado Springs dark espresso/walnut hardwood (Bookstore stays warm mahogany)
+      const isStore = floorType === "bookstore";
+      const base = purgatorio ? "#2d2442" : (isStore ? "#7c4f31" : "#6b5344");
+      const hi   = purgatorio ? "#392e54" : (isStore ? "#8f5d3c" : "#7a604f");
+      const seam = purgatorio ? "#1e172e" : (isStore ? "#5e3a22" : "#523e32");
       px(ctx, sx, sy, T, T, base);
       px(ctx, sx, sy + 1, T, 1, hi);
       px(ctx, sx, sy + 7, T, 1, seam);
@@ -156,77 +157,106 @@ window.WorldArt = (() => {
   // tile === 6: Sleek Thin Interior Room Divider Wall (NOT chunky full-tile blocks!)
   function drawInteriorWallTile(ctx, map, tileId, x, y, sx, sy, purgatorio = false) {
     const ft = map.floorType;
-    const wallTop = purgatorio ? "#2a2145" : (ft === "stone" ? "#3b475c" : (ft === "tile" ? "#cbd5e1" : (ft === "party" ? "#1e1947" : "#d6c3a5")));
-    const wallBot = purgatorio ? "#1d1633" : (ft === "stone" ? "#293345" : (ft === "tile" ? "#94a3b8" : (ft === "party" ? "#141033" : "#8c6239")));
-    const trim    = purgatorio ? "#6d4aff" : (ft === "stone" ? "#64748b" : (ft === "tile" ? "#0f766e" : (ft === "party" ? "#6366f1" : "#6b4423")));
-    const cap     = "#141624";
+    // Book-Accurate Modern Colorado Springs Urban-Fantasy Interior Palette
+    // (Modern slate/cool-gray suburban drywall for House, Gothic Cathedral Stone for Church,
+    //  Clean Clinical Teal/White for Hospital, Warm Brick/Mahogany for Barnes & Noble)
+    const wallTop = purgatorio ? "#231b3b"
+      : (ft === "stone" ? "#334155"
+      : (ft === "tile" ? "#e2e8f0"
+      : (ft === "party" ? "#1a153d"
+      : (ft === "bookstore" ? "#7f2d2d" : "#cbd5e1"))));
+    const wallBot = purgatorio ? "#161029"
+      : (ft === "stone" ? "#1e293b"
+      : (ft === "tile" ? "#94a3b8"
+      : (ft === "party" ? "#0f0c26"
+      : (ft === "bookstore" ? "#4a2511" : "#475569"))));
+    const oakHi   = purgatorio ? "#8b5cf6"
+      : (ft === "stone" ? "#64748b"
+      : (ft === "tile" ? "#0f766e"
+      : (ft === "party" ? "#818cf8"
+      : (ft === "bookstore" ? "#92400e" : "#334155"))));
+    const oakMid  = purgatorio ? "#5b21b6"
+      : (ft === "stone" ? "#475569"
+      : (ft === "tile" ? "#0d9488"
+      : (ft === "party" ? "#4f46e5"
+      : (ft === "bookstore" ? "#6b3410" : "#1e293b"))));
+    const cap     = "#0b0d14";
 
-    // SLEEK THIN PARTITION WALL (Tile === 6) — Drawn over floor!
+    // SLEEK STARDEW PARTITION WALL (Tile === 6) — Warm wood cap & clean T/corner junctions!
     if (tileId === 6) {
       drawInteriorFloorTile(ctx, ft, 0, x, y, sx, sy, 0, purgatorio);
-      const hasUp = y > 0 && (map.grid[y - 1][x] === 6 || map.grid[y - 1][x] === 1);
-      const hasDn = y < map.h - 1 && (map.grid[y + 1][x] === 6 || map.grid[y + 1][x] === 1);
-      const hasLt = x > 0 && (map.grid[y][x - 1] === 6 || map.grid[y][x - 1] === 1);
-      const hasRt = x < map.w - 1 && (map.grid[y][x + 1] === 6 || map.grid[y][x + 1] === 1);
+      const isW = (tx, ty) => tx >= 0 && ty >= 0 && tx < map.w && ty < map.h && (map.grid[ty][tx] === 6 || map.grid[ty][tx] === 1);
+      const up = isW(x, y - 1), dn = isW(x, y + 1), lt = isW(x - 1, y), rt = isW(x + 1, y);
 
-      if (hasLt || hasRt) {
-        // Horizontal room divider with wainscoting & baseboard
-        px(ctx, sx, sy + 4, T, 16, cap);
-        px(ctx, sx, sy + 5, T, 3, trim);
-        px(ctx, sx, sy + 8, T, 7, wallTop);
-        px(ctx, sx, sy + 15, T, 4, wallBot);
-      } else {
-        // Vertical room divider (slim 10px architectural wall, centered)
+      if (lt || rt) {
+        // Horizontal room divider with Stardew golden-oak top cap & paneled wainscoting
+        px(ctx, sx, sy + 3, T, 18, cap);
+        px(ctx, sx, sy + 4, T, 3, oakHi);
+        px(ctx, sx, sy + 7, T, 2, oakMid);
+        px(ctx, sx, sy + 9, T, 6, wallTop);
+        px(ctx, sx, sy + 15, T, 5, wallBot);
+        px(ctx, sx + 11, sy + 15, 1, 5, oakMid);
+      }
+      if (up || dn || (!lt && !rt)) {
+        // Vertical room divider (slim Stardew golden-oak beam)
         px(ctx, sx + 7, sy, 10, T, cap);
-        px(ctx, sx + 8, sy, 8, T, wallTop);
-        px(ctx, sx + 9, sy, 6, T, trim);
-        if (!hasDn) {
-          // Clean end-cap with baseboard at doorway
-          px(ctx, sx + 7, sy + T - 5, 10, 5, wallBot);
-        }
+        px(ctx, sx + 8, sy, 8, T, oakMid);
+        px(ctx, sx + 9, sy, 6, T, oakHi);
+        if (!dn) px(ctx, sx + 7, sy + T - 5, 10, 5, wallBot);
       }
       return;
     }
 
-    // OUTER PERIMETER WALLS (Tile === 1)
+    // OUTER PERIMETER WALLS (Tile === 1) — Stardew Golden-Oak Border + Warm Paneled Back Wall
     if (y === 0) {
-      // Ceiling border + upper wall top
-      px(ctx, sx, sy, T, 10, cap);
-      px(ctx, sx, sy + 10, T, 3, trim);
+      px(ctx, sx, sy, T, 7, cap);
+      px(ctx, sx, sy + 7, T, 4, oakHi);
+      px(ctx, sx, sy + 11, T, 2, oakMid);
       px(ctx, sx, sy + 13, T, 11, wallTop);
+      if (x % 2 === 0 && (ft === "wood" || ft === "bookstore")) {
+        px(ctx, sx + 11, sy + 13, 1, 11, "rgba(139, 90, 43, 0.18)"); // subtle wallpaper stripe
+      }
     } else if (y === 1) {
-      // Lower half of back wall + wainscoting + baseboard
-      px(ctx, sx, sy, T, 14, wallTop);
-      px(ctx, sx, sy + 14, T, 2, trim);
-      px(ctx, sx, sy + 16, T, 7, wallBot);
+      px(ctx, sx, sy, T, 13, wallTop);
+      px(ctx, sx, sy + 13, T, 2, oakHi);
+      px(ctx, sx, sy + 15, T, 8, wallBot);
+      px(ctx, sx + 11, sy + 16, 1, 6, "rgba(0,0,0,0.18)"); // wainscoting panel
       px(ctx, sx, sy + 23, T, 1, cap);
 
-      // Decorative windows / stained glass on back wall
+      // Decorative windows / stained glass / cozy Stardew wall paintings
       if (ft === "stone" && (x === 3 || x === 12)) {
-        px(ctx, sx + 4, sy - 4, 16, 17, "#0f172a");
-        px(ctx, sx + 6, sy - 2, 6, 6, purgatorio ? "#a855f7" : "#38bdf8");
-        px(ctx, sx + 12, sy - 2, 6, 6, purgatorio ? "#7c3aed" : "#f43f5e");
-        px(ctx, sx + 6, sy + 4, 6, 7, "#facc15");
-        px(ctx, sx + 12, sy + 4, 6, 7, "#a855f7");
+        px(ctx, sx + 4, sy - 5, 16, 17, "#0f172a");
+        px(ctx, sx + 6, sy - 3, 6, 6, purgatorio ? "#a855f7" : "#38bdf8");
+        px(ctx, sx + 12, sy - 3, 6, 6, purgatorio ? "#7c3aed" : "#f43f5e");
+        px(ctx, sx + 6, sy + 3, 6, 7, "#facc15");
+        px(ctx, sx + 12, sy + 3, 6, 7, "#a855f7");
       } else if ((ft === "wood" || ft === "bookstore") && (x === 3 || x === 13)) {
-        px(ctx, sx + 4, sy - 2, 16, 14, "#6b4423");
-        px(ctx, sx + 6, sy, 12, 10, purgatorio ? "#312e81" : "#bae6fd");
-        px(ctx, sx + 11, sy, 2, 10, "#6b4423");
-        px(ctx, sx + 6, sy + 5, 12, 1, "#6b4423");
+        px(ctx, sx + 3, sy - 4, 18, 15, "#5c2d0c");
+        px(ctx, sx + 5, sy - 2, 14, 11, purgatorio ? "#312e81" : "#fef3c7");
+        px(ctx, sx + 11, sy - 2, 2, 11, "#5c2d0c");
+        px(ctx, sx + 5, sy + 3, 14, 1, "#5c2d0c");
+      } else if (ft === "wood" && x === 8) {
+        // Cozy framed landscape painting!
+        px(ctx, sx + 3, sy - 3, 18, 13, "#78350f");
+        px(ctx, sx + 5, sy - 1, 14, 5, "#38bdf8");
+        px(ctx, sx + 5, sy + 4, 14, 4, "#22c55e");
+        px(ctx, sx + 13, sy, 3, 3, "#facc15");
       }
     } else if (y === map.h - 1) {
-      px(ctx, sx, sy, T, 4, trim);
-      px(ctx, sx, sy + 4, T, T - 4, cap);
+      px(ctx, sx, sy, T, 3, oakHi);
+      px(ctx, sx, sy + 3, T, 3, oakMid);
+      px(ctx, sx, sy + 6, T, T - 6, cap);
     } else {
-      // Sleek left/right outer wall framing
       if (x === 0) {
-        px(ctx, sx, sy, 16, T, cap);
-        px(ctx, sx + 16, sy, 6, T, wallBot);
-        px(ctx, sx + 22, sy, 2, T, trim);
+        px(ctx, sx, sy, 14, T, cap);
+        px(ctx, sx + 14, sy, 4, T, oakMid);
+        px(ctx, sx + 18, sy, 4, T, oakHi);
+        px(ctx, sx + 22, sy, 2, T, cap);
       } else {
-        px(ctx, sx, sy, 2, T, trim);
-        px(ctx, sx + 2, sy, 6, T, wallBot);
-        px(ctx, sx + 8, sy, 16, T, cap);
+        px(ctx, sx, sy, 2, T, cap);
+        px(ctx, sx + 2, sy, 4, T, oakHi);
+        px(ctx, sx + 6, sy, 4, T, oakMid);
+        px(ctx, sx + 10, sy, 14, T, cap);
       }
     }
   }
@@ -635,6 +665,66 @@ window.WorldArt = (() => {
     } else if (prop.kind === "bush") {
       px(ctx, x + 3, y + 8, 18, 12, "#15803d"); px(ctx, x + 5, y + 5, 14, 10, "#22c55e");
       px(ctx, x + 8, y + 8, 3, 3, "#f472b6"); px(ctx, x + 14, y + 11, 3, 3, "#facc15");
+    } else if (prop.kind === "lamp") {
+      // Warm Stardew glowing floor lamp with amber light halo!
+      const glow = 0.22 + Math.sin(time * 0.005 + x) * 0.05;
+      ctx.fillStyle = `rgba(254, 240, 138, ${glow})`;
+      ctx.beginPath(); ctx.arc(x + 12, y + 8, 16, 0, Math.PI * 2); ctx.fill();
+      px(ctx, x + 9, y + 18, 6, 3, "#78350f");
+      px(ctx, x + 11, y + 9, 2, 10, "#92400e");
+      px(ctx, x + 6, y + 2, 12, 8, "#fef08a");
+      px(ctx, x + 7, y + 3, 10, 6, "#fde047");
+    } else if (prop.kind === "fireplace") {
+      // Cozy Stardew brick hearth with flickering fire!
+      px(ctx, x + 2, y - 2, 44, 24, "#7c2d12");
+      px(ctx, x + 4, y, 40, 20, "#9a3412");
+      px(ctx, x, y - 4, 48, 4, "#78350f"); // wooden mantle
+      px(ctx, x + 12, y + 6, 24, 14, "#1c1917"); // firebox
+      const f = Math.floor(time / 180) % 2;
+      px(ctx, x + 16, y + 11 - f, 16, 8 + f, "#f97316");
+      px(ctx, x + 19, y + 13 - f, 10, 6, "#facc15");
+    } else if (prop.kind === "closet_rack") {
+      // Wardrobe / Hanging Clothes Rack for Jacob's Closet!
+      px(ctx, x, y, 48, 24, "#5c2d0c");
+      px(ctx, x + 2, y + 2, 44, 20, "#78350f");
+      px(ctx, x + 4, y + 4, 40, 2, "#cbd5e1"); // hanging rod
+      const shirts = ["#2563eb", "#7c3aed", "#ef4444", "#16a34a", "#f59e0b"];
+      shirts.forEach((c, i) => px(ctx, x + 5 + i * 8, y + 6, 6, 13, c));
+    } else if (prop.kind === "candelabra") {
+      // Tall Golden Church Candelabra with flickering flames!
+      const glow = 0.25 + Math.sin(time * 0.008 + y) * 0.07;
+      ctx.fillStyle = `rgba(250, 204, 21, ${glow})`;
+      ctx.beginPath(); ctx.arc(x + 12, y + 5, 13, 0, Math.PI * 2); ctx.fill();
+      px(ctx, x + 9, y + 18, 6, 3, "#b45309");
+      px(ctx, x + 11, y + 7, 2, 12, "#f5c542");
+      px(ctx, x + 6, y + 6, 12, 2, "#f5c542");
+      px(ctx, x + 6, y + 3, 2, 4, "#fef3c7");
+      px(ctx, x + 11, y + 2, 2, 5, "#fef3c7");
+      px(ctx, x + 16, y + 3, 2, 4, "#fef3c7");
+      const fl = Math.floor(time / 200) % 2;
+      px(ctx, x + 6, y + 1 - fl, 2, 2, "#f97316");
+      px(ctx, x + 11, y - fl, 2, 2, "#facc15");
+      px(ctx, x + 16, y + 1 - fl, 2, 2, "#f97316");
+    } else if (prop.kind === "bookshelf_wide") {
+      // Full continuous 3-tile (72px) stocked Barnes & Noble bookshelf!
+      px(ctx, x, y, 72, 26, "#5c2d0c"); px(ctx, x + 2, y + 2, 68, 22, "#78350f");
+      const cols = ["#ef4444", "#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ec4899"];
+      for (let i = 0; i < 13; i++) {
+        px(ctx, x + 4 + i * 5, y + 4, 4, 8, cols[i % cols.length]);
+        px(ctx, x + 4 + i * 5, y + 14, 4, 8, cols[(i + 2) % cols.length]);
+      }
+    } else if (prop.kind === "cafe_set") {
+      // Café Table WITH Wooden Chairs on Left & Right!
+      px(ctx, x - 6, y + 7, 7, 10, "#5c2d0c"); px(ctx, x - 5, y + 8, 5, 8, "#92400e"); // Left chair
+      px(ctx, x + 23, y + 7, 7, 10, "#5c2d0c"); px(ctx, x + 24, y + 8, 5, 8, "#92400e"); // Right chair
+      px(ctx, x + 2, y + 4, 20, 16, "#78350f"); px(ctx, x + 4, y + 6, 16, 12, "#b45309");
+      px(ctx, x + 8, y + 9, 4, 4, "#f8fafc"); px(ctx, x + 14, y + 11, 4, 4, "#fef3c7");
+    } else if (prop.kind === "play_fence") {
+      // Low colorful wooden enclosure for Barnes & Noble Kids' Play Corner
+      px(ctx, x, y + 10, T, 5, "#f59e0b");
+      px(ctx, x + 2, y + 7, 4, 11, "#ef4444");
+      px(ctx, x + 10, y + 7, 4, 11, "#3b82f6");
+      px(ctx, x + 18, y + 7, 4, 11, "#22c55e");
     } else if (prop.kind === "exit_mat") {
       px(ctx, x, y + 4, 48, 16, "#991b1b"); px(ctx, x + 3, y + 7, 42, 10, "#f5c542");
       ctx.font = "bold 7px monospace"; ctx.fillStyle = "#111"; ctx.fillText("EXIT", x + 15, y + 14);
@@ -664,15 +754,38 @@ window.WorldArt = (() => {
     }
   }
 
-  function drawFenceTile(ctx, sx, sy, purgatorio = false) {
-    // Grass under a crisp wooden neighborhood fence
+  function drawFenceTile(ctx, map, x, y, sx, sy, purgatorio = false) {
+    // Grass under auto-oriented wooden neighborhood fence (vertical, horizontal & corners!)
     px(ctx, sx, sy, T, T, purgatorio ? "#1f3d34" : "#3a8540");
-    px(ctx, sx, sy + 9, T, 3, "#78350f");
-    px(ctx, sx, sy + 16, T, 3, "#78350f");
-    [2, 10, 18].forEach(ox => {
-      px(ctx, sx + ox, sy + 5, 4, 16, "#92400e");
-      px(ctx, sx + ox + 1, sy + 4, 2, 2, "#b45309");
-    });
+    const isF = (tx, ty) => (tx >= 0 && ty >= 0 && tx < map.w && ty < map.h && map.grid[ty][tx] === 9);
+    const up = isF(x, y - 1), dn = isF(x, y + 1), lt = isF(x - 1, y), rt = isF(x + 1, y);
+    const wood = "#92400e", woodHi = "#b45309", rail = "#78350f", shade = "#451a03";
+
+    // Horizontal rails if connected left or right (or isolated)
+    if (lt || rt || (!up && !dn)) {
+      const rx = lt ? 0 : 8;
+      const rw = (lt && rt) ? T : (lt ? 14 : (rt ? 16 : 16));
+      px(ctx, sx + rx, sy + 9, rw, 3, rail);
+      px(ctx, sx + rx, sy + 16, rw, 3, rail);
+      if (lt && rt) {
+        [2, 10, 18].forEach(ox => {
+          px(ctx, sx + ox, sy + 5, 4, 16, wood);
+          px(ctx, sx + ox + 1, sy + 4, 2, 2, woodHi);
+        });
+      }
+    }
+    // Vertical rails & posts if connected up or down!
+    if (up || dn) {
+      const ry = up ? 0 : 8;
+      const rh = (up && dn) ? T : (up ? 14 : 16);
+      px(ctx, sx + 9, sy + ry, 6, rh, rail);
+      px(ctx, sx + 10, sy + ry, 4, rh, wood);
+      px(ctx, sx + 11, sy + ry, 2, rh, woodHi);
+    }
+    // Sturdy center fence post at every tile / corner
+    px(ctx, sx + 8, sy + 4, 8, 17, shade);
+    px(ctx, sx + 9, sy + 5, 6, 15, wood);
+    px(ctx, sx + 10, sy + 4, 4, 3, woodHi);
   }
 
   function drawWaterTile(ctx, x, y, sx, sy, time = 0, isDream = false) {

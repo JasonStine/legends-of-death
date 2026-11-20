@@ -14,7 +14,7 @@
     <div class="pin-card">
       <div class="pin-header">
         <span class="pin-led"></span>
-        <span>RESTRICTED CARTRIDGE // VER 4.0</span>
+        <span>RESTRICTED CARTRIDGE // VER 9.0</span>
       </div>
       <div class="pin-emblem">✦ ⚔ ✦</div>
       <h1 class="pin-title">ACCESS REQUIRED</h1>
@@ -110,7 +110,7 @@
             <!-- Compact Dialogue Overlay with 64x64 Pixel Portrait -->
             <div id="dialogue-box" class="hidden">
               <div id="portrait-frame">
-                <canvas id="portrait-canvas" width="64" height="64"></canvas>
+                <canvas id="portrait-canvas" width="96" height="96"></canvas>
               </div>
               <div id="dialogue-content">
                 <div id="dialogue-header">
@@ -130,6 +130,8 @@
               <div class="ingame-menu-panel">
                 <div class="ingame-tabs">
                   <button class="ig-tab active" data-tab="quests">STORY</button>
+                  <button class="ig-tab" data-tab="side">SIDE</button>
+                  <button class="ig-tab" data-tab="map">MAP</button>
                   <button class="ig-tab" data-tab="party">PARTY</button>
                   <button class="ig-tab" data-tab="lore">LORE</button>
                   <button id="ig-settings-shortcut" class="ig-tab ig-gear" title="Open Settings">⚙</button>
@@ -224,6 +226,52 @@
         </div>
         <div id="settings-body"></div>
         <div class="settings-footer">Tap any option or use ▲▼ ◀▶ &amp; A • B to Close</div>
+      </div>
+    </div>
+    <!-- Almost-Hidden Subtle Release Notes Link -->
+    <div id="release-footer">
+      <button id="btn-release-notes" class="release-link" aria-label="Release Updates">v9 • release updates</button>
+    </div>
+
+    <!-- Release Notes / Changelog Modal -->
+    <div id="release-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Release Updates">
+      <div class="settings-panel">
+        <div class="settings-header">
+          <span>✦ RELEASE UPDATES (v1 – v9)</span>
+          <button id="release-close" class="tab-close" aria-label="Close Release Notes">✕</button>
+        </div>
+        <div id="release-body">
+          <div class="setting-section focused">
+            <div class="setting-title">v9 — Book-Accurate Portraits, Organic Sprites &amp; Modern Interiors</div>
+            <div class="setting-desc">Current Build</div>
+            <p class="rn-text">• Upgraded dialogue portraits to 96×96 high-detail, book-accurate character art (Jacob's dirty-blond hair &amp; glacier-blue eyes, Cyrine's platinum hair, Letonin's hoop earring &amp; honey-brown eyes, Death's black hoodie, Navi's long wavy hair, etc.).<br>• Reformed overworld &amp; battle character sprites with rounded heads, contoured shoulders, and natural proportions (no more blocky limbs).<br>• Kept Stardew-style multi-room interior layouts while re-theming walls/floors to match the modern Colorado Springs urban-fantasy aesthetic of the novel.<br>• Added this subtle Release Updates changelog link at the bottom.</p>
+          </div>
+          <div class="setting-section">
+            <div class="setting-title">v8 — Sketch-Matched Interiors, Mini-Map &amp; Side Quests</div>
+            <p class="rn-text">• Built 4-room Jacob's House (Kitchen, Living Room, Closet, Bedroom), 2-bay Hospital, wide-shelf Barnes &amp; Noble + Kids' Play Corner + Café, and 8-pew Church with candelabras.<br>• Added Fog-of-War Mini-Map (MAP tab), Side Quest tracker (SIDE tab), Settings info (i) buttons, auto-oriented fences, and pure tree perimeters.</p>
+          </div>
+          <div class="setting-section">
+            <div class="setting-title">v7 — Westside District &amp; Intimate Dream Realm</div>
+            <p class="rn-text">• Added Westside overworld (Colorado Springs High School, Sweet Tooth Candy Store, Mr. Henderson's House, Retro Arcade Loft), Tyler's Lindor side quest, and revamped Dream Realm island.</p>
+          </div>
+          <div class="setting-section">
+            <div class="setting-title">v6 — Book-Accurate Purgatorio &amp; Tight Landscape Lens</div>
+            <p class="rn-text">• Story-locked ??? Purgatorio button with spectral reflections, unseen Morte Discipuli, and wandering spirits. Fixed landscape 4:3 bezel and dynamic 2-lane roads/sidewalks.</p>
+          </div>
+          <div class="setting-section">
+            <div class="setting-title">v5 — Playable SNAKE.EXE &amp; Exploration Lore</div>
+            <p class="rn-text">• Added playable SNAKE.EXE on Jacob's PC, Barnes &amp; Noble story stop, 3 secret exploration lore entries, and town NPCs.</p>
+          </div>
+          <div class="setting-section">
+            <div class="setting-title">v4 — Developer PIN Gate &amp; GBA Landscape Mode</div>
+            <p class="rn-text">• Added retro PIN gate, GBA-style landscape layout, Burnt Orange default theme, pill-grid Settings, and Pokémon-style battle step-in &amp; zoom.</p>
+          </div>
+          <div class="setting-section">
+            <div class="setting-title">v1–v3 — Foundation, Full Novel Arc &amp; Handheld Shell</div>
+            <p class="rn-text">• Built 32-bit GBA RPG engine, 15-chapter novel storyline, 2-on-1 full-body battles, Fog of War, evolving lore toasts, B-to-Run, button sizes, and 7 console color themes.</p>
+          </div>
+        </div>
+        <div class="settings-footer">Legends of Death &amp; the Reapers of Time • Press B or ✕ to Close</div>
       </div>
     </div>
   </div>

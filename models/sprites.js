@@ -1,6 +1,6 @@
 // =========================================================
-// models/sprites.js — Upgraded 32-Bit GBA Human Sprites,
-//                     64x64 Portraits & Detailed Battle Models
+// models/sprites.js — v9: Organic Human-Proportioned Sprites
+//                     & 96x96 Book-Accurate Illustrated Portraits
 // =========================================================
 window.Sprites = (() => {
   const OUT = "#141624";
@@ -10,268 +10,401 @@ window.Sprites = (() => {
     ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   }
 
+  function pill(ctx, x, y, w, h, r, fill, stroke = null, lw = 1) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+  }
+
   // ---------------------------------------------------------
-  // 1. OVERWORLD 24x32 HUMAN SPRITE (Anatomical + 1px Outlines)
+  // 1. OVERWORLD 24x32 ORGANIC HUMAN SPRITE (Non-Blocky!)
   // ---------------------------------------------------------
   function drawOverworld(ctx, id, x, y, dir = "down", frame = 0, purgatorio = false, activity = null, time = 0) {
     const p = window.PALETTES[id] || window.PALETTES.jacob;
     const step = frame % 4;
-    const danceBob = activity === "dance" ? Math.round(Math.sin(time * 0.014 + x) * 2) : 0;
+    const danceBob = activity === "dance" ? Math.round(Math.sin(time * 0.014 + x) * 1.8) : 0;
     const bob = ((step === 1 || step === 3) ? -1 : 0) + danceBob;
     const leftLegY = step === 1 ? -2 : (step === 3 ? 1 : 0);
     const rightLegY = step === 3 ? -2 : (step === 1 ? 1 : 0);
     const armSwing = step === 1 ? 2 : (step === 3 ? -2 : 0);
 
-    // Special: Crista the Platinum Cat (outlined & detailed)
+    // Special: Crista the Platinum Cat (curved organic feline)
     if (p.hairStyle === "cat") {
-      ctx.fillStyle = "rgba(0,0,0,0.3)";
-      ctx.beginPath(); ctx.ellipse(x + 12, y + 27, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
-      px(ctx, x + 6, y + 18 + bob, 12, 9, OUT);
-      px(ctx, x + 7, y + 19 + bob, 10, 7, p.top);
-      px(ctx, x + 16, y + 14 + bob, 3, 6, OUT);
-      px(ctx, x + 17, y + 15 + bob, 2, 5, p.skinShade);
-      px(ctx, x + 6, y + 12 + bob, 11, 9, OUT);
-      px(ctx, x + 7, y + 13 + bob, 9, 7, p.hair);
-      px(ctx, x + 7, y + 10 + bob, 3, 4, OUT); px(ctx, x + 8, y + 11 + bob, 1, 2, "#fda4af");
-      px(ctx, x + 14, y + 10 + bob, 3, 4, OUT); px(ctx, x + 15, y + 11 + bob, 1, 2, "#fda4af");
-      px(ctx, x + 9, y + 16 + bob, 2, 2, p.eyes);
-      px(ctx, x + 13, y + 16 + bob, 2, 2, p.eyes);
+      ctx.fillStyle = "rgba(0,0,0,0.28)";
+      ctx.beginPath(); ctx.ellipse(x + 12, y + 27, 7, 2.8, 0, 0, Math.PI * 2); ctx.fill();
+      pill(ctx, x + 6, y + 18 + bob, 11, 8, 4, p.top, OUT, 1);
+      // Curved tail
+      ctx.strokeStyle = OUT; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(x + 16, y + 21 + bob); ctx.quadraticCurveTo(x + 21, y + 17 + bob, x + 18, y + 13 + bob); ctx.stroke();
+      ctx.strokeStyle = p.skinShade; ctx.lineWidth = 1.6; ctx.stroke();
+      // Cat head & ears
+      ctx.beginPath(); ctx.arc(x + 11, y + 15 + bob, 5, 0, Math.PI * 2);
+      ctx.fillStyle = p.hair; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = p.hair;
+      ctx.beginPath(); ctx.moveTo(x + 7, y + 13 + bob); ctx.lineTo(x + 7, y + 8 + bob); ctx.lineTo(x + 10, y + 11 + bob); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x + 15, y + 13 + bob); ctx.lineTo(x + 15, y + 8 + bob); ctx.lineTo(x + 12, y + 11 + bob); ctx.fill();
+      px(ctx, x + 9, y + 14 + bob, 1.8, 1.8, p.eyes);
+      px(ctx, x + 12.5, y + 14 + bob, 1.8, 1.8, p.eyes);
       return;
     }
 
-    // Ground shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.34)";
-    ctx.beginPath(); ctx.ellipse(x + 12, y + 29, 7, 2.8, 0, 0, Math.PI * 2); ctx.fill();
+    // Soft Ground Shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.32)";
+    ctx.beginPath(); ctx.ellipse(x + 12, y + 29, 6.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
 
     // Purgatorio Wings behind character
     if (purgatorio && p.wings && p.wings !== "float") {
       const wCol = p.wings === "angel" ? "#f8fafc" : (p.wings === "corrupted" ? "#7f1d1d" : "#111827");
       const flap = Math.sin(time * 0.008) * 2;
-      px(ctx, x - 5, y + 10 + bob + flap, 9, 9, OUT);
-      px(ctx, x - 4, y + 11 + bob + flap, 7, 7, wCol);
-      px(ctx, x + 20, y + 10 + bob + flap, 9, 9, OUT);
-      px(ctx, x + 21, y + 11 + bob + flap, 7, 7, p.wings === "corrupted" ? "#dc2626" : wCol);
+      ctx.fillStyle = wCol; ctx.strokeStyle = OUT; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x + 8, y + 14 + bob); ctx.lineTo(x - 4, y + 8 + bob + flap); ctx.lineTo(x - 1, y + 18 + bob); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.wings === "corrupted" ? "#dc2626" : wCol;
+      ctx.beginPath(); ctx.moveTo(x + 16, y + 14 + bob); ctx.lineTo(x + 28, y + 8 + bob + flap); ctx.lineTo(x + 25, y + 18 + bob); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
 
-    // Back long hair layer (when facing down/side)
+    // Back Long Hair Layer (flowing silhouette)
     if ((p.hairStyle === "long" || p.hairStyle === "wavy_long") && dir !== "up") {
-      px(ctx, x + 4, y + 5 + bob, 16, 13, OUT);
-      px(ctx, x + 5, y + 6 + bob, 14, 11, p.hair);
+      pill(ctx, x + 5.5, y + 5 + bob, 13, 13, 5, p.hair, OUT, 1);
     }
 
-    // LEGS & SHOES (Outlined with distinct stride)
+    // LEGS & SHOES (Rounded organic legs with stride)
     if (dir === "left" || dir === "right") {
-      const stride = step === 1 ? 3 : (step === 3 ? -3 : 0);
-      px(ctx, x + 8 - stride, y + 20, 6, 9, OUT);
-      px(ctx, x + 9 - stride, y + 21, 4, 5, p.pants);
-      px(ctx, x + 9 - stride, y + 26, 5, 2, p.shoes);
-      px(ctx, x + 10 + stride, y + 20, 6, 9, OUT);
-      px(ctx, x + 11 + stride, y + 21, 4, 5, p.pants);
-      px(ctx, x + 11 + stride, y + 26, 5, 2, p.shoes);
+      const stride = step === 1 ? 2.8 : (step === 3 ? -2.8 : 0);
+      pill(ctx, x + 9.5 - stride, y + 20, 4.5, 7, 2, p.pants, OUT, 1);
+      pill(ctx, x + 9 - stride, y + 25.5, 5.5, 3, 1.5, p.shoes, OUT, 1);
+      pill(ctx, x + 10.5 + stride, y + 20, 4.5, 7, 2, p.pants, OUT, 1);
+      pill(ctx, x + 10 + stride, y + 25.5, 5.5, 3, 1.5, p.shoes, OUT, 1);
     } else {
-      px(ctx, x + 6, y + 20 + leftLegY, 6, 9, OUT);
-      px(ctx, x + 7, y + 21 + leftLegY, 4, 5, p.pants);
-      px(ctx, x + 7, y + 26 + leftLegY, 4, 2, p.shoes);
-
-      px(ctx, x + 12, y + 20 + rightLegY, 6, 9, OUT);
-      px(ctx, x + 13, y + 21 + rightLegY, 4, 5, p.pants);
-      px(ctx, x + 13, y + 26 + rightLegY, 4, 2, p.shoes);
+      pill(ctx, x + 7, y + 20 + leftLegY, 4.5, 7, 2, p.pants, OUT, 1);
+      pill(ctx, x + 6.8, y + 25.5 + leftLegY, 5, 3, 1.5, p.shoes, OUT, 1);
+      pill(ctx, x + 12.5, y + 20 + rightLegY, 4.5, 7, 2, p.pants, OUT, 1);
+      pill(ctx, x + 12.2, y + 25.5 + rightLegY, 5, 3, 1.5, p.shoes, OUT, 1);
     }
 
-    // TORSO / JACKET / BELT (Contoured shoulders & collar)
-    px(ctx, x + 5, y + 12 + bob, 14, 10, OUT);
-    px(ctx, x + 6, y + 13 + bob, 12, 8, p.top);
-    px(ctx, x + 6, y + 18 + bob, 12, 2, p.topShade);
-    px(ctx, x + 6, y + 20 + bob, 12, 1, "#0f172a"); // belt line
+    // CONTOURED TORSO / JACKET (Rounded shoulders + tapered waist)
+    pill(ctx, x + 6.5, y + 12.5 + bob, 11, 9.5, 3.5, p.top, OUT, 1);
+    pill(ctx, x + 7.2, y + 18 + bob, 9.6, 3.2, 1.5, p.topShade);
     if (dir === "down") {
-      px(ctx, x + 10, y + 13 + bob, 4, 6, p.accent); // shirt / lapel
-      px(ctx, x + 11, y + 20 + bob, 2, 1, "#f5c542"); // belt buckle
+      px(ctx, x + 10.5, y + 13.5 + bob, 3, 6, p.accent); // V-neck shirt / lapel
     }
 
-    // ARMS & HANDS (Outlined, swinging naturally)
+    // ARMS & HANDS (Rounded sleeves + skin hands)
     if (dir === "down" || dir === "up") {
-      px(ctx, x + 3, y + 13 + bob + armSwing, 4, 8, OUT);
-      px(ctx, x + 4, y + 14 + bob + armSwing, 2, 4, p.topShade);
-      px(ctx, x + 4, y + 18 + bob + armSwing, 2, 2, p.skin);
+      pill(ctx, x + 4.2, y + 13.5 + bob + armSwing, 3.2, 6.5, 1.6, p.topShade, OUT, 0.9);
+      ctx.fillStyle = p.skin; ctx.beginPath(); ctx.arc(x + 5.8, y + 19.5 + bob + armSwing, 1.4, 0, Math.PI * 2); ctx.fill();
 
-      px(ctx, x + 17, y + 13 + bob - armSwing, 4, 8, OUT);
-      px(ctx, x + 18, y + 14 + bob - armSwing, 2, 4, p.topShade);
-      px(ctx, x + 18, y + 18 + bob - armSwing, 2, 2, p.skin);
+      pill(ctx, x + 16.6, y + 13.5 + bob - armSwing, 3.2, 6.5, 1.6, p.topShade, OUT, 0.9);
+      ctx.fillStyle = p.skin; ctx.beginPath(); ctx.arc(x + 18.2, y + 19.5 + bob - armSwing, 1.4, 0, Math.PI * 2); ctx.fill();
     } else {
-      px(ctx, x + 9 + armSwing, y + 13 + bob, 5, 8, OUT);
-      px(ctx, x + 10 + armSwing, y + 14 + bob, 3, 4, p.topShade);
-      px(ctx, x + 10 + armSwing, y + 18 + bob, 3, 2, p.skin);
+      pill(ctx, x + 10 + armSwing, y + 13.5 + bob, 3.6, 6.5, 1.8, p.topShade, OUT, 0.9);
+      ctx.fillStyle = p.skin; ctx.beginPath(); ctx.arc(x + 11.8 + armSwing, y + 19.5 + bob, 1.5, 0, Math.PI * 2); ctx.fill();
     }
 
     // NECK
-    px(ctx, x + 10, y + 11 + bob, 4, 3, p.skinShade);
+    px(ctx, x + 10.5, y + 10.5 + bob, 3, 3, p.skinShade);
 
-    // HEAD (Rounded silhouette with dark outline + chin taper)
-    px(ctx, x + 6, y + 2 + bob, 12, 10, OUT);
-    px(ctx, x + 7, y + 1 + bob, 10, 12, OUT);
-    px(ctx, x + 7, y + 3 + bob, 10, 8, p.skin);
-    px(ctx, x + 8, y + 10 + bob, 8, 2, p.skin);      // tapered chin
-    px(ctx, x + 8, y + 11 + bob, 8, 1, p.skinShade); // jaw shade
+    // HEAD (Smooth organic oval head — NOT a square!)
+    ctx.beginPath();
+    ctx.ellipse(x + 12, y + 7 + bob, 5.4, 5.6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = p.skin; ctx.fill();
+    ctx.strokeStyle = OUT; ctx.lineWidth = 1; ctx.stroke();
 
-    // HAIR / HOOD (Layered crown, bangs & highlights)
+    // HAIR / HOOD (Layered rounded crown & natural bangs)
     if (p.hairStyle === "hood") {
-      px(ctx, x + 5, y + 0 + bob, 14, 12, OUT);
-      px(ctx, x + 6, y + 1 + bob, 12, 10, p.top);
-      px(ctx, x + 8, y + 4 + bob, 8, 6, "#09090b");
+      ctx.beginPath(); ctx.ellipse(x + 12, y + 6.5 + bob, 6.4, 6.2, 0, 0, Math.PI * 2);
+      ctx.fillStyle = p.top; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1; ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(x + 12, y + 7.5 + bob, 4.2, 4.1, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#09090b"; ctx.fill();
     } else {
-      px(ctx, x + 5, y + 0 + bob, 14, 6, OUT);
-      px(ctx, x + 6, y + 1 + bob, 12, 4, p.hair);
-      px(ctx, x + 8, y + 2 + bob, 5, 1, p.hairHi);
-      // Sideburns / bangs
-      px(ctx, x + 6, y + 4 + bob, 2, 3, p.hair);
-      px(ctx, x + 16, y + 4 + bob, 2, 3, p.hair);
+      ctx.fillStyle = p.hair; ctx.strokeStyle = OUT; ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.arc(x + 12, y + 5.5 + bob, 5.8, Math.PI * 0.95, Math.PI * 2.05);
+      ctx.quadraticCurveTo(x + 18, y + 8 + bob, x + 16.5, y + 9 + bob);
+      ctx.quadraticCurveTo(x + 12, y + 5.2 + bob, x + 7.5, y + 9 + bob);
+      ctx.quadraticCurveTo(x + 6, y + 8 + bob, x + 6.2, y + 5.5 + bob);
+      ctx.fill(); ctx.stroke();
+
+      // Hair highlight sheen
+      ctx.fillStyle = p.hairHi;
+      ctx.beginPath(); ctx.ellipse(x + 11, y + 3.2 + bob, 2.5, 1, -0.2, 0, Math.PI * 2); ctx.fill();
+
       if (p.hairStyle === "spiky") {
-        px(ctx, x + 7, y - 2 + bob, 3, 3, p.hair);
-        px(ctx, x + 11, y - 3 + bob, 3, 4, p.hair);
-        px(ctx, x + 14, y - 1 + bob, 3, 3, p.hair);
-      } else if (p.hairStyle === "curly") {
-        px(ctx, x + 5, y + 2 + bob, 14, 5, p.hair);
-        px(ctx, x + 5, y + 5 + bob, 2, 5, p.hair);
-        px(ctx, x + 17, y + 5 + bob, 2, 5, p.hair);
+        ctx.fillStyle = p.hair;
+        ctx.beginPath(); ctx.moveTo(x + 8, y + 2 + bob); ctx.lineTo(x + 10, y - 2 + bob); ctx.lineTo(x + 12, y + 1 + bob); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x + 11, y + 1 + bob); ctx.lineTo(x + 14, y - 2.5 + bob); ctx.lineTo(x + 16, y + 2 + bob); ctx.fill();
       } else if (p.hairStyle === "bun") {
-        px(ctx, x + 9, y - 2 + bob, 6, 4, OUT);
-        px(ctx, x + 10, y - 1 + bob, 4, 2, p.hair);
-      } else if (p.hairStyle === "long" || p.hairStyle === "wavy_long") {
-        px(ctx, x + 5, y + 4 + bob, 2, 10, p.hair);
-        px(ctx, x + 17, y + 4 + bob, 2, 10, p.hair);
+        ctx.beginPath(); ctx.arc(x + 12, y + 0.5 + bob, 2.6, 0, Math.PI * 2);
+        ctx.fillStyle = p.hair; ctx.fill(); ctx.stroke();
+      } else if (p.hairStyle === "curly") {
+        ctx.fillStyle = p.hair;
+        [[7, 5], [9.5, 2], [12, 1.2], [14.5, 2], [17, 5]].forEach(([cx0, cy0]) => {
+          ctx.beginPath(); ctx.arc(x + cx0, y + cy0 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+        });
       }
       if (dir === "up") {
-        px(ctx, x + 6, y + 2 + bob, 12, 10, p.hair);
-        if (p.hairStyle === "long" || p.hairStyle === "wavy_long") {
-          px(ctx, x + 6, y + 9 + bob, 12, 6, p.hair);
-        }
+        ctx.beginPath(); ctx.ellipse(x + 12, y + 7 + bob, 5.7, 5.8, 0, 0, Math.PI * 2);
+        ctx.fillStyle = p.hair; ctx.fill(); ctx.stroke();
       }
     }
 
-    // EXPRESSIVE FACE (Sclera + Colored Iris + Subtle Mouth)
+    // EXPRESSIVE EYES
     if (dir === "down") {
-      px(ctx, x + 8, y + 6 + bob, 3, 3, "#ffffff");
-      px(ctx, x + 9, y + 7 + bob, 2, 2, p.eyes);
-      px(ctx, x + 13, y + 6 + bob, 3, 3, "#ffffff");
-      px(ctx, x + 13, y + 7 + bob, 2, 2, p.eyes);
-      if (p.hairStyle !== "hood") px(ctx, x + 11, y + 10 + bob, 2, 1, "#a66a54");
+      px(ctx, x + 8.8, y + 6.6 + bob, 2.2, 2.2, "#ffffff");
+      px(ctx, x + 9.4, y + 7.1 + bob, 1.5, 1.7, p.eyes);
+      px(ctx, x + 13, y + 6.6 + bob, 2.2, 2.2, "#ffffff");
+      px(ctx, x + 13.1, y + 7.1 + bob, 1.5, 1.7, p.eyes);
     } else if (dir === "left") {
-      px(ctx, x + 7, y + 6 + bob, 2, 3, "#ffffff");
-      px(ctx, x + 7, y + 7 + bob, 2, 2, p.eyes);
+      px(ctx, x + 7.6, y + 6.8 + bob, 1.8, 2.2, p.eyes);
     } else if (dir === "right") {
-      px(ctx, x + 15, y + 6 + bob, 2, 3, "#ffffff");
-      px(ctx, x + 15, y + 7 + bob, 2, 2, p.eyes);
+      px(ctx, x + 14.6, y + 6.8 + bob, 1.8, 2.2, p.eyes);
     }
 
-    // Ambient life visual cue (cooking steam, vaping puff, music note)
+    // Ambient life visual cue
     if (activity === "cook" && Math.floor(time / 850) % 2 === 0) {
       const drift = (time * 0.015) % 8;
-      px(ctx, x + 10, y - 5 - drift, 3, 3, "rgba(255,255,255,0.75)");
-      px(ctx, x + 14, y - 8 - drift, 2, 2, "rgba(254,240,138,0.85)");
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.beginPath(); ctx.arc(x + 11, y - 4 - drift, 1.8, 0, Math.PI * 2); ctx.fill();
     } else if (activity === "vape" && Math.floor(time / 1200) % 3 === 0) {
       const drift = (time * 0.012) % 9;
-      px(ctx, x + 12, y - 4 - drift, 4, 3, "rgba(244,114,182,0.55)");
+      ctx.fillStyle = "rgba(244,114,182,0.55)";
+      ctx.beginPath(); ctx.arc(x + 13, y - 3 - drift, 2.2, 0, Math.PI * 2); ctx.fill();
     } else if (activity === "dance" && Math.floor(time / 500) % 2 === 0) {
-      ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 8px monospace";
-      ctx.fillText("♪", x + 16, y - 2);
+      ctx.fillStyle = "#38bdf8"; ctx.font = "bold 8px monospace"; ctx.fillText("♪", x + 16, y - 2);
     }
   }
 
   // ---------------------------------------------------------
-  // 2. 64x64 EXPRESSIVE DIALOGUE PORTRAIT
+  // 2. 96x96 BOOK-ACCURATE ILLUSTRATED DIALOGUE PORTRAIT!
   // ---------------------------------------------------------
   function drawPortrait(ctx, id, mood = "neutral") {
     const p = window.PALETTES[id] || window.PALETTES.jacob;
-    ctx.clearRect(0, 0, 64, 64);
+    const W = ctx.canvas.width || 96;
+    const H = ctx.canvas.height || 96;
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+    ctx.scale(W / 96, H / 96);
 
-    const grad = ctx.createRadialGradient(32, 28, 4, 32, 32, 34);
-    grad.addColorStop(0, p.aura ? p.aura + "55" : "#47556966");
-    grad.addColorStop(1, "#0f1324");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 64, 64);
+    // Rich atmospheric backdrop with character aura
+    const bg = ctx.createRadialGradient(48, 40, 8, 48, 48, 56);
+    bg.addColorStop(0, p.aura ? p.aura + "55" : "#47556966");
+    bg.addColorStop(1, "#0d1122");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 96, 96);
 
+    // Special: Signpost portrait
     if (p.hairStyle === "sign") {
-      px(ctx, 29, 34, 6, 24, "#78350f");
-      px(ctx, 10, 14, 44, 24, "#92400e");
-      px(ctx, 13, 17, 38, 18, "#fef3c7");
-      px(ctx, 18, 22, 28, 3, "#78350f");
-      px(ctx, 18, 28, 20, 3, "#78350f");
+      pill(ctx, 43, 54, 10, 36, 2, "#78350f", OUT, 2);
+      pill(ctx, 14, 20, 68, 38, 5, "#92400e", OUT, 2);
+      pill(ctx, 19, 25, 58, 28, 3, "#fef3c7");
+      px(ctx, 26, 33, 44, 4, "#78350f");
+      px(ctx, 26, 42, 32, 4, "#78350f");
+      ctx.restore();
       return;
     }
+
+    // Special: Crista the Platinum Cat (Detailed Feline Portrait)
     if (p.hairStyle === "cat") {
-      px(ctx, 18, 26, 28, 24, p.hair);
-      px(ctx, 16, 14, 8, 14, p.hair);
-      px(ctx, 40, 14, 8, 14, p.hair);
-      px(ctx, 18, 18, 4, 8, "#fda4af");
-      px(ctx, 42, 18, 4, 8, "#fda4af");
-      px(ctx, 22, 32, 6, 6, p.eyes);
-      px(ctx, 36, 32, 6, 6, p.eyes);
-      px(ctx, 30, 39, 4, 3, "#f472b6");
+      // Ears
+      ctx.fillStyle = "#ffffff"; ctx.strokeStyle = OUT; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(24, 44); ctx.lineTo(22, 18); ctx.lineTo(40, 32); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(72, 44); ctx.lineTo(74, 18); ctx.lineTo(56, 32); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#fda4af";
+      ctx.beginPath(); ctx.moveTo(26, 40); ctx.lineTo(25, 25); ctx.lineTo(36, 34); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(70, 40); ctx.lineTo(71, 25); ctx.lineTo(60, 34); ctx.closePath(); ctx.fill();
+      // Face
+      ctx.beginPath(); ctx.ellipse(48, 54, 24, 21, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#f8fafc"; ctx.fill(); ctx.stroke();
+      // Piercing ice-blue eyes
+      [37, 59].forEach(ex => {
+        ctx.beginPath(); ctx.ellipse(ex, 52, 5.5, 6, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "#38bdf8"; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#09090b"; ctx.beginPath(); ctx.ellipse(ex, 52, 2, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ex - 2, 49.5, 1.5, 0, Math.PI * 2); ctx.fill();
+      });
+      // Pink nose & whiskers
+      ctx.fillStyle = "#f472b6"; ctx.beginPath(); ctx.moveTo(45, 60); ctx.lineTo(51, 60); ctx.lineTo(48, 63); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(20, 58); ctx.lineTo(34, 60); ctx.moveTo(20, 64); ctx.lineTo(34, 63);
+      ctx.moveTo(76, 58); ctx.lineTo(62, 60); ctx.moveTo(76, 64); ctx.lineTo(62, 63); ctx.stroke();
+      ctx.restore();
       return;
     }
 
-    // Shoulders & Jacket with outline
-    px(ctx, 9, 43, 46, 21, OUT);
-    px(ctx, 11, 45, 42, 19, p.top);
-    px(ctx, 11, 56, 42, 8, p.topShade);
-    px(ctx, 25, 45, 14, 19, p.accent);
-    px(ctx, 26, 38, 12, 9, p.skinShade);
-
+    // Back Long Hair Layer (Cyrine, Navi, Emillia, Envy, Lucia)
     if (p.hairStyle === "long" || p.hairStyle === "wavy_long") {
-      px(ctx, 11, 15, 42, 38, OUT);
-      px(ctx, 13, 17, 38, 35, p.hair);
+      ctx.fillStyle = p.hair; ctx.strokeStyle = OUT; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(22, 34);
+      ctx.quadraticCurveTo(14, 62, 18, 94);
+      ctx.lineTo(78, 94);
+      ctx.quadraticCurveTo(82, 62, 74, 34);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
     }
 
-    // Head with rounded chin
-    px(ctx, 17, 13, 30, 27, OUT);
-    px(ctx, 19, 15, 26, 23, p.skin);
-    px(ctx, 21, 38, 22, 3, p.skinShade);
-    px(ctx, 16, 22, 3, 8, p.skinShade);
-    px(ctx, 45, 22, 3, 8, p.skinShade);
+    // Contoured Shoulders & Jacket / Collar
+    ctx.fillStyle = p.top; ctx.strokeStyle = OUT; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(12, 96);
+    ctx.quadraticCurveTo(14, 70, 34, 67);
+    ctx.lineTo(62, 67);
+    ctx.quadraticCurveTo(82, 70, 84, 96);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
 
-    if (p.hairStyle === "hood") {
-      px(ctx, 10, 6, 44, 38, p.top);
-      px(ctx, 16, 14, 32, 26, "#09090b");
+    // Inner Shirt / Collar / Armor Accents
+    ctx.fillStyle = p.accent;
+    ctx.beginPath(); ctx.moveTo(38, 68); ctx.lineTo(48, 86); ctx.lineTo(58, 68); ctx.closePath(); ctx.fill();
+    if (id === "navi" || id === "crepsus") {
+      // Gold / Crimson Shoulder Armor
+      pill(ctx, 16, 69, 14, 10, 4, p.accent, OUT, 1.5);
+      pill(ctx, 66, 69, 14, 10, 4, p.accent, OUT, 1.5);
+    }
+
+    // Neck with soft chin shadow
+    pill(ctx, 41, 56, 14, 16, 4, p.skin, OUT, 1.5);
+    ctx.fillStyle = p.skinShade;
+    ctx.beginPath(); ctx.ellipse(48, 60, 7, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Ears
+    ctx.fillStyle = p.skin; ctx.strokeStyle = OUT; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(27, 44, 3.8, 6, -0.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(69, 44, 3.8, 6, 0.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    // Book-accurate Letonin silver hoop earring!
+    if (id === "letonin") {
+      ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.arc(26, 51, 3.2, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // Contoured Anime/32-Bit Face & Tapered Chin
+    ctx.fillStyle = p.skin; ctx.strokeStyle = OUT; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(28, 32);
+    ctx.quadraticCurveTo(27, 50, 35, 58);
+    ctx.quadraticCurveTo(48, 65, 61, 58);
+    ctx.quadraticCurveTo(69, 50, 68, 32);
+    ctx.quadraticCurveTo(68, 17, 48, 17);
+    ctx.quadraticCurveTo(28, 17, 28, 32);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // Subtle cheek blush / shading
+    if (mood === "blush" || mood === "happy") {
+      ctx.fillStyle = "rgba(244, 114, 182, 0.35)";
+      ctx.beginPath(); ctx.ellipse(34, 48, 5, 2.6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(62, 48, 5, 2.6, 0, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Book-accurate subtle scar above Cyrine's left eye (Ch. VIII)
+    if (id === "cyrine") {
+      ctx.strokeStyle = "#c084fc"; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(57, 31); ctx.lineTo(61, 34); ctx.stroke();
+    }
+
+    // Expressive Detailed Eyes (Sclera + Colored Iris + Pupil + Specular Shine + Lashes)
+    const drawEye = (ex, flip) => {
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath(); ctx.ellipse(ex, 42, 6, 4.8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = p.eyes;
+      ctx.beginPath(); ctx.arc(ex + (flip ? -0.5 : 0.5), 42.3, 3.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#09090b";
+      ctx.beginPath(); ctx.arc(ex + (flip ? -0.5 : 0.5), 42.5, 1.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath(); ctx.arc(ex - 1.6, 40.5, 1.3, 0, Math.PI * 2); ctx.fill();
+      // Upper lash line
+      ctx.strokeStyle = OUT; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(ex, 42.5, 6.2, Math.PI * 1.12, Math.PI * 1.88); ctx.stroke();
+    };
+    drawEye(37.5, false);
+    drawEye(58.5, true);
+
+    // Subtle Nose Bridge
+    ctx.strokeStyle = p.skinShade; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(48, 44); ctx.lineTo(47, 49); ctx.lineTo(49.5, 49.5); ctx.stroke();
+
+    // Mood-Driven Eyebrows & Mouth
+    ctx.strokeStyle = p.hairStyle === "hood" ? "#451a03" : p.hair;
+    ctx.lineWidth = 2.2; ctx.lineCap = "round";
+    if (mood === "angry" || mood === "intense") {
+      ctx.beginPath(); ctx.moveTo(31, 33); ctx.lineTo(43, 36); ctx.moveTo(65, 33); ctx.lineTo(53, 36); ctx.stroke();
+      ctx.fillStyle = "#7f1d1d"; ctx.beginPath(); ctx.ellipse(48, 55, 5.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+    } else if (mood === "sad") {
+      ctx.beginPath(); ctx.moveTo(31, 36); ctx.lineTo(43, 33.5); ctx.moveTo(65, 36); ctx.lineTo(53, 33.5); ctx.stroke();
+      ctx.strokeStyle = "#8c4a38"; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.arc(48, 58, 5, Math.PI * 1.2, Math.PI * 1.8); ctx.stroke();
+      // Tear drop
+      ctx.fillStyle = "#38bdf8"; ctx.beginPath(); ctx.arc(34, 48, 1.8, 0, Math.PI * 2); ctx.fill();
+    } else if (mood === "happy" || mood === "blush") {
+      ctx.beginPath(); ctx.moveTo(31, 34); ctx.lineTo(43, 33); ctx.moveTo(65, 34); ctx.lineTo(53, 33); ctx.stroke();
+      ctx.fillStyle = "#b91c1c";
+      ctx.beginPath(); ctx.arc(48, 53.5, 5.5, 0.1, Math.PI - 0.1); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#ffffff"; px(ctx, 44, 53.5, 8, 1.8, "#ffffff");
     } else {
-      px(ctx, 15, 8, 34, 12, p.hair);
-      px(ctx, 20, 10, 18, 4, p.hairHi);
-      px(ctx, 14, 14, 6, 16, p.hair);
-      px(ctx, 44, 14, 6, 16, p.hair);
+      ctx.beginPath(); ctx.moveTo(31, 34.5); ctx.lineTo(43, 34.5); ctx.moveTo(65, 34.5); ctx.lineTo(53, 34.5); ctx.stroke();
+      ctx.strokeStyle = "#8c4a38"; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(43, 55); ctx.quadraticCurveTo(48, 56.5, 53, 55); ctx.stroke();
+    }
+
+    // Front Hair / Hood (Detailed Bangs & Layered Strands)
+    if (p.hairStyle === "hood") {
+      // Lord Death's Black Hoodie + Wavy Brown Hair Peeking Out!
+      ctx.fillStyle = p.top; ctx.strokeStyle = OUT; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(18, 72);
+      ctx.quadraticCurveTo(14, 14, 48, 10);
+      ctx.quadraticCurveTo(82, 14, 78, 72);
+      ctx.lineTo(68, 66);
+      ctx.quadraticCurveTo(72, 24, 48, 22);
+      ctx.quadraticCurveTo(24, 24, 28, 66);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      // Wavy brown hair tuft under hood
+      ctx.fillStyle = p.hair;
+      ctx.beginPath(); ctx.moveTo(32, 28); ctx.quadraticCurveTo(44, 34, 48, 25); ctx.quadraticCurveTo(56, 33, 64, 28);
+      ctx.quadraticCurveTo(48, 18, 32, 28); ctx.fill();
+    } else {
+      ctx.fillStyle = p.hair; ctx.strokeStyle = OUT; ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(24, 42);
+      ctx.quadraticCurveTo(21, 14, 48, 12);
+      ctx.quadraticCurveTo(75, 14, 72, 42);
+      ctx.lineTo(67, 46);
+      ctx.quadraticCurveTo(66, 30, 58, 30);
+      ctx.lineTo(53, 35);
+      ctx.lineTo(48, 28);
+      ctx.lineTo(41, 36);
+      ctx.lineTo(36, 29);
+      ctx.quadraticCurveTo(29, 31, 29, 46);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+
+      // Glossy anime hair highlight arc
+      ctx.strokeStyle = p.hairHi; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(48, 26, 14, Math.PI * 1.18, Math.PI * 1.72); ctx.stroke();
+
       if (p.hairStyle === "spiky") {
-        px(ctx, 18, 3, 6, 7, p.hair); px(ctx, 28, 1, 8, 9, p.hair); px(ctx, 40, 4, 6, 7, p.hair);
+        ctx.fillStyle = p.hair; ctx.strokeStyle = OUT; ctx.lineWidth = 1.6;
+        [[30,18,36,5,42,15],[42,14,50,3,56,14],[56,15,65,6,68,20]].forEach(([x1,y1,x2,y2,x3,y3]) => {
+          ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.closePath(); ctx.fill(); ctx.stroke();
+        });
       } else if (p.hairStyle === "curly") {
-        px(ctx, 13, 10, 38, 10, p.hair); px(ctx, 13, 18, 6, 14, p.hair); px(ctx, 45, 18, 6, 14, p.hair);
+        ctx.fillStyle = p.hair;
+        [[26,30],[31,20],[40,14],[50,13],[60,15],[67,22],[70,32]].forEach(([cx0,cy0]) => {
+          ctx.beginPath(); ctx.arc(cx0, cy0, 6.5, 0, Math.PI * 2); ctx.fill();
+        });
       } else if (p.hairStyle === "bun") {
-        px(ctx, 24, 2, 16, 8, p.hair);
+        ctx.beginPath(); ctx.arc(48, 10, 9, 0, Math.PI * 2);
+        ctx.fillStyle = p.hair; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.8; ctx.stroke();
       }
     }
 
-    const eyeY = 24;
-    px(ctx, 21, eyeY, 7, 6, "#ffffff"); px(ctx, 36, eyeY, 7, 6, "#ffffff");
-    px(ctx, 23, eyeY + 1, 4, 5, p.eyes); px(ctx, 38, eyeY + 1, 4, 5, p.eyes);
-    px(ctx, 24, eyeY + 2, 2, 2, "#09090b"); px(ctx, 39, eyeY + 2, 2, 2, "#09090b");
-    px(ctx, 23, eyeY + 1, 1, 1, "#ffffff"); px(ctx, 38, eyeY + 1, 1, 1, "#ffffff");
-
-    if (mood === "angry" || mood === "intense") {
-      px(ctx, 20, 21, 8, 2, p.hair); px(ctx, 25, 22, 4, 2, p.hair);
-      px(ctx, 36, 21, 8, 2, p.hair); px(ctx, 35, 22, 4, 2, p.hair);
-      px(ctx, 27, 34, 10, 3, "#7f1d1d");
-    } else if (mood === "sad") {
-      px(ctx, 20, 22, 8, 2, p.hair); px(ctx, 36, 22, 8, 2, p.hair);
-      px(ctx, 28, 35, 8, 2, "#9a5b48"); px(ctx, 22, 31, 2, 4, "#38bdf8");
-    } else if (mood === "happy" || mood === "blush") {
-      px(ctx, 20, 20, 8, 2, p.hair); px(ctx, 36, 20, 8, 2, p.hair);
-      px(ctx, 27, 33, 10, 3, "#b91c1c"); px(ctx, 28, 33, 8, 1, "#ffffff");
-      if (mood === "blush") { px(ctx, 19, 30, 5, 2, "#f472b6"); px(ctx, 40, 30, 5, 2, "#f472b6"); }
-    } else {
-      px(ctx, 20, 21, 8, 2, p.hair); px(ctx, 36, 21, 8, 2, p.hair);
-      px(ctx, 28, 34, 8, 2, "#8c4a38");
-    }
+    ctx.restore();
   }
 
   // ---------------------------------------------------------
-  // 3. DETAILED FULL-BODY BATTLE MODEL (Outlined & Proportioned)
+  // 3. ORGANIC FULL-BODY BATTLE CHARACTER MODEL
   // ---------------------------------------------------------
   function drawBattleModel(ctx, id, cx, cy, flip = false, animTime = 0, lunge = 0, hitFlash = false) {
     const p = window.PALETTES[id] || window.PALETTES.jacob;
@@ -287,15 +420,13 @@ window.Sprites = (() => {
     if (p.weapon === "serpent") {
       ctx.fillStyle = "rgba(16, 185, 129, 0.25)";
       ctx.beginPath(); ctx.ellipse(0, 30, 36, 9, 0, 0, Math.PI * 2); ctx.fill();
-      px(ctx, -34, 13, 68, 16, OUT); px(ctx, -32, 15, 64, 12, "#065f46"); px(ctx, -26, 18, 52, 6, "#10b981");
-      px(ctx, -24, 0, 48, 16, OUT); px(ctx, -22, 2, 44, 12, "#047857"); px(ctx, -16, 5, 32, 6, "#34d399");
-      px(ctx, -20, -28, 40, 30, OUT); px(ctx, -18, -26, 36, 26, "#064e3b");
-      px(ctx, -13, -23, 26, 22, "#581c87"); px(ctx, -9, -19, 18, 18, "#10b981");
-      px(ctx, -16, -42, 32, 18, OUT); px(ctx, -14, -40, 28, 14, "#065f46"); px(ctx, -10, -37, 20, 8, "#10b981");
+      pill(ctx, -33, 14, 66, 14, 7, "#065f46", OUT, 2);
+      pill(ctx, -23, 1, 46, 14, 7, "#047857", OUT, 2);
+      pill(ctx, -19, -27, 38, 28, 12, "#064e3b", OUT, 2);
+      pill(ctx, -12, -23, 24, 21, 8, "#581c87");
+      pill(ctx, -15, -41, 30, 17, 8, "#065f46", OUT, 2);
       px(ctx, -10, -35, 6, 4, "#fde047"); px(ctx, 4, -35, 6, 4, "#fde047");
       px(ctx, -8, -26, 3, 7, "#ffffff"); px(ctx, 5, -26, 3, 7, "#ffffff");
-      const drip = (animTime * 0.03) % 14;
-      px(ctx, -7, -18 + drip, 2, 5, "#a855f7");
       ctx.restore();
       return;
     }
@@ -305,66 +436,57 @@ window.Sprites = (() => {
       ctx.beginPath(); ctx.ellipse(0, 30, 22, 7, 0, 0, Math.PI * 2); ctx.fill();
     }
 
-    // Feathered / Stylized Wings
+    // Feathered Wings
     if (p.wings && p.wings !== "float") {
       const leftCol = p.wings === "angel" ? "#f8fafc" : (p.wings === "demon" ? "#7f1d1d" : "#111827");
       const rightCol = p.wings === "corrupted" ? "#991b1b" : leftCol;
       const trim = p.wings === "angel" ? "#f5c542" : (p.wings === "demon" ? "#ef4444" : "#475569");
-      ctx.fillStyle = leftCol;
-      ctx.beginPath();
-      ctx.moveTo(-6, -6); ctx.lineTo(-38, -22 + wingFlap); ctx.lineTo(-30, 3 + wingFlap * 0.5); ctx.lineTo(-7, 9);
-      ctx.closePath(); ctx.fill(); ctx.strokeStyle = trim; ctx.lineWidth = 1.5; ctx.stroke();
-
+      ctx.fillStyle = leftCol; ctx.strokeStyle = trim; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-6, -6); ctx.lineTo(-38, -22 + wingFlap); ctx.lineTo(-30, 3 + wingFlap * 0.5); ctx.lineTo(-7, 9); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle = rightCol;
-      ctx.beginPath();
-      ctx.moveTo(6, -6); ctx.lineTo(38, -22 + wingFlap); ctx.lineTo(30, 3 + wingFlap * 0.5); ctx.lineTo(7, 9);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(6, -6); ctx.lineTo(38, -22 + wingFlap); ctx.lineTo(30, 3 + wingFlap * 0.5); ctx.lineTo(7, 9); ctx.closePath(); ctx.fill(); ctx.stroke();
       if (p.wings === "corrupted") px(ctx, 18, -12 + wingFlap * 0.6, 5, 4, "#38bdf8");
     }
 
-    // Outlined Legs & Boots (Combat stance)
-    px(ctx, -11, 11, 9, 19, OUT); px(ctx, -10, 12, 7, 13, p.pants); px(ctx, -11, 24, 8, 5, p.shoes);
-    px(ctx, 2, 11, 9, 19, OUT);   px(ctx, 3, 12, 7, 13, p.pants);   px(ctx, 3, 24, 8, 5, p.shoes);
+    // Organic Legs & Boots
+    pill(ctx, -10.5, 11, 8, 17, 3.5, p.pants, OUT, 1.5);
+    pill(ctx, -11.5, 24, 9, 5.5, 2.5, p.shoes, OUT, 1.5);
+    pill(ctx, 2.5, 11, 8, 17, 3.5, p.pants, OUT, 1.5);
+    pill(ctx, 2.5, 24, 9, 5.5, 2.5, p.shoes, OUT, 1.5);
 
-    // Outlined Torso, Collar & Belt
-    px(ctx, -12, -10, 24, 23, OUT);
-    px(ctx, -10, -8, 20, 19, p.top);
-    px(ctx, -10, 6, 20, 5, p.topShade);
-    px(ctx, -4, -8, 8, 16, p.accent);
-    px(ctx, -10, 10, 20, 2, "#0f172a"); // belt
-    px(ctx, -2, 10, 4, 2, "#f5c542");   // buckle
-    if (id === "navi" || id === "crepsus") {
-      px(ctx, -15, -11, 6, 6, p.accent); px(ctx, 9, -11, 6, 6, p.accent);
-    }
+    // Contoured Torso & Coat
+    pill(ctx, -11, -9, 22, 22, 6, p.top, OUT, 1.8);
+    pill(ctx, -9.5, 5, 19, 6, 2, p.topShade);
+    px(ctx, -4, -8, 8, 15, p.accent);
+    px(ctx, -9, 10, 18, 2, "#0f172a");
+    px(ctx, -2, 10, 4, 2, "#f5c542");
 
-    // Outlined Arms & Hands
-    px(ctx, -17, -8, 6, 17, OUT); px(ctx, -16, -7, 4, 11, p.topShade); px(ctx, -16, 4, 4, 4, p.skin);
-    px(ctx, 11, -8, 6, 17, OUT);  px(ctx, 12, -7, 4, 11, p.topShade);  px(ctx, 12, 4, 4, 4, p.skin);
+    // Organic Arms & Hands
+    pill(ctx, -16, -7, 5.5, 14, 2.8, p.topShade, OUT, 1.4);
+    ctx.fillStyle = p.skin; ctx.beginPath(); ctx.arc(-13.2, 7.5, 2.5, 0, Math.PI * 2); ctx.fill();
+    pill(ctx, 10.5, -7, 5.5, 14, 2.8, p.topShade, OUT, 1.4);
+    ctx.fillStyle = p.skin; ctx.beginPath(); ctx.arc(13.2, 7.5, 2.5, 0, Math.PI * 2); ctx.fill();
 
-    // Neck + Rounded Head
+    // Neck & Smooth Oval Head
     px(ctx, -3, -13, 6, 5, p.skinShade);
-    px(ctx, -10, -29, 20, 18, OUT);
-    px(ctx, -8, -27, 16, 14, p.skin);
-    px(ctx, -7, -14, 14, 2, p.skinShade);
+    ctx.beginPath(); ctx.ellipse(0, -21, 9.2, 9.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = p.skin; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.6; ctx.stroke();
 
     if (p.hairStyle === "hood") {
-      px(ctx, -13, -33, 26, 23, OUT); px(ctx, -11, -31, 22, 19, p.top); px(ctx, -8, -25, 16, 13, "#09090b");
+      ctx.beginPath(); ctx.ellipse(0, -21.5, 11.5, 11, 0, 0, Math.PI * 2);
+      ctx.fillStyle = p.top; ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(0, -20.5, 7.5, 7.2, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#09090b"; ctx.fill();
     } else {
-      px(ctx, -11, -33, 22, 9, OUT);
-      px(ctx, -10, -32, 20, 7, p.hair);
-      px(ctx, -6, -30, 10, 2, p.hairHi);
-      if (p.hairStyle === "long" || p.hairStyle === "wavy_long") {
-        px(ctx, -12, -28, 4, 20, p.hair); px(ctx, 8, -28, 4, 20, p.hair);
-      } else if (p.hairStyle === "spiky") {
-        px(ctx, -9, -37, 4, 5, p.hair); px(ctx, -2, -39, 5, 7, p.hair); px(ctx, 6, -36, 4, 5, p.hair);
-      } else if (p.hairStyle === "curly") {
-        px(ctx, -12, -31, 24, 8, p.hair); px(ctx, -12, -25, 4, 10, p.hair); px(ctx, 8, -25, 4, 10, p.hair);
-      }
+      ctx.fillStyle = p.hair; ctx.strokeStyle = OUT; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(0, -23, 10, Math.PI * 0.92, Math.PI * 2.08);
+      ctx.quadraticCurveTo(10, -18, 8, -17); ctx.quadraticCurveTo(0, -23, -8, -17);
+      ctx.quadraticCurveTo(-10, -18, -10, -23); ctx.fill(); ctx.stroke();
     }
 
-    // Expressive Eyes with sclera
-    px(ctx, -6, -21, 4, 4, "#ffffff"); px(ctx, -5, -20, 3, 3, p.eyes);
-    px(ctx, 2, -21, 4, 4, "#ffffff");  px(ctx, 3, -20, 3, 3, p.eyes);
+    // Eyes
+    px(ctx, -5.5, -21.5, 3.5, 3.5, "#ffffff"); px(ctx, -4.5, -20.8, 2.5, 2.8, p.eyes);
+    px(ctx, 2, -21.5, 3.5, 3.5, "#ffffff");    px(ctx, 2.8, -20.8, 2.5, 2.8, p.eyes);
 
     // Signature Weapons
     if (p.weapon === "halberd") {
@@ -372,7 +494,7 @@ window.Sprites = (() => {
     } else if (p.weapon === "rapier") {
       px(ctx, 15, -22, 3, 32, "#c084fc"); px(ctx, 11, 5, 11, 3, "#fbbf24");
     } else if (p.weapon === "mallet") {
-      px(ctx, 15, -18, 4, 30, "#6366f1"); px(ctx, 7, -30, 19, 13, "#1e1b4b"); px(ctx, 9, -28, 15, 3, "#facc15");
+      px(ctx, 15, -18, 4, 30, "#6366f1"); pill(ctx, 7, -30, 19, 13, 3, "#1e1b4b", "#facc15", 1.5);
     } else if (p.weapon === "whip") {
       ctx.strokeStyle = "#f97316"; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(15, 5); ctx.bezierCurveTo(32, -6, 24, -24, 38, -28 + wingFlap * 0.5); ctx.stroke();
