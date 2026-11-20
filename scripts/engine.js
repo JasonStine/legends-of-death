@@ -249,11 +249,28 @@
     updateDisplay();
   }
 
+  function isPurgatorioUnlocked() {
+    return game.questStage >= 7 || !game.settings.fogOfWar;
+  }
+
+  function updatePurgatorioBtn() {
+    const btn = document.getElementById("btn-realm");
+    if (!btn) return;
+    const unlocked = isPurgatorioUnlocked();
+    btn.textContent = unlocked ? "PURGATORIO" : "???";
+    btn.classList.toggle("locked", !unlocked);
+    if (!unlocked && game.purgatorio) {
+      game.purgatorio = false;
+      btn.classList.remove("active");
+    }
+  }
+
   function applyAppearance() {
     shell.dataset.theme = game.settings.theme || "sunburnt-yellow";
     shell.dataset.btnSize = game.settings.buttonSize || "medium";
     const bLabel = document.getElementById("b-mode-label");
     if (bLabel) bLabel.textContent = game.settings.runByDefault ? "WALK" : "RUN";
+    updatePurgatorioBtn();
   }
 
   // ---------------------------------------------------------
@@ -314,7 +331,8 @@
       game.player.y = ty * T;
       game.player.frame = 0;
       rebuildActors();
-      document.getElementById("location-pill").textContent = window.Maps[mapId].name;
+      document.getElementById("location-pill").textContent = window.Maps[mapId].name + (game.purgatorio ? " (Purgatorio)" : "");
+      updatePurgatorioBtn();
       updateProgressHud();
       saveProgress();
       setTimeout(() => {
@@ -561,8 +579,13 @@
   // ---------------------------------------------------------
   function advanceStage(newStage) {
     if (game.questStage < newStage) {
+      const wasUnlocked = isPurgatorioUnlocked();
       game.questStage = newStage;
       updateProgressHud();
+      updatePurgatorioBtn();
+      if (!wasUnlocked && isPurgatorioUnlocked()) {
+        showLoreToast("REALM UNLOCKED", "Purgatorio Shift!");
+      }
       saveProgress();
     }
   }
@@ -588,6 +611,18 @@
       startDialogue([{ id: "sign", mood: "neutral", text: "Memorial Plaque: 'In loving memory of the Huesic Family.' On the margin, a tiny Latin engraving notes that midnight church bells summon the Reapers' hunt.", unlockLore: { id: "church_memorial", tier: 1 } }]);
     } else if (eventName === "loreHospitalChart") {
       startDialogue([{ id: "sign", mood: "neutral", text: "Dr. Menos's Toxicology Note: 'Concentrated Iris and Belladonna compound from the Huesic case does not match any known terrestrial plant...'", unlockLore: { id: "hospital_toxicology", tier: 1 } }]);
+    } else if (eventName === "loreHospitalDesk") {
+      startDialogue([{ id: "receptionist", mood: "neutral", text: "Reception Log: 'Dr. Menos is on duty in the back wing. Police detectives dropped off sealed toxicology files earlier today.'" }]);
+    } else if (eventName === "loreSupernaturalNovels") {
+      startDialogue([{ id: "sign", mood: "neutral", text: "You pull a fantasy novel off the shelf—it describes Reapers using a voice spell called 'Alter' to rewrite human perception. No wonder Cyrine knew how it worked!", unlockLore: { id: "supernatural_novels", tier: 1 } }]);
+    } else if (eventName === "loreCafeBoard") {
+      startDialogue([{ id: "clerk", mood: "happy", text: "Café Special: Iced Caramel Macchiato & Dark Chocolate Truffles! (Jacob's favorite Lindor chocolates are right by the register.)" }]);
+    } else if (eventName === "lorePurgTown") {
+      startDialogue([{ id: "sign", mood: "intense", text: "Astral Reaperian Tablet: 'Purgatorio mirrors the mortal world—humans cannot see or touch those who walk here, save for young children and Nephilim.'", unlockLore: { id: "purgatorio_secrets", tier: 2 } }]);
+    } else if (eventName === "lorePurgHouse") {
+      startDialogue([{ id: "jacob", mood: "intense", text: "Whoa... in Purgatorio, I can see faint black-green Envy toxin glowing on the floor—just like Navi saw at Cyrine's house!", unlockLore: { id: "purgatorio_secrets", tier: 1 } }]);
+    } else if (eventName === "lorePurgBookstore") {
+      startDialogue([{ id: "sign", mood: "intense", text: "Hidden Reaperian Text: 'When a Reaper disguises themselves as an animal, their form reflects their soul—like Illicero's platinum cat form, Crista.'", unlockLore: { id: "crista_cat", tier: 2 } }]);
     } else if (eventName === "hospitalHeal") {
       window.AudioFX.heal();
       startDialogue([{ id: "mom", mood: "happy", text: "Welcome to Colorado Springs Medical Center, sweetheart! All HP and spirit energy fully restored!" }]);
@@ -719,10 +754,12 @@
       const tx = Math.floor(cx / T), ty = Math.floor(cy / T);
       if (tx < 0 || ty < 0 || tx >= map.w || ty >= map.h) return true;
       const tile = map.grid[ty][tx];
-      if (tile === 1 || tile === 2) return true;
+      if (tile === 1 || tile === 2 || tile === 6) return true;
     }
     for (const a of game.actors) {
       if (a.hidden) continue;
+      if (a.purgOnly && !game.purgatorio) continue;
+      if (a.isHuman && game.purgatorio) continue; // Book-accurate: can't touch humans while in Purgatorio!
       if (Math.abs(px - a.x) < 15 && Math.abs(py - a.y) < 15) return true;
     }
     return false;
@@ -769,6 +806,8 @@
     let bestActor = null, bestDist = 36;
     for (const a of game.actors) {
       if (a.hidden) continue;
+      if (a.purgOnly && !game.purgatorio) continue;
+      if (a.isHuman && game.purgatorio) continue;
       const ax = a.x + 12, ay = a.y + 16;
       const dFront = Math.hypot(fx - ax, fy - ay);
       const dDirect = Math.hypot(px - ax, py - ay);
@@ -799,8 +838,9 @@
     // 3. Interactive Furniture (Couch / Bed)
     for (const prop of map.props || []) {
       if (!prop.interact) continue;
-      const pw = prop.kind === "couch" ? 72 : 44;
-      const ph = prop.kind === "couch" ? 32 : 58;
+      if (prop.purgOnly && !game.purgatorio) continue;
+      const pw = (prop.kind === "couch" || prop.kind === "reception_desk" || prop.kind === "coffee_counter") ? 72 : 44;
+      const ph = prop.kind === "bed" ? 56 : 30;
       const px0 = prop.tx * T - 10, py0 = prop.ty * T - 10;
       if (fx >= px0 && fx <= px0 + pw + 20 && fy >= py0 && fy <= py0 + ph + 20) {
         triggerEvent(prop.interact);
@@ -827,13 +867,17 @@
         if (sx < -T || sy < -T || sx > VIEW_W || sy > VIEW_H) continue;
         const tile = map.grid[y][x];
         if (tile === 3) {
-          window.WorldArt.drawRoadTile(ctx, map, x, y, sx, sy);
-        } else if (tile === 1 && map.id !== "overworld") {
-          window.WorldArt.drawInteriorWallTile(ctx, map, x, y, sx, sy);
-        } else if (map.id !== "overworld" && window.WorldArt.drawInteriorFloorTile(ctx, map.floorType, x, y, sx, sy, time)) {
-          // Drawn by refined interior floor renderer!
+          window.WorldArt.drawRoadTile(ctx, map, x, y, sx, sy, game.purgatorio);
+        } else if (tile === 5) {
+          window.WorldArt.drawSidewalkTile(ctx, sx, sy, game.purgatorio);
+        } else if ((tile === 1 || tile === 6) && map.id !== "overworld") {
+          window.WorldArt.drawInteriorWallTile(ctx, map, tile, x, y, sx, sy, game.purgatorio);
+        } else if (map.id !== "overworld" && window.WorldArt.drawInteriorFloorTile(ctx, map.floorType, tile, x, y, sx, sy, time, game.purgatorio)) {
+          // Drawn by refined Stardew interior floor renderer!
         } else {
-          ctx.fillStyle = (x + y) % 2 === 0 ? c1 : c2;
+          const g1 = (game.purgatorio && map.floorType === "grass") ? "#24473c" : c1;
+          const g2 = (game.purgatorio && map.floorType === "grass") ? "#1d3b32" : c2;
+          ctx.fillStyle = (x + y) % 2 === 0 ? g1 : g2;
           ctx.fillRect(sx, sy, T, T);
           if (map.floorType === "dream" && (x * 7 + y * 13) % 11 === 0) {
             ctx.fillStyle = Math.sin(time * 0.005 + x) > 0 ? "#fde047" : "#38bdf8";
@@ -920,7 +964,7 @@
     ctx.translate(-camX, -camY);
 
     (map.props || []).filter(p => p.kind === "rug" || p.kind === "exit_mat").forEach(p => window.WorldArt.drawProp(ctx, p, time));
-    (map.buildings || []).forEach(b => window.WorldArt.drawBuilding(ctx, b, time));
+    (map.buildings || []).forEach(b => window.WorldArt.drawBuilding(ctx, b, time, game.purgatorio));
     (map.signs || []).forEach(s => window.WorldArt.drawSignpost(ctx, s.tx, s.ty));
     (map.trees || []).forEach(t => window.WorldArt.drawTree(ctx, t.tx * T, t.ty * T, t.kind, time));
 
@@ -935,7 +979,7 @@
       }
     }
 
-    (map.props || []).filter(p => p.kind !== "rug" && p.kind !== "exit_mat").forEach(p => window.WorldArt.drawProp(ctx, p, time));
+    (map.props || []).filter(p => p.kind !== "rug" && p.kind !== "exit_mat" && (!p.purgOnly || game.purgatorio)).forEach(p => window.WorldArt.drawProp(ctx, p, time));
 
     (map.portals || []).forEach(p => {
       if (p.minQuest !== undefined && game.questStage < p.minQuest) return;
@@ -947,17 +991,32 @@
     });
 
     const drawables = [{ id: "jacob", x: game.player.x, y: game.player.y, dir: game.player.dir, frame: game.player.frame, activity: null }];
-    game.actors.forEach(a => { if (!a.hidden) drawables.push(a); });
+    game.actors.forEach(a => {
+      if (a.hidden) return;
+      if (a.purgOnly && !game.purgatorio) return;
+      drawables.push(a);
+    });
     drawables.sort((a, b) => a.y - b.y);
     drawables.forEach(ch => {
+      ctx.save();
+      if (ch.isHuman && game.purgatorio) ctx.globalAlpha = 0.35; // Book-accurate: mortal humans appear ghostly/untouchable in Purgatorio
+      else if (ch.purgOnly) ctx.globalAlpha = 0.88 + Math.sin(time * 0.006) * 0.12;
       window.Sprites.drawOverworld(ctx, ch.id, ch.x, ch.y - 6, ch.dir, ch.frame, game.purgatorio, ch.activity, time);
+      ctx.restore();
     });
 
     ctx.restore();
 
     if (game.purgatorio || map.id === "park") {
-      ctx.fillStyle = "rgba(88, 28, 135, 0.22)";
+      ctx.fillStyle = "rgba(76, 29, 149, 0.22)";
       ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      // Floating astral Purgatorio wisps
+      for (let i = 0; i < 12; i++) {
+        const wx = ((i * 73 + time * 0.015) % VIEW_W);
+        const wy = ((i * 59 + Math.sin(time * 0.002 + i) * 18 + VIEW_H) % VIEW_H);
+        ctx.fillStyle = i % 2 === 0 ? "rgba(192, 132, 252, 0.6)" : "rgba(56, 189, 248, 0.5)";
+        ctx.fillRect(Math.round(wx), Math.round(wy), 2, 2);
+      }
     }
 
     if (!game.cutscene && !game.dialogue) drawQuestBeacon(map, camX, camY, time);
@@ -1128,8 +1187,8 @@
         title: "Enable Fog of War",
         desc: "Hide undiscovered chapters, unmet party members, and unlearned lore as ???.",
         pills: [
-          { label: "ON (Default)", active: s.fogOfWar, onClick: () => { s.fogOfWar = true; } },
-          { label: "OFF (Reveal All)", active: !s.fogOfWar, onClick: () => { s.fogOfWar = false; } }
+          { label: "ON (Default)", active: s.fogOfWar, onClick: () => { s.fogOfWar = true; updatePurgatorioBtn(); } },
+          { label: "OFF (Reveal All)", active: !s.fogOfWar, onClick: () => { s.fogOfWar = false; updatePurgatorioBtn(); } }
         ]
       },
       {
@@ -1345,10 +1404,18 @@
   btnB.addEventListener("pointercancel", releaseB);
 
   document.getElementById("btn-realm").addEventListener("click", e => {
-    if (!game.started || !game.pinUnlocked) return;
+    if (!game.started || !game.pinUnlocked || window.Battle.isActive()) return;
+    if (!isPurgatorioUnlocked()) {
+      window.AudioFX.cancel();
+      if (!game.dialogue && !game.cutscene) {
+        startDialogue([{ id: "jacob", mood: "neutral", text: "You feel a strange chill in the air... (Advance the story to Ch. VIII at Limbach Park to unlock Purgatorio!)" }]);
+      }
+      return;
+    }
     game.purgatorio = !game.purgatorio;
     window.AudioFX.portal();
     e.currentTarget.classList.toggle("active", game.purgatorio);
+    document.getElementById("location-pill").textContent = window.Maps[game.mapId].name + (game.purgatorio ? " (Purgatorio)" : "");
   });
 
   document.getElementById("progress-hud").addEventListener("click", () => openIngameMenu("quests"));

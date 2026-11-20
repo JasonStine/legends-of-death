@@ -120,6 +120,21 @@ window.Story = {
       ]
     },
     {
+      id: "supernatural_novels",
+      title: "Secret: 'Unnecessarily Accurate' Novels",
+      tiers: [
+        "Discovered at Barnes & Noble: A fantasy novel describing Reapers who rewrite human memory by speaking—the exact reason Cyrine later sees through Navi's Alter spell!"
+      ]
+    },
+    {
+      id: "purgatorio_secrets",
+      title: "Purgatorio Vision: Hidden Traces",
+      tiers: [
+        "Seen in Purgatorio: Unseen Morte Discipuli patrol Colorado Springs, while glowing black Envy toxin residue lingers in the astral reflection of Jacob's House.",
+        "Seen in Purgatorio: Ancient Reaperian Texts hidden across Purgatorio reveal that children and Nephilim can naturally perceive spirits across the veil."
+      ]
+    },
+    {
       id: "deicide_profugo",
       title: "Cyrine: Deicide Profugo",
       tiers: [

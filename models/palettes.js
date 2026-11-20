@@ -221,4 +221,82 @@ window.PALETTES = {
     pants: "#1f2937", shoes: "#27272a",
     aura: null, wings: null, weapon: null
   }
+,
+  receptionist: {
+    name: "Nurse Clara",
+    role: "Hospital Reception",
+    trueRole: "Colorado Springs Medical Staff",
+    skin: "#f4cbb0", skinShade: "#d4a586",
+    hair: "#b45309", hairHi: "#d97706", hairStyle: "bun",
+    eyes: "#0ea5e9",
+    top: "#0d9488", topShade: "#0f766e", accent: "#f8fafc",
+    pants: "#134e4a", shoes: "#f8fafc",
+    aura: null, wings: null, weapon: null
+  },
+  nurse: {
+    name: "Nurse Maya",
+    role: "ER Nurse",
+    trueRole: "ER Care Specialist",
+    skin: "#c68652", skinShade: "#9c6438",
+    hair: "#1c1917", hairHi: "#44403c", hairStyle: "long",
+    eyes: "#451a03",
+    top: "#38bdf8", topShade: "#0284c7", accent: "#ffffff",
+    pants: "#0369a1", shoes: "#e2e8f0",
+    aura: null, wings: null, weapon: null
+  },
+  patron: {
+    name: "Bookshop Patron",
+    role: "Colorado Springs Local",
+    trueRole: "Colorado Springs Local",
+    skin: "#f0c8aa", skinShade: "#cf9f7e",
+    hair: "#57534e", hairHi: "#78716c", hairStyle: "messy",
+    eyes: "#334155",
+    top: "#9a3412", topShade: "#7c2d12", accent: "#fde68a",
+    pants: "#1f2937", shoes: "#3f3f46",
+    aura: null, wings: null, weapon: null
+  },
+  barista: {
+    name: "Café Reader",
+    role: "College Student",
+    trueRole: "College Student",
+    skin: "#e8be9e", skinShade: "#c49674",
+    hair: "#312e81", hairHi: "#4f46e5", hairStyle: "wavy",
+    eyes: "#6366f1",
+    top: "#1e293b", topShade: "#0f172a", accent: "#f472b6",
+    pants: "#334155", shoes: "#0f172a",
+    aura: null, wings: null, weapon: null
+  },
+  mourner: {
+    name: "Family Friend",
+    role: "St. Jude Parishioner",
+    trueRole: "St. Jude Parishioner",
+    skin: "#eec5a8", skinShade: "#cca082",
+    hair: "#3f3f46", hairHi: "#71717a", hairStyle: "wavy",
+    eyes: "#475569",
+    top: "#18181b", topShade: "#09090b", accent: "#e2e8f0",
+    pants: "#09090b", shoes: "#18181b",
+    aura: null, wings: null, weapon: null
+  },
+  md_scout: {
+    name: "Morte Discipuli",
+    role: "Purgatorio Scout",
+    trueRole: "Reaper Soldier (Purgatorio)",
+    skin: "#e2e8f0", skinShade: "#94a3b8",
+    hair: "#0f172a", hairHi: "#334155", hairStyle: "hood",
+    eyes: "#c084fc",
+    top: "#450a0a", topShade: "#1c0404", accent: "#f5c542",
+    pants: "#09090b", shoes: "#18181b",
+    aura: "#a855f7", wings: "dark", weapon: null
+  },
+  spirit: {
+    name: "Wandering Spirit",
+    role: "Purgatorio Soul",
+    trueRole: "Unclaimed Human Soul",
+    skin: "#e0f2fe", skinShade: "#7dd3fc",
+    hair: "#bae6fd", hairHi: "#ffffff", hairStyle: "wavy_long",
+    eyes: "#38bdf8",
+    top: "#7dd3fc", topShade: "#0284c7", accent: "#ffffff",
+    pants: "#38bdf8", shoes: "#bae6fd",
+    aura: "#38bdf8", wings: "float", weapon: null
+  }
 };
