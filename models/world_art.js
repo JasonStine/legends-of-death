@@ -140,6 +140,15 @@ window.WorldArt = (() => {
       return true;
     }
 
+    if (floorType === "candy") {
+      // Sweet Tooth Boutique: Soft Pastel Cream & Rose-Pink Checkered Tile!
+      const c1 = purgatorio ? "#291a3d" : "#fff5f9";
+      const c2 = purgatorio ? "#201330" : "#fce7f3";
+      px(ctx, sx, sy, T, T, (x + y) % 2 === 0 ? c1 : c2);
+      px(ctx, sx, sy + T - 1, T, 1, purgatorio ? "#160d24" : "#f9a8d4");
+      return true;
+    }
+
     if (floorType === "party") {
       px(ctx, sx, sy, T, T, "#1e1b4b");
       px(ctx, sx, sy + 11, T, 1, "#2a2566");
@@ -152,112 +161,128 @@ window.WorldArt = (() => {
     return false;
   }
 
-  // STARDEW VALLEY INTERIOR WALLS:
-  // tile === 1: Outer Perimeter Walls (painted drywall + crown molding + baseboard)
-  // tile === 6: Sleek Thin Interior Room Divider Wall (NOT chunky full-tile blocks!)
+  // STARDEW-STYLE DYNAMIC MULTI-ROOM WALLS (Supports Non-Cubic Wings, Hallways & Alcoves!)
+  // tile === 12: Void outside the building contour (pure dark backdrop)
+  // tile === 1 or 6: Auto-tiled wall hugging any walkable floor (0, 4, 7, 11)
   function drawInteriorWallTile(ctx, map, tileId, x, y, sx, sy, purgatorio = false) {
+    if (tileId === 12) {
+      px(ctx, sx, sy, T, T, "#090b12");
+      return;
+    }
+
     const ft = map.floorType;
-    // Book-Accurate Modern Colorado Springs Urban-Fantasy Interior Palette
-    // (Modern slate/cool-gray suburban drywall for House, Gothic Cathedral Stone for Church,
-    //  Clean Clinical Teal/White for Hospital, Warm Brick/Mahogany for Barnes & Noble)
+    const isFloor = (tx, ty) => {
+      if (tx < 0 || ty < 0 || tx >= map.w || ty >= map.h) return false;
+      const v = map.grid[ty][tx];
+      return v === 0 || v === 4 || v === 7 || v === 11;
+    };
+
+    const flUp = isFloor(x, y - 1);
+    const flDn = isFloor(x, y + 1);
+    const flLt = isFloor(x - 1, y);
+    const flRt = isFloor(x + 1, y);
+    const flDn2 = isFloor(x, y + 2);
+
+    // Book-Accurate Modern Colorado Springs Urban-Fantasy Palette
     const wallTop = purgatorio ? "#231b3b"
-      : (ft === "stone" ? "#334155"
+      : (ft === "stone" ? "#3b475c"
       : (ft === "tile" ? "#e2e8f0"
-      : (ft === "party" ? "#1a153d"
-      : (ft === "bookstore" ? "#7f2d2d" : "#cbd5e1"))));
+      : (ft === "party" ? "#1e1947"
+      : (ft === "candy" ? "#fbcfe8"
+      : (ft === "bookstore" ? "#7f2d2d" : "#cbd5e1")))));
     const wallBot = purgatorio ? "#161029"
-      : (ft === "stone" ? "#1e293b"
+      : (ft === "stone" ? "#252f42"
       : (ft === "tile" ? "#94a3b8"
-      : (ft === "party" ? "#0f0c26"
-      : (ft === "bookstore" ? "#4a2511" : "#475569"))));
-    const oakHi   = purgatorio ? "#8b5cf6"
+      : (ft === "party" ? "#120e2e"
+      : (ft === "candy" ? "#f472b6"
+      : (ft === "bookstore" ? "#4a2511" : "#64748b")))));
+    const trimHi = purgatorio ? "#8b5cf6"
       : (ft === "stone" ? "#64748b"
       : (ft === "tile" ? "#0f766e"
       : (ft === "party" ? "#818cf8"
-      : (ft === "bookstore" ? "#92400e" : "#334155"))));
-    const oakMid  = purgatorio ? "#5b21b6"
+      : (ft === "candy" ? "#db2777"
+      : (ft === "bookstore" ? "#92400e" : "#475569")))));
+    const trimMid = purgatorio ? "#5b21b6"
       : (ft === "stone" ? "#475569"
       : (ft === "tile" ? "#0d9488"
       : (ft === "party" ? "#4f46e5"
-      : (ft === "bookstore" ? "#6b3410" : "#1e293b"))));
-    const cap     = "#0b0d14";
+      : (ft === "candy" ? "#be185d"
+      : (ft === "bookstore" ? "#6b3410" : "#334155")))));
+    const cap = "#090b12";
 
-    // SLEEK STARDEW PARTITION WALL (Tile === 6) — Warm wood cap & clean T/corner junctions!
+    // Interior thin divider (tile === 6) — cleanly drawn over floor without ugly seams
     if (tileId === 6) {
       drawInteriorFloorTile(ctx, ft, 0, x, y, sx, sy, 0, purgatorio);
-      const isW = (tx, ty) => tx >= 0 && ty >= 0 && tx < map.w && ty < map.h && (map.grid[ty][tx] === 6 || map.grid[ty][tx] === 1);
-      const up = isW(x, y - 1), dn = isW(x, y + 1), lt = isW(x - 1, y), rt = isW(x + 1, y);
-
-      if (lt || rt) {
-        // Horizontal room divider with Stardew golden-oak top cap & paneled wainscoting
-        px(ctx, sx, sy + 3, T, 18, cap);
-        px(ctx, sx, sy + 4, T, 3, oakHi);
-        px(ctx, sx, sy + 7, T, 2, oakMid);
-        px(ctx, sx, sy + 9, T, 6, wallTop);
+      if (flDn && !flUp) {
+        // Horizontal divider showing front face
+        px(ctx, sx, sy + 2, T, 20, cap);
+        px(ctx, sx, sy + 3, T, 3, trimHi);
+        px(ctx, sx, sy + 6, T, 9, wallTop);
         px(ctx, sx, sy + 15, T, 5, wallBot);
-        px(ctx, sx + 11, sy + 15, 1, 5, oakMid);
-      }
-      if (up || dn || (!lt && !rt)) {
-        // Vertical room divider (slim Stardew golden-oak beam)
-        px(ctx, sx + 7, sy, 10, T, cap);
-        px(ctx, sx + 8, sy, 8, T, oakMid);
-        px(ctx, sx + 9, sy, 6, T, oakHi);
-        if (!dn) px(ctx, sx + 7, sy + T - 5, 10, 5, wallBot);
+      } else if (flUp && flDn) {
+        // Thin horizontal partition between two rooms
+        px(ctx, sx, sy + 4, T, 16, cap);
+        px(ctx, sx, sy + 5, T, 3, trimHi);
+        px(ctx, sx, sy + 8, T, 6, wallTop);
+        px(ctx, sx, sy + 14, T, 5, wallBot);
+      } else {
+        // Clean slim vertical divider (8px wide, centered)
+        px(ctx, sx + 8, sy, 8, T, cap);
+        px(ctx, sx + 9, sy, 6, T, trimMid);
+        px(ctx, sx + 10, sy, 4, T, trimHi);
       }
       return;
     }
 
-    // OUTER PERIMETER WALLS (Tile === 1) — Stardew Golden-Oak Border + Warm Paneled Back Wall
-    if (y === 0) {
-      px(ctx, sx, sy, T, 7, cap);
-      px(ctx, sx, sy + 7, T, 4, oakHi);
-      px(ctx, sx, sy + 11, T, 2, oakMid);
-      px(ctx, sx, sy + 13, T, 11, wallTop);
-      if (x % 2 === 0 && (ft === "wood" || ft === "bookstore")) {
-        px(ctx, sx + 11, sy + 13, 1, 11, "rgba(139, 90, 43, 0.18)"); // subtle wallpaper stripe
-      }
-    } else if (y === 1) {
-      px(ctx, sx, sy, T, 13, wallTop);
-      px(ctx, sx, sy + 13, T, 2, oakHi);
-      px(ctx, sx, sy + 15, T, 8, wallBot);
-      px(ctx, sx + 11, sy + 16, 1, 6, "rgba(0,0,0,0.18)"); // wainscoting panel
+    // Perimeter Wall (tile === 1):
+    // Case A: Visible Front-Facing North Wall (floor directly below!)
+    if (flDn) {
+      px(ctx, sx, sy, T, 14, wallTop);
+      px(ctx, sx, sy + 14, T, 2, trimHi);
+      px(ctx, sx, sy + 16, T, 7, wallBot);
       px(ctx, sx, sy + 23, T, 1, cap);
+      // Decorative windows / stained glass / paintings along back walls
+      if (ft === "stone" && (x % 5 === 3)) {
+        px(ctx, sx + 4, sy - 4, 16, 16, "#0f172a");
+        px(ctx, sx + 6, sy - 2, 6, 6, purgatorio ? "#a855f7" : "#38bdf8");
+        px(ctx, sx + 12, sy - 2, 6, 6, purgatorio ? "#7c3aed" : "#f43f5e");
+        px(ctx, sx + 6, sy + 4, 6, 6, "#facc15");
+        px(ctx, sx + 12, sy + 4, 6, 6, "#a855f7");
+      } else if ((ft === "wood" || ft === "candy") && (x === 3 || x === 12)) {
+        px(ctx, sx + 3, sy - 2, 18, 13, trimMid);
+        px(ctx, sx + 5, sy, 14, 9, purgatorio ? "#312e81" : "#e0f2fe");
+        px(ctx, sx + 11, sy, 2, 9, trimMid);
+        px(ctx, sx + 5, sy + 4, 14, 1, trimMid);
+      } else if (ft === "wood" && x === 7) {
+        px(ctx, sx + 3, sy - 1, 18, 12, "#78350f");
+        px(ctx, sx + 5, sy + 1, 14, 4, "#38bdf8");
+        px(ctx, sx + 5, sy + 5, 14, 4, "#22c55e");
+      }
+      return;
+    }
 
-      // Decorative windows / stained glass / cozy Stardew wall paintings
-      if (ft === "stone" && (x === 3 || x === 12)) {
-        px(ctx, sx + 4, sy - 5, 16, 17, "#0f172a");
-        px(ctx, sx + 6, sy - 3, 6, 6, purgatorio ? "#a855f7" : "#38bdf8");
-        px(ctx, sx + 12, sy - 3, 6, 6, purgatorio ? "#7c3aed" : "#f43f5e");
-        px(ctx, sx + 6, sy + 3, 6, 7, "#facc15");
-        px(ctx, sx + 12, sy + 3, 6, 7, "#a855f7");
-      } else if ((ft === "wood" || ft === "bookstore") && (x === 3 || x === 13)) {
-        px(ctx, sx + 3, sy - 4, 18, 15, "#5c2d0c");
-        px(ctx, sx + 5, sy - 2, 14, 11, purgatorio ? "#312e81" : "#fef3c7");
-        px(ctx, sx + 11, sy - 2, 2, 11, "#5c2d0c");
-        px(ctx, sx + 5, sy + 3, 14, 1, "#5c2d0c");
-      } else if (ft === "wood" && x === 8) {
-        // Cozy framed landscape painting!
-        px(ctx, sx + 3, sy - 3, 18, 13, "#78350f");
-        px(ctx, sx + 5, sy - 1, 14, 5, "#38bdf8");
-        px(ctx, sx + 5, sy + 4, 14, 4, "#22c55e");
-        px(ctx, sx + 13, sy, 3, 3, "#facc15");
-      }
-    } else if (y === map.h - 1) {
-      px(ctx, sx, sy, T, 3, oakHi);
-      px(ctx, sx, sy + 3, T, 3, oakMid);
-      px(ctx, sx, sy + 6, T, T - 6, cap);
-    } else {
-      if (x === 0) {
-        px(ctx, sx, sy, 14, T, cap);
-        px(ctx, sx + 14, sy, 4, T, oakMid);
-        px(ctx, sx + 18, sy, 4, T, oakHi);
-        px(ctx, sx + 22, sy, 2, T, cap);
-      } else {
-        px(ctx, sx, sy, 2, T, cap);
-        px(ctx, sx + 2, sy, 4, T, oakHi);
-        px(ctx, sx + 6, sy, 4, T, oakMid);
-        px(ctx, sx + 10, sy, 14, T, cap);
-      }
+    // Case B: Upper Crown Cap above a North Wall (floor 2 tiles below!)
+    if (flDn2) {
+      px(ctx, sx, sy, T, 10, cap);
+      px(ctx, sx, sy + 10, T, 4, trimHi);
+      px(ctx, sx, sy + 14, T, 2, trimMid);
+      px(ctx, sx, sy + 16, T, 8, wallTop);
+      return;
+    }
+
+    // Case C: Side / Bottom / Corner Framing hugging the room contour
+    px(ctx, sx, sy, T, T, cap);
+    if (flUp) {
+      px(ctx, sx, sy, T, 4, trimHi);
+      px(ctx, sx, sy + 4, T, 3, trimMid);
+    }
+    if (flRt) {
+      px(ctx, sx + T - 6, sy, 4, T, trimMid);
+      px(ctx, sx + T - 2, sy, 2, T, trimHi);
+    }
+    if (flLt) {
+      px(ctx, sx, sy, 2, T, trimHi);
+      px(ctx, sx + 2, sy, 4, T, trimMid);
     }
   }
 
@@ -524,8 +549,12 @@ window.WorldArt = (() => {
       px(ctx, x + 30, y - 8, 12, 16, "#f5c542"); px(ctx, x + 10, y + 2, 4, 8, "#fef08a");
       px(ctx, x + 58, y + 2, 4, 8, "#fef08a");
     } else if (prop.kind === "pew") {
-      px(ctx, x, y, 72, 14, "#5c2d0c"); px(ctx, x + 2, y + 2, 68, 5, "#8c4a1c");
-      px(ctx, x + 2, y + 8, 68, 4, "#78350f");
+      px(ctx, x + 2, y + 14, 68, 4, "rgba(0,0,0,0.28)"); // soft floor shadow
+      px(ctx, x, y + 1, 72, 13, "#451a03");
+      px(ctx, x + 2, y + 2, 68, 5, "#8c4a1c"); // backrest
+      px(ctx, x + 2, y + 8, 68, 4, "#78350f"); // seat
+      px(ctx, x + 3, y + 12, 4, 4, "#451a03"); // symmetrical left leg
+      px(ctx, x + 65, y + 12, 4, 4, "#451a03"); // symmetrical right leg
     } else if (prop.kind === "flower_stand") {
       px(ctx, x + 8, y + 10, 8, 12, "#cbd5e1");
       px(ctx, x + 4, y + 2, 16, 10, "#15803d");
@@ -652,8 +681,12 @@ window.WorldArt = (() => {
       px(ctx, x, y, 96, 18, "#78350f"); px(ctx, x + 3, y + 2, 90, 14, "#14532d");
       px(ctx, x + 10, y + 6, 28, 2, "#f8fafc"); px(ctx, x + 10, y + 10, 44, 2, "#bbf7d0");
     } else if (prop.kind === "school_desk") {
-      px(ctx, x + 2, y + 4, 20, 16, "#92400e"); px(ctx, x + 4, y + 6, 16, 10, "#d97706");
-      px(ctx, x + 6, y + 8, 6, 5, "#ffffff"); // open calculus notebook
+      // Clean symmetrical school desk + chair (NO black/green wall tile behind it!)
+      px(ctx, x + 3, y + 19, 18, 3, "rgba(0,0,0,0.22)");
+      px(ctx, x + 4, y + 15, 2, 5, "#475569"); px(ctx, x + 18, y + 15, 2, 5, "#475569"); // symmetrical metal legs
+      px(ctx, x + 2, y + 4, 20, 12, "#78350f"); px(ctx, x + 3, y + 5, 18, 10, "#d97706"); // desk top
+      px(ctx, x + 6, y + 7, 7, 6, "#f8fafc"); px(ctx, x + 7, y + 9, 5, 1, "#94a3b8"); // notebook
+      px(ctx, x + 15, y + 8, 3, 1, "#eab308"); // yellow pencil
     } else if (prop.kind === "candy_case") {
       const w = 72;
       px(ctx, x, y, w, 24, "#be185d"); px(ctx, x + 2, y + 2, w - 4, 14, "#fdf2f8");
@@ -725,6 +758,56 @@ window.WorldArt = (() => {
       px(ctx, x + 2, y + 7, 4, 11, "#ef4444");
       px(ctx, x + 10, y + 7, 4, 11, "#3b82f6");
       px(ctx, x + 18, y + 7, 4, 11, "#22c55e");
+    } else if (prop.kind === "closed_door") {
+      // High School Closed Classroom Door with Frosted Window & Room Plaque!
+      px(ctx, x + 2, y - 4, 20, 26, "#451a03");
+      px(ctx, x + 4, y - 2, 16, 22, "#92400e");
+      px(ctx, x + 7, y + 1, 10, 7, "#bae6fd"); // frosted door glass
+      px(ctx, x + 16, y + 11, 2, 3, "#facc15"); // brass handle
+    } else if (prop.kind === "teacher_desk") {
+      px(ctx, x + 2, y + 18, 44, 4, "rgba(0,0,0,0.24)");
+      px(ctx, x, y + 2, 48, 18, "#5c2d0c"); px(ctx, x + 2, y + 4, 44, 14, "#92400e");
+      px(ctx, x + 8, y + 7, 10, 7, "#f8fafc"); // lesson book
+      px(ctx, x + 34, y + 6, 6, 6, "#ef4444"); // classic red apple!
+    } else if (prop.kind === "vending_machine") {
+      px(ctx, x + 2, y - 4, 20, 26, "#1e3a8a");
+      px(ctx, x + 4, y - 2, 12, 14, "#bae6fd");
+      px(ctx, x + 5, y, 4, 4, "#ef4444"); px(ctx, x + 10, y, 4, 4, "#22c55e");
+      px(ctx, x + 5, y + 6, 4, 4, "#f59e0b"); px(ctx, x + 10, y + 6, 4, 4, "#a855f7");
+      px(ctx, x + 5, y + 15, 14, 5, "#0f172a"); // dispenser slot
+    } else if (prop.kind === "water_fountain") {
+      px(ctx, x + 4, y + 2, 16, 16, "#94a3b8"); px(ctx, x + 6, y + 4, 12, 10, "#e2e8f0");
+      px(ctx, x + 9, y + 7, 6, 4, "#38bdf8");
+    } else if (prop.kind === "trophy_case") {
+      px(ctx, x, y - 2, 48, 24, "#78350f"); px(ctx, x + 3, y, 42, 18, "#e0f2fe");
+      px(ctx, x + 8, y + 6, 6, 10, "#f5c542"); px(ctx, x + 21, y + 4, 6, 12, "#facc15");
+      px(ctx, x + 34, y + 7, 6, 9, "#cbd5e1");
+    } else if (prop.kind === "service_counter") {
+      // Sweet Tooth Wrap-Around Staff Service Counter + Cash Register + Candy Jars!
+      const w = 96;
+      px(ctx, x, y + 2, w, 22, "#be185d"); px(ctx, x + 2, y + 4, w - 4, 14, "#fdf2f8");
+      // Cash Register
+      px(ctx, x + 10, y - 2, 16, 11, "#334155"); px(ctx, x + 12, y, 12, 5, "#4ade80");
+      // Colorful Glass Candy Jars
+      px(ctx, x + 36, y - 1, 9, 10, "#f43f5e"); px(ctx, x + 37, y - 3, 7, 2, "#cbd5e1");
+      px(ctx, x + 50, y - 1, 9, 10, "#38bdf8"); px(ctx, x + 51, y - 3, 7, 2, "#cbd5e1");
+      px(ctx, x + 64, y - 1, 9, 10, "#a855f7"); px(ctx, x + 65, y - 3, 7, 2, "#cbd5e1");
+      px(ctx, x + 78, y - 1, 9, 10, "#facc15"); px(ctx, x + 79, y - 3, 7, 2, "#cbd5e1");
+    } else if (prop.kind === "dropped_cone") {
+      // Melting Strawberry & Vanilla Ice Cream Cone Dropped in the Corner!
+      ctx.fillStyle = "rgba(244, 114, 182, 0.55)";
+      ctx.beginPath(); ctx.ellipse(x + 12, y + 15, 9, 5, 0, 0, Math.PI * 2); ctx.fill(); // melting puddle
+      ctx.fillStyle = "#f472b6";
+      ctx.beginPath(); ctx.arc(x + 10, y + 13, 4.5, 0, Math.PI * 2); ctx.fill(); // strawberry scoop
+      ctx.fillStyle = "#fef3c7";
+      ctx.beginPath(); ctx.arc(x + 13, y + 15, 3, 0, Math.PI * 2); ctx.fill(); // vanilla drip
+      // Waffle cone tipped sideways
+      ctx.fillStyle = "#d97706";
+      ctx.beginPath(); ctx.moveTo(x + 12, y + 10); ctx.lineTo(x + 21, y + 6); ctx.lineTo(x + 17, y + 14); ctx.closePath(); ctx.fill();
+    } else if (prop.kind === "gumball") {
+      px(ctx, x + 8, y + 14, 8, 8, "#dc2626");
+      ctx.fillStyle = "#bae6fd"; ctx.beginPath(); ctx.arc(x + 12, y + 8, 6, 0, Math.PI * 2); ctx.fill();
+      px(ctx, x + 9, y + 6, 2, 2, "#ef4444"); px(ctx, x + 13, y + 7, 2, 2, "#facc15"); px(ctx, x + 11, y + 10, 2, 2, "#22c55e");
     } else if (prop.kind === "exit_mat") {
       px(ctx, x, y + 4, 48, 16, "#991b1b"); px(ctx, x + 3, y + 7, 42, 10, "#f5c542");
       ctx.font = "bold 7px monospace"; ctx.fillStyle = "#111"; ctx.fillText("EXIT", x + 15, y + 14);
