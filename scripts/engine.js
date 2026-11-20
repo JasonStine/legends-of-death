@@ -1,24 +1,29 @@
 // =========================================================
-// scripts/engine.js — Main Loop, B-to-Run / Auto-Run,
-//                     Button Sizes, 7 Handheld Device Themes,
-//                     Full-Screen Settings, Fog of War & Lore Toasts
+// scripts/engine.js — Main Loop (v4)
+//   • Developer Access PIN Gate (72800)
+//   • Live Moving NPC Quest Arrow + Generous Chat Hitbox
+//   • Pokemon-Style Step-In + Screen Zoom Battle Intro
+//   • In-Game Story/Party/Lore Menu (No Save Tab)
+//   • Full-Screen Pill-Grid Settings (Burnt Orange Default)
 // =========================================================
 (() => {
   const T = window.WorldArt.T;
-  const SAVE_KEY = "lod_save_v4";
+  const VIEW_W = 384;
+  const VIEW_H = 288;
+  const SAVE_KEY = "lod_save_v5";
+  const PIN_CODE = "72800";
   const WALK_SPEED = 62;
   const RUN_SPEED = 112;
-  const MENU_TABS = ["quests", "party", "lore", "settings", "save"];
-  const SETTING_COUNT = 6;
+  const IG_TABS = ["quests", "party", "lore"];
 
   const THEMES = [
-    { id: "default",         label: "Midnight Blue (Default)", swatch: "#232a46" },
-    { id: "dark-purple",     label: "Dark Purple",             swatch: "#3b2060" },
-    { id: "dark-green",      label: "Dark Green",              swatch: "#15382c" },
-    { id: "light-offwhite",  label: "Light Off-White",         swatch: "#ebe7dc" },
-    { id: "light-green",     label: "Light Green",             swatch: "#aee2c7" },
-    { id: "light-blue",      label: "Light Blue",              swatch: "#aed4f2" },
-    { id: "sunburnt-yellow", label: "Sunburnt Yellow ★",       swatch: "#e8a427" }
+    { id: "sunburnt-yellow", label: "Burnt Orange ★", swatch: "#e89b24" },
+    { id: "default",         label: "Midnight Blue",  swatch: "#232a46" },
+    { id: "dark-purple",     label: "Dark Purple",    swatch: "#3b2060" },
+    { id: "dark-green",      label: "Dark Green",     swatch: "#15382c" },
+    { id: "light-offwhite",  label: "Off-White",      swatch: "#ebe7dc" },
+    { id: "light-green",     label: "Light Green",    swatch: "#aee2c7" },
+    { id: "light-blue",      label: "Light Blue",     swatch: "#aed4f2" }
   ];
 
   const shell = document.getElementById("handheld-shell");
@@ -36,6 +41,7 @@
   let toastTimer = null;
 
   const game = {
+    pinUnlocked: false,
     started: false,
     titleFocus: 0,
     mapId: "overworld",
@@ -48,23 +54,96 @@
     choice: null,
     cutscene: null,
     actors: [],
-    menuOpen: false,
-    menuTab: "quests",
-    settingFocus: 0,
+    ingameMenuOpen: false,
+    ingameTab: "quests",
+    settingsOpen: false,
+    settingFocusRow: 0,
     discoveredParty: ["jacob"],
     loreTiers: {},
     settings: {
       volume: true,
-      runByDefault: false,   // OFF: hold B to Run | ON: Run by default, hold B to Walk
-      buttonSize: "medium",  // "small" | "medium" | "large"
-      theme: "default",      // 7 handheld shell styles
-      fogOfWar: true         // ON by default
+      runByDefault: false,
+      buttonSize: "medium",
+      theme: "sunburnt-yellow", // Default: Burnt Orange / Sunburnt Yellow!
+      fogOfWar: true
     },
     lastTime: 0
   };
 
+  // ---------------------------------------------------------
+  // DEVELOPER ACCESS PIN GATE (72800)
+  // ---------------------------------------------------------
+  function initPinGate() {
+    const gate = document.getElementById("pin-gate");
+    const display = document.getElementById("pin-display");
+    const errEl = document.getElementById("pin-error");
+    const card = gate.querySelector(".pin-card");
+
+    if (sessionStorage.getItem("lod_pin_ok") === "1") {
+      game.pinUnlocked = true;
+      gate.classList.add("hidden");
+      return;
+    }
+
+    let entered = "";
+    const updateDisplay = () => {
+      const slots = [];
+      for (let i = 0; i < 5; i++) slots.push(i < entered.length ? "•" : "_");
+      display.textContent = slots.join(" ");
+    };
+
+    const submitPin = () => {
+      if (entered === PIN_CODE) {
+        window.AudioFX.heal();
+        game.pinUnlocked = true;
+        sessionStorage.setItem("lod_pin_ok", "1");
+        gate.classList.add("hidden");
+      } else {
+        window.AudioFX.cancel();
+        errEl.classList.remove("hidden");
+        card.classList.remove("shake");
+        void card.offsetWidth;
+        card.classList.add("shake");
+        entered = "";
+        updateDisplay();
+      }
+    };
+
+    const pushDigit = d => {
+      if (entered.length >= 5) return;
+      errEl.classList.add("hidden");
+      window.AudioFX.cursor();
+      entered += d;
+      updateDisplay();
+      if (entered.length === 5) setTimeout(submitPin, 140);
+    };
+
+    gate.querySelectorAll(".pin-key").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.digit !== undefined) pushDigit(btn.dataset.digit);
+        else if (btn.dataset.fn === "clear") {
+          window.AudioFX.cancel();
+          entered = "";
+          errEl.classList.add("hidden");
+          updateDisplay();
+        } else if (btn.dataset.fn === "enter") {
+          submitPin();
+        }
+      });
+    });
+
+    window.addEventListener("keydown", e => {
+      if (game.pinUnlocked) return;
+      if (e.key >= "0" && e.key <= "9") { pushDigit(e.key); e.preventDefault(); }
+      else if (e.key === "Backspace") { entered = entered.slice(0, -1); updateDisplay(); e.preventDefault(); }
+      else if (e.key === "Enter") { submitPin(); e.preventDefault(); }
+    });
+
+    updateDisplay();
+  }
+
   function applyAppearance() {
-    shell.dataset.theme = game.settings.theme || "default";
+    shell.dataset.theme = game.settings.theme || "sunburnt-yellow";
     shell.dataset.btnSize = game.settings.buttonSize || "medium";
     const bLabel = document.getElementById("b-mode-label");
     if (bLabel) bLabel.textContent = game.settings.runByDefault ? "WALK" : "RUN";
@@ -106,9 +185,6 @@
     if (changed) saveProgress();
   }
 
-  // ---------------------------------------------------------
-  // CLICKABLE PROGRESS BAR
-  // ---------------------------------------------------------
   function updateProgressHud() {
     const total = window.Story.quests.length - 1;
     const q = window.Story.quests[Math.min(game.questStage, total)];
@@ -119,7 +195,7 @@
   }
 
   // ---------------------------------------------------------
-  // MAP LOADING (With Safe Warp Cooldown)
+  // MAP LOADING & AMBIENT LIVING NPCS
   // ---------------------------------------------------------
   function loadMap(mapId, tx, ty, afterFade) {
     game.warpCooldown = 0.9;
@@ -198,7 +274,7 @@
   }
 
   // ---------------------------------------------------------
-  // DIALOGUE & D-PAD NAVIGABLE CHOICES
+  // DIALOGUE & CHOICES
   // ---------------------------------------------------------
   function startDialogue(lines, onDone) {
     if (!lines || !lines.length) { if (onDone) onDone(); return; }
@@ -248,10 +324,7 @@
       const btn = document.createElement("button");
       btn.className = "choice-btn" + (i === game.choice.focusIdx ? " focused" : "");
       btn.textContent = (i === game.choice.focusIdx ? "▶ " : "  ") + opt.label;
-      btn.onclick = () => {
-        game.choice.focusIdx = i;
-        confirmChoice();
-      };
+      btn.onclick = () => { game.choice.focusIdx = i; confirmChoice(); };
       box.appendChild(btn);
     });
   }
@@ -281,11 +354,11 @@
   }
 
   // ---------------------------------------------------------
-  // CUTSCENE ENGINE
+  // CUTSCENE ENGINE + POKEMON-STYLE STEP-IN & ZOOM BATTLE INTRO!
   // ---------------------------------------------------------
   function runCutscene(steps, onDone) {
     screenWrap.classList.add("cutscene-active");
-    game.cutscene = { steps, idx: 0, onDone, activeWalk: null };
+    game.cutscene = { steps, idx: 0, onDone, activeWalks: [] };
     nextCutsceneStep();
   }
 
@@ -300,35 +373,80 @@
       return;
     }
     const step = cs.steps[cs.idx++];
-    if (step.type === "dialogue") startDialogue(step.lines, () => nextCutsceneStep());
-    else if (step.type === "walk") {
+    if (step.type === "dialogue") {
+      startDialogue(step.lines, () => nextCutsceneStep());
+    } else if (step.type === "walk") {
       const actor = game.actors.find(a => a.id === step.actorId);
       if (!actor) { nextCutsceneStep(); return; }
-      cs.activeWalk = { actor, targetX: step.tx * T, targetY: step.ty * T, speed: step.speed || 54, hideAtEnd: !!step.hideAtEnd };
-    } else if (step.type === "wait") setTimeout(() => nextCutsceneStep(), step.ms || 350);
-    else if (step.type === "warp") loadMap(step.mapId, step.tx, step.ty, () => nextCutsceneStep());
-    else nextCutsceneStep();
+      cs.activeWalks = [{ actor, targetX: step.tx * T, targetY: step.ty * T, speed: step.speed || 54, hideAtEnd: !!step.hideAtEnd }];
+    } else if (step.type === "multiWalk") {
+      cs.activeWalks = step.walks
+        .map(w => {
+          const actor = game.actors.find(a => a.id === w.actorId);
+          return actor ? { actor, targetX: w.tx * T, targetY: w.ty * T, speed: w.speed || 60, hideAtEnd: !!w.hideAtEnd } : null;
+        })
+        .filter(Boolean);
+      if (!cs.activeWalks.length) nextCutsceneStep();
+    } else if (step.type === "battleZoom") {
+      // Dramatic Pokemon-style flash + screen zoom-in into combat!
+      const flash = document.getElementById("battle-flash");
+      window.AudioFX.portal();
+      flash.classList.remove("flashing");
+      void flash.offsetWidth;
+      flash.classList.add("flashing");
+      canvas.classList.add("battle-zooming");
+      setTimeout(() => {
+        canvas.classList.remove("battle-zooming");
+        nextCutsceneStep();
+      }, 540);
+    } else if (step.type === "wait") {
+      setTimeout(() => nextCutsceneStep(), step.ms || 350);
+    } else if (step.type === "warp") {
+      loadMap(step.mapId, step.tx, step.ty, () => nextCutsceneStep());
+    } else {
+      nextCutsceneStep();
+    }
   }
 
   function updateCutscene(dt) {
     const cs = game.cutscene;
-    if (!cs || !cs.activeWalk) return;
-    const w = cs.activeWalk;
-    const a = w.actor;
-    const dx = w.targetX - a.x, dy = w.targetY - a.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist <= 2) {
-      a.x = w.targetX; a.y = w.targetY; a.frame = 0;
-      if (w.hideAtEnd) a.hidden = true;
-      cs.activeWalk = null;
-      nextCutsceneStep();
-      return;
+    if (!cs || !cs.activeWalks || !cs.activeWalks.length) return;
+    let allDone = true;
+
+    for (const w of cs.activeWalks) {
+      if (w.done) continue;
+      const a = w.actor;
+      const dx = w.targetX - a.x, dy = w.targetY - a.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist <= 2) {
+        a.x = w.targetX; a.y = w.targetY; a.frame = 0;
+        if (w.hideAtEnd) a.hidden = true;
+        w.done = true;
+      } else {
+        allDone = false;
+        const sp = w.speed * dt;
+        a.x += (dx / dist) * sp; a.y += (dy / dist) * sp;
+        a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up");
+        a.walkTimer += dt;
+        if (a.walkTimer > 0.14) { a.walkTimer = 0; a.frame = (a.frame + 1) % 4; }
+      }
     }
-    const sp = w.speed * dt;
-    a.x += (dx / dist) * sp; a.y += (dy / dist) * sp;
-    a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up");
-    a.walkTimer += dt;
-    if (a.walkTimer > 0.14) { a.walkTimer = 0; a.frame = (a.frame + 1) % 4; }
+
+    if (allDone) {
+      cs.activeWalks = [];
+      nextCutsceneStep();
+    }
+  }
+
+  // Helper: Allies step forward -> Pokemon flash + zoom -> Battle!
+  function launchBattleWithStepIn(encounterKey, stepInWalks, onWin) {
+    const steps = [];
+    if (stepInWalks && stepInWalks.length) steps.push({ type: "multiWalk", walks: stepInWalks });
+    steps.push({ type: "wait", ms: 200 });
+    steps.push({ type: "battleZoom" });
+    runCutscene(steps, () => {
+      window.Battle.start(encounterKey, onWin);
+    });
   }
 
   // ---------------------------------------------------------
@@ -379,16 +497,24 @@
         loadMap("house", 5, 6, () => startDialogue(D.afterDreamWake));
       });
     } else if (eventName === "partyBattle") {
+      // Party House: Navi & Illicero step up in front of Sendex, then Pokémon zoom-in!
       startDialogue(D.partyConfrontation, () => {
-        window.Battle.start("partySendex", () => {
-          advanceStage(5);
-          runCutscene([
-            { type: "dialogue", lines: D.partyPostBattle },
-            { type: "walk", actorId: "sendex", tx: 7, ty: 10, speed: 52, hideAtEnd: true },
-            { type: "wait", ms: 350 },
-            { type: "dialogue", lines: D.partyAfterWalkout }
-          ]);
-        });
+        launchBattleWithStepIn(
+          "partySendex",
+          [
+            { actorId: "navi", tx: 6, ty: 5, speed: 62 },
+            { actorId: "illicero", tx: 8, ty: 5, speed: 62 }
+          ],
+          () => {
+            advanceStage(5);
+            runCutscene([
+              { type: "dialogue", lines: D.partyPostBattle },
+              { type: "walk", actorId: "sendex", tx: 7, ty: 10, speed: 52, hideAtEnd: true },
+              { type: "wait", ms: 350 },
+              { type: "dialogue", lines: D.partyAfterWalkout }
+            ]);
+          }
+        );
       });
     } else if (eventName === "snowCatCrista") {
       if (game.questStage === 5) startDialogue(D.snowCatCrista, () => advanceStage(6));
@@ -398,14 +524,18 @@
         startDialogue(D.parkSummonLetonin, () => { advanceStage(7); triggerEvent("parkAction"); });
       } else if (game.questStage === 7) {
         startDialogue(D.parkSoulFusion, () => {
-          window.Battle.start("parkSendex", () => {
-            advanceStage(8);
-            rebuildActors();
-            runCutscene([
-              { type: "dialogue", lines: D.parkPostBattle },
-              { type: "walk", actorId: "sendex", tx: 12, ty: 5, speed: 56, hideAtEnd: true }
-            ]);
-          });
+          launchBattleWithStepIn(
+            "parkSendex",
+            [{ actorId: "letonin", tx: 6, ty: 4, speed: 62 }],
+            () => {
+              advanceStage(8);
+              rebuildActors();
+              runCutscene([
+                { type: "dialogue", lines: D.parkPostBattle },
+                { type: "walk", actorId: "sendex", tx: 12, ty: 5, speed: 56, hideAtEnd: true }
+              ]);
+            }
+          );
         });
       } else {
         startDialogue([{ id: "letonin", mood: "happy", text: "Go speak to Lord Death over on the left!" }]);
@@ -418,13 +548,17 @@
       else startDialogue([{ id: "emillia", mood: "intense", text: "Let's finish Envy and Crepsus so we can finally go home!" }]);
     } else if (eventName === "envyBattle") {
       startDialogue(D.fortressEnvyIntro, () => {
-        window.Battle.start("fortressEnvy", () => {
-          advanceStage(11);
-          runCutscene([
-            { type: "dialogue", lines: D.fortressEnvyPost },
-            { type: "walk", actorId: "envy", tx: 13, ty: 6, speed: 46, hideAtEnd: true }
-          ], () => rebuildActors());
-        });
+        launchBattleWithStepIn(
+          "fortressEnvy",
+          [{ actorId: "emillia", tx: 6, ty: 7, speed: 65 }],
+          () => {
+            advanceStage(11);
+            runCutscene([
+              { type: "dialogue", lines: D.fortressEnvyPost },
+              { type: "walk", actorId: "envy", tx: 13, ty: 6, speed: 46, hideAtEnd: true }
+            ], () => rebuildActors());
+          }
+        );
       });
     } else if (eventName === "danielAscend") {
       startDialogue(D.fortressDanielAscend, () => {
@@ -437,13 +571,17 @@
         return;
       }
       startDialogue(D.fortressCrepsusIntro, () => {
-        window.Battle.start("fortressCrepsus", () => {
-          advanceStage(13);
-          runCutscene([
-            { type: "dialogue", lines: D.fortressCrepsusPost },
-            { type: "walk", actorId: "crepsus", tx: 7, ty: 1, speed: 40, hideAtEnd: true }
-          ], () => rebuildActors());
-        });
+        launchBattleWithStepIn(
+          "fortressCrepsus",
+          [{ actorId: "crepsus", tx: 7, ty: 4, speed: 50 }],
+          () => {
+            advanceStage(13);
+            runCutscene([
+              { type: "dialogue", lines: D.fortressCrepsusPost },
+              { type: "walk", actorId: "crepsus", tx: 7, ty: 1, speed: 40, hideAtEnd: true }
+            ], () => rebuildActors());
+          }
+        );
       });
     } else if (eventName === "griefResolve") {
       startDialogue(D.griefAndResolve, () => { advanceStage(14); loadMap("overworld", 12, 10); });
@@ -453,7 +591,7 @@
   }
 
   // ---------------------------------------------------------
-  // MOVEMENT, COLLISION & INTERACT
+  // MOVEMENT, COLLISION & GENEROUS MOVING-NPC INTERACT HITBOX
   // ---------------------------------------------------------
   function isBlocked(px, py) {
     const map = window.Maps[game.mapId];
@@ -493,36 +631,52 @@
   }
 
   function interact() {
+    if (!game.pinUnlocked) return;
     if (!game.started) { confirmTitle(); return; }
     if (window.Battle.isActive()) { window.Battle.confirmMove(); return; }
     if (game.choice) { confirmChoice(); return; }
-    if (game.menuOpen) { confirmMenuAction(); return; }
+    if (game.settingsOpen) { cycleFocusedSetting(); return; }
+    if (game.ingameMenuOpen) { closeIngameMenu(); return; }
     if (game.dialogue) { advanceDialogue(); return; }
     if (game.cutscene) return;
 
     const p = game.player;
-    const fx = p.x + 12 + (p.dir === "left" ? -20 : p.dir === "right" ? 20 : 0);
-    const fy = p.y + 16 + (p.dir === "up" ? -20 : p.dir === "down" ? 20 : 0);
+    const px = p.x + 12, py = p.y + 16;
+    const fx = px + (p.dir === "left" ? -22 : p.dir === "right" ? 22 : 0);
+    const fy = py + (p.dir === "up" ? -22 : p.dir === "down" ? 22 : 0);
 
+    // 1. Live NPC check: find closest live moving NPC in front OR right next to Jacob!
+    let bestActor = null, bestDist = 36;
     for (const a of game.actors) {
       if (a.hidden) continue;
-      if (Math.hypot(fx - (a.x + 12), fy - (a.y + 16)) < 26) {
-        const opp = { up: "down", down: "up", left: "right", right: "left" };
-        a.dir = opp[p.dir] || "down";
-        if (a.event) triggerEvent(a.event);
-        else if (a.dialogue) startDialogue(a.dialogue);
-        return;
+      const ax = a.x + 12, ay = a.y + 16;
+      const dFront = Math.hypot(fx - ax, fy - ay);
+      const dDirect = Math.hypot(px - ax, py - ay);
+      const score = Math.min(dFront, dDirect + 4);
+      if (score < bestDist) {
+        bestDist = score;
+        bestActor = a;
       }
     }
+    if (bestActor) {
+      const opp = { up: "down", down: "up", left: "right", right: "left" };
+      bestActor.dir = opp[p.dir] || "down";
+      bestActor.pauseTimer = 1.5;
+      if (bestActor.event) triggerEvent(bestActor.event);
+      else if (bestActor.dialogue) startDialogue(bestActor.dialogue);
+      return;
+    }
 
+    // 2. Readable Yard Signposts
     const map = window.Maps[game.mapId];
     for (const s of map.signs || []) {
-      if (Math.hypot(fx - (s.tx * T + 12), fy - (s.ty * T + 12)) < 24) {
+      if (Math.hypot(fx - (s.tx * T + 12), fy - (s.ty * T + 12)) < 26) {
         startDialogue([{ id: "sign", mood: "neutral", text: s.text }]);
         return;
       }
     }
 
+    // 3. Interactive Furniture (Couch / Bed)
     for (const prop of map.props || []) {
       if (!prop.interact) continue;
       const pw = prop.kind === "couch" ? 72 : 44;
@@ -536,7 +690,7 @@
   }
 
   // ---------------------------------------------------------
-  // RENDERING PIPELINE
+  // RENDERING PIPELINE (384x288 + Real Asphalt Roads + Live Arrow)
   // ---------------------------------------------------------
   function drawFloor(map, camX, camY, time) {
     const styles = {
@@ -550,11 +704,10 @@
     for (let y = 0; y < map.h; y++) {
       for (let x = 0; x < map.w; x++) {
         const sx = x * T - camX, sy = y * T - camY;
-        if (sx < -T || sy < -T || sx > 384 || sy > 256) continue;
+        if (sx < -T || sy < -T || sx > VIEW_W || sy > VIEW_H) continue;
         const tile = map.grid[y][x];
         if (tile === 3) {
-          ctx.fillStyle = "#64748b"; ctx.fillRect(sx, sy, T, T);
-          ctx.fillStyle = "#94a3b8"; ctx.fillRect(sx + 10, sy + 10, 4, 4);
+          window.WorldArt.drawRoadTile(ctx, map, x, y, sx, sy);
         } else if (tile === 1 && map.id !== "overworld") {
           ctx.fillStyle = "#1e293b"; ctx.fillRect(sx, sy, T, T);
           ctx.fillStyle = "#334155"; ctx.fillRect(sx, sy + T - 4, T, 4);
@@ -570,39 +723,54 @@
     }
   }
 
+  // DYNAMIC QUEST BEACON — Tracks Live Moving NPC Coordinates!
   function drawQuestBeacon(map, camX, camY, time) {
     const q = window.Story.quests[game.questStage];
     if (!q) return;
-    let tx = null, ty = null;
+
+    let worldX = null, worldY = null;
+    const findActor = id => game.actors.find(a => a.id === id && !a.hidden);
 
     if (map.id === "overworld") {
-      if (q.mapHint === "church") { tx = 5; ty = 5; }
-      else if (q.mapHint === "house") { tx = 19; ty = 5; }
-      else if (q.mapHint === "party") { tx = 19; ty = 14; }
-      else if (q.mapHint === "park" || q.mapHint === "fortress") { tx = 12; ty = 2; }
-      else if (q.mapHint === "overworld") { tx = 12; ty = 8; }
+      if (q.mapHint === "church") { worldX = 5 * T + 12; worldY = 5 * T; }
+      else if (q.mapHint === "house") { worldX = 19 * T + 12; worldY = 5 * T; }
+      else if (q.mapHint === "party") { worldX = 19 * T + 12; worldY = 14 * T; }
+      else if (q.mapHint === "park" || q.mapHint === "fortress") { worldX = 12 * T + 12; worldY = 2 * T; }
+      else if (q.mapHint === "overworld") {
+        const a = findActor("letonin");
+        if (a) { worldX = a.x + 12; worldY = a.y - 4; }
+      }
     } else if (map.id === "house" && q.mapHint === "house") {
-      if (game.questStage === 1) { tx = 7; ty = 3; }
-      else if (game.questStage === 2 || game.questStage === 3) { tx = 3; ty = 4; }
-      else if (game.questStage === 5) { tx = 3; ty = 6; }
-    } else if (map.id === "church" && q.mapHint === "church") { tx = 7; ty = 4; }
-    else if (map.id === "dream" && q.mapHint === "dream") { tx = 7; ty = 4; }
-    else if (map.id === "party" && q.mapHint === "party") { tx = 7; ty = 4; }
-    else if (map.id === "park") {
-      if (game.questStage === 6 || game.questStage === 7) { tx = 7; ty = 5; }
-      else if (game.questStage === 8) { tx = 4; ty = 6; }
-      else if (game.questStage >= 9) { tx = 12; ty = 5; }
+      if (game.questStage === 1) {
+        const a = findActor("navi");
+        if (a) { worldX = a.x + 12; worldY = a.y - 4; }
+      } else if (game.questStage === 2 || game.questStage === 3) {
+        worldX = 3 * T + 12; worldY = 4 * T;
+      } else if (game.questStage === 5) {
+        const a = findActor("crista");
+        if (a) { worldX = a.x + 12; worldY = a.y - 2; }
+      }
+    } else if (map.id === "church" && q.mapHint === "church") {
+      const a = findActor("cyrine"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
+    } else if (map.id === "dream" && q.mapHint === "dream") {
+      const a = findActor("letonin"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
+    } else if (map.id === "party" && q.mapHint === "party") {
+      const a = findActor("sendex"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
+    } else if (map.id === "park") {
+      if (game.questStage === 6 || game.questStage === 7) {
+        const a = findActor("letonin"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
+      } else if (game.questStage === 8) {
+        const a = findActor("death"); if (a) { worldX = a.x + 12; worldY = a.y - 4; }
+      } else if (game.questStage >= 9) { worldX = 12 * T + 12; worldY = 5 * T; }
     } else if (map.id === "fortress") {
-      if (game.questStage === 9) { tx = 5; ty = 8; }
-      else if (game.questStage === 10) { tx = 7; ty = 6; }
-      else if (game.questStage === 11) { tx = 10; ty = 7; }
-      else if (game.questStage === 12) { tx = 7; ty = 3; }
-      else if (game.questStage === 13) { tx = 7; ty = 5; }
+      const targetId = { 9: "emillia", 10: "envy", 11: "sendex", 12: "crepsus", 13: "death" }[game.questStage];
+      const a = targetId ? findActor(targetId) : null;
+      if (a) { worldX = a.x + 12; worldY = a.y - 4; }
     }
 
-    if (tx === null) return;
-    const bx = tx * T + 12 - camX;
-    const by = ty * T - 10 + Math.sin(time * 0.008) * 3 - camY;
+    if (worldX === null) return;
+    const bx = worldX - camX;
+    const by = worldY - 8 + Math.sin(time * 0.008) * 3 - camY;
     ctx.fillStyle = "#f5c542";
     ctx.beginPath();
     ctx.moveTo(bx, by + 8); ctx.lineTo(bx - 6, by); ctx.lineTo(bx + 6, by);
@@ -611,13 +779,16 @@
   }
 
   function render(time) {
-    ctx.clearRect(0, 0, 384, 256);
+    ctx.clearRect(0, 0, VIEW_W, VIEW_H);
     if (window.Battle.isActive()) { window.Battle.draw(ctx, time); return; }
 
     const map = window.Maps[game.mapId];
-    const camX = Math.max(0, Math.min(map.w * T - 384, Math.round(game.player.x + 12 - 192)));
-    const camY = Math.max(0, Math.min(map.h * T - 256, Math.round(game.player.y + 12 - 128)));
+    const mapW = map.w * T, mapH = map.h * T;
+    const camX = mapW <= VIEW_W ? -Math.floor((VIEW_W - mapW) / 2) : Math.max(0, Math.min(mapW - VIEW_W, Math.round(game.player.x + 12 - VIEW_W / 2)));
+    const camY = mapH <= VIEW_H ? -Math.floor((VIEW_H - mapH) / 2) : Math.max(0, Math.min(mapH - VIEW_H, Math.round(game.player.y + 12 - VIEW_H / 2)));
 
+    ctx.fillStyle = "#0b0d15";
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     drawFloor(map, camX, camY, time);
 
     ctx.save();
@@ -645,8 +816,7 @@
       if (p.minQuest !== undefined && game.questStage < p.minQuest) return;
       window.WorldArt.drawPortal(ctx, p.tx * T + 12, p.ty * T + 12, p.style, time);
       if (p.label) {
-        ctx.font = "bold 7px monospace";
-        ctx.fillStyle = "#fef08a";
+        ctx.font = "bold 7px monospace"; ctx.fillStyle = "#fef08a";
         ctx.fillText(p.label, p.tx * T - 10, p.ty * T - 10);
       }
     });
@@ -662,21 +832,21 @@
 
     if (game.purgatorio || map.id === "park") {
       ctx.fillStyle = "rgba(88, 28, 135, 0.22)";
-      ctx.fillRect(0, 0, 384, 256);
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     }
 
     if (!game.cutscene && !game.dialogue) drawQuestBeacon(map, camX, camY, time);
   }
 
   // ---------------------------------------------------------
-  // MAIN GAME LOOP (Hold B to Run / Run by Default Swap)
+  // MAIN GAME LOOP
   // ---------------------------------------------------------
   function tick(time) {
     const dt = Math.min(0.05, (time - game.lastTime) / 1000 || 0.016);
     game.lastTime = time;
     if (game.warpCooldown > 0) game.warpCooldown = Math.max(0, game.warpCooldown - dt);
 
-    if (game.started && !game.menuOpen && !window.Battle.isActive()) {
+    if (game.pinUnlocked && game.started && !game.ingameMenuOpen && !game.settingsOpen && !window.Battle.isActive()) {
       updateActors(dt);
       if (game.cutscene) {
         updateCutscene(dt);
@@ -710,178 +880,205 @@
   }
 
   // ---------------------------------------------------------
-  // FULL-SCREEN MENU & SETTINGS
+  // IN-GAME MENU (Story / Party / Lore — Inside Game Screen!)
   // ---------------------------------------------------------
-  function openMenu(tab = "quests") {
-    if (!game.started || window.Battle.isActive()) return;
-    game.menuOpen = true;
-    game.menuTab = tab;
-    game.settingFocus = 0;
+  function openIngameMenu(tab = "quests") {
+    if (!game.started || window.Battle.isActive() || game.settingsOpen) return;
+    game.ingameMenuOpen = true;
+    game.ingameTab = tab;
     window.AudioFX.confirm();
-    document.getElementById("menu-overlay").classList.remove("hidden");
-    renderMenuTab(tab);
+    document.getElementById("ingame-menu").classList.remove("hidden");
+    renderIngameTab(tab);
   }
 
-  function closeMenu() {
-    game.menuOpen = false;
+  function closeIngameMenu() {
+    game.ingameMenuOpen = false;
     window.AudioFX.cancel();
-    document.getElementById("menu-overlay").classList.add("hidden");
+    document.getElementById("ingame-menu").classList.add("hidden");
   }
 
-  function renderMenuTab(tab) {
-    game.menuTab = tab;
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
-    const body = document.getElementById("menu-body");
+  function renderIngameTab(tab) {
+    game.ingameTab = tab;
+    document.querySelectorAll(".ig-tab[data-tab]").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    const body = document.getElementById("ingame-body");
     const fog = game.settings.fogOfWar;
 
     if (tab === "quests") {
       body.innerHTML = window.Story.quests.map((q, i) => {
-        const done = i < game.questStage;
-        const curr = i === game.questStage;
-        const hiddenByFog = fog && i > game.questStage;
-        if (hiddenByFog) {
-          return `<div class="menu-card fogged"><h4>🔒 ${q.act} • ${q.ch} — ???</h4><p>Undiscovered chapter. Advance the story to reveal.</p></div>`;
+        const done = i < game.questStage, curr = i === game.questStage;
+        if (fog && i > game.questStage) {
+          return `<div class="menu-card fogged"><h4>🔒 ${q.act} • ${q.ch} — ???</h4><p>Undiscovered chapter.</p></div>`;
         }
         return `<div class="menu-card ${curr ? "focused" : ""}">
           <h4><span>${done ? "✓ " : curr ? "▶ " : ""}${q.act} • ${q.ch} — ${q.title}</span></h4>
           <p>${q.objective}</p>
         </div>`;
       }).join("");
-    }
-
-    else if (tab === "party") {
+    } else if (tab === "party") {
       body.innerHTML = window.Story.partyOrder.map(id => {
         const p = window.PALETTES[id];
-        const met = game.discoveredParty.includes(id);
-        if (fog && !met) {
+        if (fog && !game.discoveredParty.includes(id)) {
           return `<div class="menu-card fogged"><h4>???</h4><p>You have not met this character yet.</p></div>`;
         }
         const role = (game.questStage >= 6 && p.trueRole) ? p.trueRole : p.role;
         return `<div class="menu-card"><h4>${p.name}</h4><p>${role}</p></div>`;
       }).join("");
-    }
-
-    else if (tab === "lore") {
+    } else if (tab === "lore") {
       body.innerHTML = window.Story.loreDefs.map(def => {
         const tier = game.loreTiers[def.id] || 0;
         const showTier = fog ? tier : def.tiers.length;
         if (showTier === 0) {
-          return `<div class="menu-card fogged"><h4>???</h4><p>Explore Colorado Springs and talk to characters to uncover this lore.</p></div>`;
+          return `<div class="menu-card fogged"><h4>???</h4><p>Talk to characters to uncover this lore.</p></div>`;
         }
-        const entries = def.tiers.slice(0, showTier).map((t, idx) => `<p style="margin-top:${idx ? 5 : 0}px">${idx > 0 ? "↳ " : ""}${t}</p>`).join("");
+        const entries = def.tiers.slice(0, showTier).map((t, idx) => `<p style="margin-top:${idx ? 4 : 0}px">${idx > 0 ? "↳ " : ""}${t}</p>`).join("");
         return `<div class="menu-card">
           <h4><span>${def.title}</span><span class="badge-tier">Tier ${showTier}/${def.tiers.length}</span></h4>
           ${entries}
         </div>`;
       }).join("");
     }
-
-    else if (tab === "settings") {
-      const currTheme = THEMES.find(t => t.id === game.settings.theme) || THEMES[0];
-      const items = [
-        {
-          label: "Audio Volume",
-          sub: "Toggle 32-bit retro sound effects",
-          val: game.settings.volume ? "ON" : "OFF"
-        },
-        {
-          label: "Run by Default",
-          sub: game.settings.runByDefault ? "Auto-Run ON (Hold B to Walk)" : "Walk normally (Hold B to Run)",
-          val: game.settings.runByDefault ? "ON" : "OFF"
-        },
-        {
-          label: "Button Size",
-          sub: "Adjusts gamepad buttons & screen spacing",
-          val: game.settings.buttonSize.toUpperCase()
-        },
-        {
-          label: "Device Color Style",
-          sub: "Change handheld console shell theme",
-          val: currTheme.label,
-          swatch: currTheme.swatch
-        },
-        {
-          label: "Enable Fog of War",
-          sub: "Hide unknown chapters, party & lore as ???",
-          val: game.settings.fogOfWar ? "ON" : "OFF"
-        },
-        {
-          label: "Reset Save & Play Again",
-          sub: "Erase current progress and start from Ch. I",
-          val: "RESET",
-          danger: true
-        }
-      ];
-
-      body.innerHTML = items.map((it, idx) => `
-        <div class="menu-card setting-row ${idx === game.settingFocus ? "focused" : ""}" data-sidx="${idx}">
-          <div class="setting-left">
-            <strong>${idx === game.settingFocus ? "▶ " : ""}${it.label}</strong>
-            <span class="setting-sub">${it.sub}</span>
-          </div>
-          <span class="setting-pill ${it.danger ? "danger" : ""}">
-            ${it.swatch ? `<span class="theme-swatch" style="background:${it.swatch}"></span>` : ""}
-            ${it.val}
-          </span>
-        </div>
-      `).join("");
-
-      body.querySelectorAll(".setting-row").forEach(row => {
-        row.onclick = () => {
-          game.settingFocus = Number(row.dataset.sidx);
-          confirmMenuAction();
-        };
-      });
-    }
-
-    else if (tab === "save") {
-      saveProgress();
-      body.innerHTML = `<div class="menu-card focused"><h4>✓ Game Saved!</h4><p>Your chapter progress, evolving lore, party discoveries, and device settings are saved automatically on this device.</p></div>`;
-    }
   }
 
-  function confirmMenuAction() {
-    if (game.menuTab !== "settings") {
-      if (game.menuTab === "save") { saveProgress(); window.AudioFX.heal(); }
-      return;
-    }
-    if (game.settingFocus === 0) {
-      game.settings.volume = !game.settings.volume;
-      window.AudioFX.setEnabled(game.settings.volume);
-    } else if (game.settingFocus === 1) {
-      game.settings.runByDefault = !game.settings.runByDefault;
-      applyAppearance();
-    } else if (game.settingFocus === 2) {
-      const sizes = ["small", "medium", "large"];
-      game.settings.buttonSize = sizes[(sizes.indexOf(game.settings.buttonSize) + 1) % sizes.length];
-      applyAppearance();
-    } else if (game.settingFocus === 3) {
-      const idx = THEMES.findIndex(t => t.id === game.settings.theme);
-      game.settings.theme = THEMES[(idx + 1) % THEMES.length].id;
-      applyAppearance();
-    } else if (game.settingFocus === 4) {
-      game.settings.fogOfWar = !game.settings.fogOfWar;
-    } else if (game.settingFocus === 5) {
-      closeMenu();
-      showChoices([
-        {
-          label: "Yes, Reset & Start Over",
-          action: () => {
-            localStorage.removeItem(SAVE_KEY);
-            location.reload();
+  // ---------------------------------------------------------
+  // FULL-SCREEN SETTINGS OVERLAY (All Options as Selectable Pills!)
+  // ---------------------------------------------------------
+  function openSettings() {
+    if (!game.pinUnlocked) return;
+    if (game.ingameMenuOpen) closeIngameMenu();
+    game.settingsOpen = true;
+    game.settingFocusRow = 0;
+    window.AudioFX.confirm();
+    document.getElementById("settings-overlay").classList.remove("hidden");
+    renderSettings();
+  }
+
+  function closeSettings() {
+    game.settingsOpen = false;
+    window.AudioFX.cancel();
+    document.getElementById("settings-overlay").classList.add("hidden");
+  }
+
+  function renderSettings() {
+    const body = document.getElementById("settings-body");
+    const s = game.settings;
+
+    const sections = [
+      {
+        title: "Audio Volume",
+        desc: "Enable or mute 32-bit retro sound effects.",
+        pills: [
+          { label: "ON", active: s.volume, onClick: () => { s.volume = true; window.AudioFX.setEnabled(true); } },
+          { label: "OFF", active: !s.volume, onClick: () => { s.volume = false; window.AudioFX.setEnabled(false); } }
+        ]
+      },
+      {
+        title: "Run Mode (B Button)",
+        desc: s.runByDefault ? "Running by default — hold B to walk." : "Walking normally — hold B to sprint.",
+        pills: [
+          { label: "Hold B to Run", active: !s.runByDefault, onClick: () => { s.runByDefault = false; applyAppearance(); } },
+          { label: "Run by Default", active: s.runByDefault, onClick: () => { s.runByDefault = true; applyAppearance(); } }
+        ]
+      },
+      {
+        title: "Gamepad Button Size",
+        desc: "All sizes automatically scale to stay cleanly on screen.",
+        pills: [
+          { label: "Small", active: s.buttonSize === "small", onClick: () => { s.buttonSize = "small"; applyAppearance(); } },
+          { label: "Medium", active: s.buttonSize === "medium", onClick: () => { s.buttonSize = "medium"; applyAppearance(); } },
+          { label: "Large", active: s.buttonSize === "large", onClick: () => { s.buttonSize = "large"; applyAppearance(); } }
+        ]
+      },
+      {
+        title: "Device Color Style",
+        desc: "Pick your handheld console shell finish.",
+        pills: THEMES.map(t => ({
+          label: t.label,
+          swatch: t.swatch,
+          active: s.theme === t.id,
+          onClick: () => { s.theme = t.id; applyAppearance(); }
+        }))
+      },
+      {
+        title: "Enable Fog of War",
+        desc: "Hide undiscovered chapters, unmet party members, and unlearned lore as ???.",
+        pills: [
+          { label: "ON (Default)", active: s.fogOfWar, onClick: () => { s.fogOfWar = true; } },
+          { label: "OFF (Reveal All)", active: !s.fogOfWar, onClick: () => { s.fogOfWar = false; } }
+        ]
+      },
+      {
+        title: "Reset Save Data",
+        desc: "Your progress auto-saves automatically. Use this to start a fresh playthrough.",
+        pills: [
+          {
+            label: "Reset Save & Play Again",
+            danger: true,
+            onClick: () => {
+              closeSettings();
+              showChoices([
+                { label: "Yes, Reset & Start Over", action: () => { localStorage.removeItem(SAVE_KEY); location.reload(); } },
+                { label: "Cancel", action: () => {} }
+              ]);
+            }
           }
-        },
+        ]
+      }
+    ];
+
+    body.innerHTML = "";
+    sections.forEach((sec, rIdx) => {
+      const card = document.createElement("div");
+      card.className = "setting-section" + (rIdx === game.settingFocusRow ? " focused" : "");
+      card.innerHTML = `<div class="setting-title">${rIdx === game.settingFocusRow ? "▶ " : ""}${sec.title}</div><div class="setting-desc">${sec.desc}</div>`;
+      const row = document.createElement("div");
+      row.className = "option-pills";
+      sec.pills.forEach(p => {
+        const btn = document.createElement("button");
+        btn.className = "opt-btn" + (p.active ? " active" : "") + (p.danger ? " danger" : "");
+        btn.innerHTML = `${p.swatch ? `<span class="theme-swatch" style="background:${p.swatch}"></span>` : ""}${p.label}`;
+        btn.onclick = () => {
+          game.settingFocusRow = rIdx;
+          p.onClick();
+          window.AudioFX.confirm();
+          saveProgress();
+          if (game.settingsOpen) renderSettings();
+        };
+        row.appendChild(btn);
+      });
+      card.appendChild(row);
+      body.appendChild(card);
+    });
+  }
+
+  function cycleFocusedSetting(delta = 1) {
+    const s = game.settings;
+    if (game.settingFocusRow === 0) { s.volume = !s.volume; window.AudioFX.setEnabled(s.volume); }
+    else if (game.settingFocusRow === 1) { s.runByDefault = !s.runByDefault; applyAppearance(); }
+    else if (game.settingFocusRow === 2) {
+      const sz = ["small", "medium", "large"];
+      s.buttonSize = sz[(sz.indexOf(s.buttonSize) + delta + sz.length) % sz.length];
+      applyAppearance();
+    } else if (game.settingFocusRow === 3) {
+      const idx = THEMES.findIndex(t => t.id === s.theme);
+      s.theme = THEMES[(idx + delta + THEMES.length) % THEMES.length].id;
+      applyAppearance();
+    } else if (game.settingFocusRow === 4) {
+      s.fogOfWar = !s.fogOfWar;
+    } else if (game.settingFocusRow === 5) {
+      closeSettings();
+      showChoices([
+        { label: "Yes, Reset & Start Over", action: () => { localStorage.removeItem(SAVE_KEY); location.reload(); } },
         { label: "Cancel", action: () => {} }
       ]);
       return;
     }
     window.AudioFX.confirm();
     saveProgress();
-    renderMenuTab("settings");
+    renderSettings();
   }
 
   // ---------------------------------------------------------
-  // TITLE SCREEN NAVIGATION
+  // TITLE SCREEN & UNIFIED D-PAD DISPATCHER
   // ---------------------------------------------------------
   function updateTitleFocus() {
     const newBtn = document.getElementById("btn-new-game");
@@ -900,10 +1097,8 @@
     else startNewGame();
   }
 
-  // ---------------------------------------------------------
-  // UNIFIED D-PAD DISPATCHER
-  // ---------------------------------------------------------
   function onDpadPress(dir) {
+    if (!game.pinUnlocked) return;
     if (!game.started) {
       const hasSave = !document.getElementById("btn-continue").classList.contains("hidden");
       if (hasSave && (dir === "left" || dir === "right" || dir === "up" || dir === "down")) {
@@ -919,19 +1114,23 @@
       else if (dir === "down") moveChoice(1);
       return;
     }
-    if (game.menuOpen) {
+    if (game.settingsOpen) {
+      if (dir === "up") { game.settingFocusRow = (game.settingFocusRow + 5) % 6; window.AudioFX.cursor(); renderSettings(); }
+      else if (dir === "down") { game.settingFocusRow = (game.settingFocusRow + 1) % 6; window.AudioFX.cursor(); renderSettings(); }
+      else if (dir === "left") cycleFocusedSetting(-1);
+      else if (dir === "right") cycleFocusedSetting(1);
+      return;
+    }
+    if (game.ingameMenuOpen) {
       if (dir === "left" || dir === "right") {
-        const idx = MENU_TABS.indexOf(game.menuTab);
-        const next = MENU_TABS[(idx + (dir === "right" ? 1 : -1) + MENU_TABS.length) % MENU_TABS.length];
+        const idx = IG_TABS.indexOf(game.ingameTab);
+        const next = IG_TABS[(idx + (dir === "right" ? 1 : -1) + IG_TABS.length) % IG_TABS.length];
         window.AudioFX.cursor();
-        renderMenuTab(next);
-      } else if (game.menuTab === "settings") {
-        if (dir === "up") { game.settingFocus = (game.settingFocus + SETTING_COUNT - 1) % SETTING_COUNT; window.AudioFX.cursor(); renderMenuTab("settings"); }
-        else if (dir === "down") { game.settingFocus = (game.settingFocus + 1) % SETTING_COUNT; window.AudioFX.cursor(); renderMenuTab("settings"); }
+        renderIngameTab(next);
       } else {
-        const body = document.getElementById("menu-body");
-        if (dir === "up") body.scrollTop -= 56;
-        else if (dir === "down") body.scrollTop += 56;
+        const body = document.getElementById("ingame-body");
+        if (dir === "up") body.scrollTop -= 48;
+        else if (dir === "down") body.scrollTop += 48;
       }
       return;
     }
@@ -941,7 +1140,7 @@
   function onDpadRelease(dir) { game.input[dir] = false; }
 
   // ---------------------------------------------------------
-  // SAVE / LOAD
+  // AUTO-SAVE / LOAD
   // ---------------------------------------------------------
   function saveProgress() {
     try {
@@ -982,7 +1181,7 @@
   }
 
   // ---------------------------------------------------------
-  // EVENT BINDINGS (Hold B to Run + Touch + Keyboard)
+  // EVENT BINDINGS
   // ---------------------------------------------------------
   document.querySelectorAll(".dpad-btn").forEach(btn => {
     const dir = btn.dataset.dir;
@@ -996,14 +1195,14 @@
   document.getElementById("btn-a").addEventListener("click", interact);
   document.getElementById("dialogue-box").addEventListener("click", advanceDialogue);
 
-  // B Button: Hold to Run (or Walk if Run-by-Default is ON) + Cancel/Back in UI
   const btnB = document.getElementById("btn-b");
   btnB.addEventListener("pointerdown", e => {
     e.preventDefault();
     btnB.classList.add("pressed");
     game.input.run = true;
     if (game.choice) cancelChoice();
-    else if (game.menuOpen) closeMenu();
+    else if (game.settingsOpen) closeSettings();
+    else if (game.ingameMenuOpen) closeIngameMenu();
     else if (game.dialogue) advanceDialogue();
   });
   const releaseB = () => { btnB.classList.remove("pressed"); game.input.run = false; };
@@ -1012,41 +1211,48 @@
   btnB.addEventListener("pointercancel", releaseB);
 
   document.getElementById("btn-realm").addEventListener("click", e => {
-    if (!game.started) return;
+    if (!game.started || !game.pinUnlocked) return;
     game.purgatorio = !game.purgatorio;
     window.AudioFX.portal();
     e.currentTarget.classList.toggle("active", game.purgatorio);
   });
 
-  document.getElementById("progress-hud").addEventListener("click", () => openMenu("quests"));
-  document.getElementById("btn-menu").addEventListener("click", () => game.menuOpen ? closeMenu() : openMenu("quests"));
-  document.getElementById("btn-menu-top").addEventListener("click", () => game.menuOpen ? closeMenu() : openMenu("quests"));
-  document.getElementById("menu-close").addEventListener("click", closeMenu);
-  document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => { window.AudioFX.cursor(); renderMenuTab(b.dataset.tab); }));
+  document.getElementById("progress-hud").addEventListener("click", () => openIngameMenu("quests"));
+  document.getElementById("btn-menu").addEventListener("click", () => game.ingameMenuOpen ? closeIngameMenu() : openIngameMenu("quests"));
+  document.getElementById("ig-close").addEventListener("click", closeIngameMenu);
+  document.getElementById("ig-settings-shortcut").addEventListener("click", openSettings);
+  document.querySelectorAll(".ig-tab[data-tab]").forEach(b => b.addEventListener("click", () => { window.AudioFX.cursor(); renderIngameTab(b.dataset.tab); }));
+
+  document.getElementById("btn-settings-top").addEventListener("click", () => game.settingsOpen ? closeSettings() : openSettings());
+  document.getElementById("settings-close").addEventListener("click", closeSettings);
 
   const keyMap = { ArrowUp: "up", KeyW: "up", ArrowDown: "down", KeyS: "down", ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right" };
   window.addEventListener("keydown", e => {
-    if (keyMap[e.code]) { if (!e.repeat || !game.menuOpen) onDpadPress(keyMap[e.code]); e.preventDefault(); }
+    if (!game.pinUnlocked) return;
+    if (keyMap[e.code]) { if (!e.repeat || (!game.ingameMenuOpen && !game.settingsOpen)) onDpadPress(keyMap[e.code]); e.preventDefault(); }
     if (e.code === "KeyZ" || e.code === "Enter" || e.code === "Space") { interact(); e.preventDefault(); }
     if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyX") {
       game.input.run = true;
       if (e.code === "KeyX" && !e.repeat) {
         if (game.choice) cancelChoice();
-        else if (game.menuOpen) closeMenu();
+        else if (game.settingsOpen) closeSettings();
+        else if (game.ingameMenuOpen) closeIngameMenu();
       }
     }
     if (e.code === "Escape") {
       if (game.choice) cancelChoice();
-      else if (game.menuOpen) closeMenu();
+      else if (game.settingsOpen) closeSettings();
+      else if (game.ingameMenuOpen) closeIngameMenu();
     }
-    if (e.code === "KeyM") { game.menuOpen ? closeMenu() : openMenu("quests"); }
+    if (e.code === "KeyM") { game.ingameMenuOpen ? closeIngameMenu() : openIngameMenu("quests"); }
   });
   window.addEventListener("keyup", e => {
     if (keyMap[e.code]) onDpadRelease(keyMap[e.code]);
     if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyX") game.input.run = false;
   });
 
-  // Boot Title Screen & Load Saved Settings
+  // Boot Sequence
+  initPinGate();
   const saved = localStorage.getItem(SAVE_KEY);
   if (saved) {
     document.getElementById("btn-continue").classList.remove("hidden");

@@ -9,7 +9,39 @@
   <link rel="stylesheet" href="styles/game.css" />
 </head>
 <body>
-  <div id="handheld-shell" data-theme="default" data-btn-size="medium">
+  <!-- Retro Developer Access PIN Gate (Before Game Loads) -->
+  <div id="pin-gate" role="dialog" aria-modal="true" aria-label="Developer Access Gate">
+    <div class="pin-card">
+      <div class="pin-header">
+        <span class="pin-led"></span>
+        <span>RESTRICTED CARTRIDGE // VER 4.0</span>
+      </div>
+      <div class="pin-emblem">✦ ⚔ ✦</div>
+      <h1 class="pin-title">ACCESS REQUIRED</h1>
+      <p class="pin-msg">This is a private resource available only to those with permission. Please provide an access PIN to proceed.</p>
+
+      <div id="pin-display" class="pin-display" aria-live="polite">_ _ _ _ _</div>
+      <div id="pin-error" class="pin-error hidden">Wrong PIN. Contact the developer for access.</div>
+
+      <div class="pin-keypad">
+        <button class="pin-key" data-digit="1">1</button>
+        <button class="pin-key" data-digit="2">2</button>
+        <button class="pin-key" data-digit="3">3</button>
+        <button class="pin-key" data-digit="4">4</button>
+        <button class="pin-key" data-digit="5">5</button>
+        <button class="pin-key" data-digit="6">6</button>
+        <button class="pin-key" data-digit="7">7</button>
+        <button class="pin-key" data-digit="8">8</button>
+        <button class="pin-key" data-digit="9">9</button>
+        <button class="pin-key pin-fn" data-fn="clear">CLR</button>
+        <button class="pin-key" data-digit="0">0</button>
+        <button class="pin-key pin-ok" data-fn="enter">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Handheld Console Shell (Default Theme: Burnt Orange / Sunburnt Yellow) -->
+  <div id="handheld-shell" data-theme="sunburnt-yellow" data-btn-size="medium">
     <!-- Top Handheld Status Header -->
     <header id="top-bar">
       <div class="brand">
@@ -17,118 +49,13 @@
         <span>LEGENDS OF DEATH</span>
       </div>
       <div id="location-pill">Colorado Springs</div>
-      <button id="btn-menu-top" class="mini-btn" aria-label="Menu">MENU</button>
+      <button id="btn-settings-top" class="mini-btn" aria-label="Settings">⚙ SETTINGS</button>
     </header>
 
-    <!-- Handheld Console Body: Dark Screen Lens Framed by Device Shell -->
-    <main id="screen-bezel">
-      <div id="console-lens">
-        <div class="lens-top-strip">
-          <div class="lens-led-wrap">
-            <span class="lens-led"></span>
-            <span class="lens-led-label">POWER</span>
-          </div>
-          <span class="lens-model">32-BIT COLOR SYSTEM</span>
-        </div>
-
-        <div id="screen-wrap">
-          <canvas id="game-canvas" width="384" height="256"></canvas>
-
-          <!-- Cinematic Letterbox Bars for Cutscenes -->
-          <div id="letterbox-top" class="letterbox"></div>
-          <div id="letterbox-bottom" class="letterbox"></div>
-          <div id="cutscene-badge">CUTSCENE</div>
-
-          <!-- Clickable Story Progress Bar -->
-          <button id="progress-hud" title="Tap to view Storyline & Quests" aria-label="Story Progress">
-            <span id="progress-act">ACT I</span>
-            <div id="progress-track">
-              <div id="progress-fill"></div>
-            </div>
-            <span id="progress-pct">0%</span>
-          </button>
-
-          <!-- Tiny Corner Lore Unlock / Evolution Popup -->
-          <div id="lore-toast" class="hidden" aria-live="polite">
-            <span class="toast-icon">✦</span>
-            <div class="toast-body">
-              <div id="toast-label">NEW LORE</div>
-              <div id="toast-title">Purgatorio</div>
-            </div>
-          </div>
-
-          <!-- Dialogue Overlay with 64x64 Pixel Portrait -->
-          <div id="dialogue-box" class="hidden">
-            <div id="portrait-frame">
-              <canvas id="portrait-canvas" width="64" height="64"></canvas>
-            </div>
-            <div id="dialogue-content">
-              <div id="dialogue-header">
-                <span id="speaker-name">Jacob</span>
-                <span id="speaker-role">Nephilim</span>
-              </div>
-              <p id="dialogue-text"></p>
-              <div id="dialogue-next">▼ PRESS A</div>
-            </div>
-          </div>
-
-          <!-- Choice Prompt Overlay (D-Pad + A/B navigable) -->
-          <div id="choice-box" class="hidden"></div>
-
-          <!-- Turn-Based Battle Overlay (Full-Body 32-bit Models + D-Pad Nav) -->
-          <div id="battle-ui" class="hidden">
-            <div id="battle-top-hud">
-              <div id="enemy-hud" class="stat-card">
-                <div class="stat-row">
-                  <span id="enemy-name">Sendex</span>
-                  <span id="enemy-tag">Lv.18</span>
-                </div>
-                <div class="hp-bar-bg"><div id="enemy-hp-fill" class="hp-bar-fill"></div></div>
-                <div id="enemy-hp-text" class="hp-text">180 / 180</div>
-              </div>
-            </div>
-
-            <div id="battle-party-hud"></div>
-
-            <div id="battle-bottom">
-              <div id="battle-log">Battle started!</div>
-              <div id="battle-actions"></div>
-            </div>
-          </div>
-
-          <!-- Title Screen Overlay (D-Pad + A navigable) -->
-          <div id="title-screen">
-            <div class="title-emblem">✦ ⚔ ✦</div>
-            <h1>LEGENDS OF DEATH</h1>
-            <h2>&amp; THE REAPERS OF TIME</h2>
-            <p class="title-sub">Complete Novel Edition • 5 Acts • 15 Chapters</p>
-            <div id="title-buttons" class="title-buttons">
-              <button id="btn-new-game" class="primary-btn focused" data-title-idx="0">▶ NEW JOURNEY</button>
-              <button id="btn-continue" class="secondary-btn hidden" data-title-idx="1">CONTINUE</button>
-            </div>
-            <p class="title-hint">D-Pad / WASD • A Confirm • Hold B to Run</p>
-          </div>
-
-          <!-- Scene Transition Fade -->
-          <div id="fade-layer"></div>
-        </div>
-
-        <div class="lens-bottom-strip">
-          <span class="lens-brand">REAPERS OF TIME</span>
-        </div>
-      </div>
-    </main>
-
-    <!-- Handheld Gamepad Deck (Colored Shell + Speaker Grille + Recessed Controls) -->
-    <footer id="controls-deck">
-      <div class="deck-top-row">
-        <span class="deck-stamp">PURGATORIO HANDHELD</span>
-        <div class="speaker-grille" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span>
-        </div>
-      </div>
-
-      <div class="deck-controls-row">
+    <!-- Handheld Main Body (Stacks Top+Center in Portrait, GBA Left-Center-Right in Landscape) -->
+    <div id="handheld-body">
+      <!-- Left Wing (Landscape GBA D-Pad) / Bottom-Left in Portrait -->
+      <div id="left-controls-slot" class="control-wing left-wing">
         <div id="dpad-well">
           <div id="dpad" aria-label="Directional Pad">
             <button class="dpad-btn up" data-dir="up">▲</button>
@@ -138,12 +65,133 @@
             <button class="dpad-btn down" data-dir="down">▼</button>
           </div>
         </div>
+      </div>
 
-        <div id="mid-controls">
-          <button id="btn-realm" class="pill-btn">PURGATORIO</button>
-          <button id="btn-menu" class="pill-btn">MENU</button>
+      <!-- Dark Glass Console Lens & Taller 4:3 Game Viewport (384x288) -->
+      <main id="screen-bezel">
+        <div id="console-lens">
+          <div class="lens-top-strip">
+            <div class="lens-led-wrap">
+              <span class="lens-led"></span>
+              <span class="lens-led-label">POWER</span>
+            </div>
+            <span class="lens-model">32-BIT COLOR SYSTEM</span>
+          </div>
+
+          <div id="screen-wrap">
+            <canvas id="game-canvas" width="384" height="288"></canvas>
+
+            <!-- Cinematic Letterbox Bars for Cutscenes -->
+            <div id="letterbox-top" class="letterbox"></div>
+            <div id="letterbox-bottom" class="letterbox"></div>
+            <div id="cutscene-badge">CUTSCENE</div>
+
+            <!-- Pokemon-Style Battle Flash Overlay -->
+            <div id="battle-flash"></div>
+
+            <!-- Clickable Story Progress Bar (Hidden during battle) -->
+            <button id="progress-hud" title="Tap to view Storyline" aria-label="Story Progress">
+              <span id="progress-act">ACT I</span>
+              <div id="progress-track">
+                <div id="progress-fill"></div>
+              </div>
+              <span id="progress-pct">0%</span>
+            </button>
+
+            <!-- Tiny Corner Lore Unlock / Evolution Popup -->
+            <div id="lore-toast" class="hidden" aria-live="polite">
+              <span class="toast-icon">✦</span>
+              <div class="toast-body">
+                <div id="toast-label">NEW LORE</div>
+                <div id="toast-title">Purgatorio</div>
+              </div>
+            </div>
+
+            <!-- Compact Dialogue Overlay with 64x64 Pixel Portrait -->
+            <div id="dialogue-box" class="hidden">
+              <div id="portrait-frame">
+                <canvas id="portrait-canvas" width="64" height="64"></canvas>
+              </div>
+              <div id="dialogue-content">
+                <div id="dialogue-header">
+                  <span id="speaker-name">Jacob</span>
+                  <span id="speaker-role">Nephilim</span>
+                </div>
+                <p id="dialogue-text"></p>
+                <div id="dialogue-next">▼ PRESS A</div>
+              </div>
+            </div>
+
+            <!-- Choice Prompt Overlay (D-Pad + A/B navigable) -->
+            <div id="choice-box" class="hidden"></div>
+
+            <!-- Compact In-Game Menu (Story / Party / Lore — Controlled by D-Pad + A/B) -->
+            <div id="ingame-menu" class="hidden">
+              <div class="ingame-menu-panel">
+                <div class="ingame-tabs">
+                  <button class="ig-tab active" data-tab="quests">STORY</button>
+                  <button class="ig-tab" data-tab="party">PARTY</button>
+                  <button class="ig-tab" data-tab="lore">LORE</button>
+                  <button id="ig-settings-shortcut" class="ig-tab ig-gear" title="Open Settings">⚙</button>
+                  <button id="ig-close" class="ig-close">✕</button>
+                </div>
+                <div id="ingame-body"></div>
+                <div class="ingame-hint">◀▶ Tabs • ▲▼ Scroll • B Close</div>
+              </div>
+            </div>
+
+            <!-- Sleek Non-Obstructing Turn-Based Battle UI -->
+            <div id="battle-ui" class="hidden">
+              <div id="battle-top-hud">
+                <div id="enemy-hud" class="stat-card">
+                  <div class="stat-row">
+                    <span id="enemy-name">Sendex</span>
+                    <span id="enemy-tag">Lv.18</span>
+                  </div>
+                  <div class="hp-bar-bg"><div id="enemy-hp-fill" class="hp-bar-fill"></div></div>
+                  <div id="enemy-hp-text" class="hp-text">180 / 180</div>
+                </div>
+              </div>
+
+              <div id="battle-bottom-stack">
+                <div id="battle-party-hud"></div>
+                <div id="battle-bottom">
+                  <div id="battle-log">Battle started!</div>
+                  <div id="battle-actions"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Title Screen Overlay (D-Pad + A navigable) -->
+            <div id="title-screen">
+              <div class="title-emblem">✦ ⚔ ✦</div>
+              <h1>LEGENDS OF DEATH</h1>
+              <h2>&amp; THE REAPERS OF TIME</h2>
+              <p class="title-sub">Complete Novel Edition • 5 Acts • 15 Chapters</p>
+              <div id="title-buttons" class="title-buttons">
+                <button id="btn-new-game" class="primary-btn focused" data-title-idx="0">▶ NEW JOURNEY</button>
+                <button id="btn-continue" class="secondary-btn hidden" data-title-idx="1">CONTINUE</button>
+              </div>
+              <p class="title-hint">D-Pad / WASD • A Confirm • Hold B to Run</p>
+            </div>
+
+            <!-- Scene Transition Fade -->
+            <div id="fade-layer"></div>
+          </div>
+
+          <div class="lens-bottom-strip">
+            <span class="lens-brand">REAPERS OF TIME</span>
+          </div>
         </div>
+      </main>
 
+      <!-- Middle & Right Controls (Combined into Centered Deck in Portrait, Right Wing in Landscape GBA) -->
+      <div id="mid-controls">
+        <button id="btn-realm" class="pill-btn">PURGATORIO</button>
+        <button id="btn-menu" class="pill-btn">MENU</button>
+      </div>
+
+      <div id="right-controls-slot" class="control-wing right-wing">
         <div id="ab-well">
           <div id="ab-pad">
             <div class="btn-slot slot-b">
@@ -157,24 +205,25 @@
           </div>
         </div>
       </div>
-    </footer>
 
-    <!-- Full-Screen Menu & Settings Overlay -->
-    <div id="menu-overlay" class="hidden" role="dialog" aria-modal="true">
-      <div class="menu-panel">
-        <div class="menu-top-title">
-          <span>✦ LEGENDS OF DEATH — MENU</span>
-          <button id="menu-close" class="tab-close" aria-label="Close Menu">✕</button>
+      <!-- Portrait-only decorative handheld stamp & speaker grille -->
+      <div class="deck-decor" aria-hidden="true">
+        <span class="deck-stamp">PURGATORIO HANDHELD</span>
+        <div class="speaker-grille">
+          <span></span><span></span><span></span><span></span><span></span>
         </div>
-        <div class="menu-tabs">
-          <button class="tab-btn active" data-tab="quests">Story</button>
-          <button class="tab-btn" data-tab="party">Party</button>
-          <button class="tab-btn" data-tab="lore">Lore</button>
-          <button class="tab-btn" data-tab="settings">Settings</button>
-          <button class="tab-btn" data-tab="save">Save</button>
+      </div>
+    </div>
+
+    <!-- Full-Screen SETTINGS Overlay (Only Settings Pops Up Full-Screen!) -->
+    <div id="settings-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Settings">
+      <div class="settings-panel">
+        <div class="settings-header">
+          <span>⚙ DEVICE &amp; GAME SETTINGS</span>
+          <button id="settings-close" class="tab-close" aria-label="Close Settings">✕</button>
         </div>
-        <div id="menu-body"></div>
-        <div class="menu-footer-hint">◀▶ Switch Tabs • ▲▼ Select • A Confirm • B Close</div>
+        <div id="settings-body"></div>
+        <div class="settings-footer">Tap any option or use ▲▼ ◀▶ &amp; A • B to Close</div>
       </div>
     </div>
   </div>

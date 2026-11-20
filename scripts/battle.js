@@ -1,9 +1,10 @@
 // =========================================================
 // scripts/battle.js — Full-Body 32-Bit GBA Turn-Based Battle
-//                     with D-Pad / A Button Grid Navigation
+//                     Cleanly Framed on 384x288 Viewport
 // =========================================================
 window.Battle = (() => {
   const ui = () => document.getElementById("battle-ui");
+  const wrap = () => document.getElementById("screen-wrap");
   const logEl = () => document.getElementById("battle-log");
   const actionsEl = () => document.getElementById("battle-actions");
   const partyHudEl = () => document.getElementById("battle-party-hud");
@@ -133,6 +134,7 @@ window.Battle = (() => {
       busy: false
     };
 
+    wrap().classList.add("battle-active");
     ui().classList.remove("hidden");
     renderHud();
     setLog(`${state.enemy.name} stands before you! Choose ${state.party[0].name}'s move!`);
@@ -185,7 +187,6 @@ window.Battle = (() => {
     });
   }
 
-  // Full D-Pad + A button navigation for the 2x2 battle move grid
   function moveFocus(dir) {
     if (!active || !state || state.busy) return;
     const prev = state.focusIdx;
@@ -225,12 +226,12 @@ window.Battle = (() => {
     if (mv.healAll) {
       state.party.forEach(p => { if (p.hp > 0) p.hp = Math.min(p.maxHp, p.hp + mv.healAll); });
       window.AudioFX.heal();
-      spawnVfx(105, 148, mv.color);
+      spawnVfx(105, 134, mv.color);
       setLog(`${actor.name} used ${mv.name}! Restored ${mv.healAll} HP to the team!`);
     } else if (mv.heal) {
       actor.hp = Math.min(actor.maxHp, actor.hp + mv.heal);
       window.AudioFX.heal();
-      spawnVfx(95 + state.turnIdx * 45, 148, mv.color);
+      spawnVfx(80 + state.turnIdx * 55, 134, mv.color);
       setLog(`${actor.name} used ${mv.name} and recovered ${mv.heal} HP!`);
     } else {
       const dmg = Math.floor(mv.dmg[0] + Math.random() * (mv.dmg[1] - mv.dmg[0] + 1));
@@ -238,7 +239,7 @@ window.Battle = (() => {
       state.enemy.flash = 14;
       shake = 10;
       window.AudioFX.hit();
-      spawnVfx(290, 96, mv.color);
+      spawnVfx(290, 82, mv.color);
       setLog(`${actor.name} unleashed ${mv.name} for ${dmg} damage!`);
     }
 
@@ -247,7 +248,7 @@ window.Battle = (() => {
     setTimeout(() => {
       if (state.enemy.hp <= 0) {
         setLog(`${state.enemy.name} was defeated! Entering cutscene...`);
-        setTimeout(() => finish(true), 900);
+        setTimeout(() => finish(true), 880);
         return;
       }
 
@@ -261,7 +262,7 @@ window.Battle = (() => {
       } else {
         enemyTurn();
       }
-    }, 820);
+    }, 800);
   }
 
   function enemyTurn() {
@@ -278,7 +279,7 @@ window.Battle = (() => {
     target.flash = 14;
     shake = 10;
     window.AudioFX.hit();
-    spawnVfx(100, 148, "#ef4444");
+    spawnVfx(105, 134, "#ef4444");
     setLog(`${e.name} used ${moveName} on ${target.name} for ${dmg} damage!`);
     renderHud();
 
@@ -294,17 +295,19 @@ window.Battle = (() => {
       state.busy = false;
       renderHud();
       renderMoves();
-    }, 900);
+    }, 880);
   }
 
   function finish(won) {
     active = false;
+    wrap().classList.remove("battle-active");
     ui().classList.add("hidden");
     const cb = onComplete;
     onComplete = null;
     if (cb) cb(won);
   }
 
+  // Draw on 384x288 canvas with clean vertical separation from HUD!
   function draw(ctx, time) {
     if (!active || !state) return;
     ctx.save();
@@ -314,43 +317,47 @@ window.Battle = (() => {
       if (shake < 0.5) shake = 0;
     }
 
-    const grad = ctx.createLinearGradient(0, 0, 0, 256);
+    const grad = ctx.createLinearGradient(0, 0, 0, 288);
     if (state.bg === "bloodmoon") {
-      grad.addColorStop(0, "#2b050b"); grad.addColorStop(0.55, "#7f1d1d"); grad.addColorStop(1, "#1c1917");
+      grad.addColorStop(0, "#2b050b"); grad.addColorStop(0.5, "#7f1d1d"); grad.addColorStop(1, "#1c1917");
     } else if (state.bg === "party") {
-      grad.addColorStop(0, "#1e1b4b"); grad.addColorStop(0.55, "#4c1d95"); grad.addColorStop(1, "#0f172a");
+      grad.addColorStop(0, "#1e1b4b"); grad.addColorStop(0.5, "#4c1d95"); grad.addColorStop(1, "#0f172a");
     } else {
-      grad.addColorStop(0, "#0f172a"); grad.addColorStop(0.55, "#312e81"); grad.addColorStop(1, "#1e293b");
+      grad.addColorStop(0, "#0f172a"); grad.addColorStop(0.5, "#312e81"); grad.addColorStop(1, "#1e293b");
     }
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 384, 256);
+    ctx.fillRect(0, 0, 384, 288);
 
     if (state.bg === "bloodmoon") {
       ctx.fillStyle = "#ef4444";
-      ctx.beginPath(); ctx.arc(192, 46, 26, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(192, 42, 24, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "rgba(254, 202, 202, 0.25)";
-      ctx.beginPath(); ctx.arc(192, 46, 34, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(192, 42, 32, 0, Math.PI * 2); ctx.fill();
     } else {
       ctx.fillStyle = "rgba(255,255,255,0.65)";
-      for (let i = 0; i < 20; i++) ctx.fillRect((i * 53) % 380, (i * 29) % 100, 2, 2);
+      for (let i = 0; i < 22; i++) ctx.fillRect((i * 53) % 380, (i * 29) % 105, 2, 2);
     }
 
+    // Enemy Platform (Upper Right — completely clear of top-left enemy HUD!)
     ctx.fillStyle = "rgba(15, 23, 42, 0.72)";
-    ctx.beginPath(); ctx.ellipse(290, 134, 62, 16, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(290, 114, 58, 14, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = "#f5c542"; ctx.lineWidth = 2; ctx.stroke();
 
+    // Party Platform (Mid-Left — completely ABOVE the bottom HUD & HP cards!)
     ctx.fillStyle = "rgba(15, 23, 42, 0.72)";
-    ctx.beginPath(); ctx.ellipse(104, 178, 78, 18, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(106, 162, 74, 15, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 2; ctx.stroke();
 
+    // Draw FULL-BODY Enemy Model
     if (state.enemy.flash > 0) state.enemy.flash--;
-    window.Sprites.drawBattleModel(ctx, state.enemy.id, 290, 98, true, time, state.enemy.lunge, state.enemy.flash > 0);
+    window.Sprites.drawBattleModel(ctx, state.enemy.id, 290, 82, true, time, state.enemy.lunge, state.enemy.flash > 0);
 
+    // Draw FULL-BODY 2-Character Party Models (clearly visible above bottom cards)
     state.party.forEach((p, idx) => {
       if (p.hp <= 0) return;
       if (p.flash > 0) p.flash--;
-      const px = idx === 0 ? 74 : 134;
-      const py = idx === 0 ? 140 : 148;
+      const px = idx === 0 ? 74 : 138;
+      const py = idx === 0 ? 126 : 132;
       window.Sprites.drawBattleModel(ctx, p.id, px, py, false, time + idx * 400, p.lunge, p.flash > 0);
     });
 
