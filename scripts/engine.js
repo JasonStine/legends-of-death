@@ -167,6 +167,7 @@
     settingFocusRow: 0,
     discoveredParty: ["jacob"],
     loreTiers: {},
+    sideQuests: { hasLindor: false, tylerDone: false },
     settings: {
       volume: true,
       runByDefault: false,
@@ -623,6 +624,55 @@
       startDialogue([{ id: "jacob", mood: "intense", text: "Whoa... in Purgatorio, I can see faint black-green Envy toxin glowing on the floor—just like Navi saw at Cyrine's house!", unlockLore: { id: "purgatorio_secrets", tier: 1 } }]);
     } else if (eventName === "lorePurgBookstore") {
       startDialogue([{ id: "sign", mood: "intense", text: "Hidden Reaperian Text: 'When a Reaper disguises themselves as an animal, their form reflects their soul—like Illicero's platinum cat form, Crista.'", unlockLore: { id: "crista_cat", tier: 2 } }]);
+    } else if (eventName === "kidPlaySection") {
+      startDialogue([
+        { id: "kid", mood: "happy", text: "Hi! Did you see the shiny man with black wings standing by the café? Grown-ups say I'm imagining things, but he waved at me!", unlockLore: { id: "kids_purgatorio", tier: 1 } }
+      ]);
+    } else if (eventName === "loreJacobDiary") {
+      startDialogue([
+        { id: "jacob", mood: "happy", text: "My constellation notebook! I've been sketching Orion and Cassiopeia here since middle school—Cyrine always loved hearing their stories." }
+      ]);
+    } else if (eventName === "loreSchoolCalculus") {
+      startDialogue([
+        { id: "sign", mood: "neutral", text: "Mrs. Suzanna's Chalkboard: 'AP Calculus — Derivatives & Limits. Please stay awake in class, Letonin!'" }
+      ]);
+    } else if (eventName === "lorePromPoster") {
+      startDialogue([
+        { id: "sign", mood: "happy", text: "COLORADO SPRINGS HIGH SENIOR PROM — 'A Night Under the Stars' in 2 weeks! (Maybe someone will bring Lindor dark chocolate...)", unlockLore: { id: "westside_secrets", tier: 1 } }
+      ]);
+    } else if (eventName === "candySample") {
+      window.AudioFX.heal();
+      startDialogue([
+        { id: "candy_clerk", mood: "happy", text: "Here's a free chocolate truffle filled with strawberry jam! Sweet and refreshing—HP restored!" }
+      ]);
+    } else if (eventName === "lindorPickup") {
+      game.sideQuests.hasLindor = true;
+      window.AudioFX.confirm();
+      startDialogue([
+        { id: "jacob", mood: "happy", text: "Picked up a box of Lindor Dark Chocolate—my absolute favorite! (Tyler outside in Westside might love some too.)" }
+      ]);
+    } else if (eventName === "sideQuestChocolate") {
+      if (game.sideQuests.tylerDone) {
+        startDialogue([{ id: "student_b", mood: "happy", text: "Thanks again for the Lindor chocolates, Jacob! You're a lifesaver!" }]);
+      } else if (game.sideQuests.hasLindor) {
+        game.sideQuests.tylerDone = true;
+        window.AudioFX.heal();
+        startDialogue([
+          { id: "student_b", mood: "happy", text: "Whoa—you actually brought Lindor Dark Chocolate from Sweet Tooth?! Side Quest Complete! Here's a tip: check the Arcade Loft next door for SNAKE.EXE!" }
+        ]);
+      } else {
+        startDialogue([
+          { id: "student_b", mood: "sad", text: "SIDE QUEST: Hey Jacob, I promised my date Lindor Dark Chocolate from Sweet Tooth Candy Store down the street, but I'm stuck waiting for my ride! Could you grab a box for me?" }
+        ]);
+      }
+    } else if (eventName === "loreNeighborHistory") {
+      startDialogue([
+        { id: "neighbor", mood: "neutral", text: "Local Folklore Archive: 'For decades, hikers near Limbach Park have reported seeing dark-winged figures vanish into thin air—and hearing faint piano music on moonlit nights.'", unlockLore: { id: "westside_secrets", tier: 1 } }
+      ]);
+    } else if (eventName === "lorePurgWestside") {
+      startDialogue([
+        { id: "sign", mood: "intense", text: "Purgatorio Memory Shard: 'Even if memories are sealed by Death, two souls bound across realms will always find their way back together.'", unlockLore: { id: "purgatorio_secrets", tier: 2 } }
+      ]);
     } else if (eventName === "hospitalHeal") {
       window.AudioFX.heal();
       startDialogue([{ id: "mom", mood: "happy", text: "Welcome to Colorado Springs Medical Center, sweetheart! All HP and spirit energy fully restored!" }]);
@@ -634,7 +684,7 @@
             if (game.questStage === 3 || game.questStage === 4) {
               startDialogue(D.sleepPrompt, () => {
                 advanceStage(4);
-                loadMap("dream", 7, 8);
+                loadMap("dream", 7, 7);
               });
             } else if (game.questStage < 3) {
               startDialogue([{ id: "jacob", mood: "neutral", text: "I should talk to Cyrine and meet Navi in the kitchen before going to sleep!" }]);
@@ -754,7 +804,7 @@
       const tx = Math.floor(cx / T), ty = Math.floor(cy / T);
       if (tx < 0 || ty < 0 || tx >= map.w || ty >= map.h) return true;
       const tile = map.grid[ty][tx];
-      if (tile === 1 || tile === 2 || tile === 6) return true;
+      if (tile === 1 || tile === 2 || tile === 6 || tile === 8 || tile === 9 || tile === 10) return true;
     }
     for (const a of game.actors) {
       if (a.hidden) continue;
@@ -781,6 +831,19 @@
       if (p.minQuest !== undefined && game.questStage < p.minQuest) continue;
       if (Math.hypot(game.player.x - p.tx * T, game.player.y - p.ty * T) < 15) {
         loadMap(p.dest, p.destX, p.destY);
+        return;
+      }
+    }
+    // Story-based Quest-Tied Outer City Boundary Guard!
+    for (const bz of map.boundaryZones || []) {
+      if (ptx === bz.tx && pty === bz.ty) {
+        game.player.x += (bz.pushX || 0) * T;
+        game.player.y += (bz.pushY || 0) * T;
+        const q = window.Story.quests[Math.min(game.questStage, window.Story.quests.length - 1)];
+        const msg = q
+          ? `I shouldn't leave the neighborhood right now—I need to focus on ${q.title}: ${q.objective}`
+          : "I shouldn't wander too far out of Colorado Springs right now.";
+        startDialogue([{ id: "jacob", mood: "neutral", text: msg }]);
         return;
       }
     }
@@ -839,7 +902,7 @@
     for (const prop of map.props || []) {
       if (!prop.interact) continue;
       if (prop.purgOnly && !game.purgatorio) continue;
-      const pw = (prop.kind === "couch" || prop.kind === "reception_desk" || prop.kind === "coffee_counter") ? 72 : 44;
+      const pw = (prop.kind === "couch" || prop.kind === "reception_desk" || prop.kind === "coffee_counter" || prop.kind === "candy_case" || prop.kind === "dj_booth" || prop.kind === "chalkboard") ? 72 : 44;
       const ph = prop.kind === "bed" ? 56 : 30;
       const px0 = prop.tx * T - 10, py0 = prop.ty * T - 10;
       if (fx >= px0 && fx <= px0 + pw + 20 && fy >= py0 && fy <= py0 + ph + 20) {
@@ -866,14 +929,21 @@
         const sx = x * T - camX, sy = y * T - camY;
         if (sx < -T || sy < -T || sx > VIEW_W || sy > VIEW_H) continue;
         const tile = map.grid[y][x];
+        const isExterior = (map.id === "overworld" || map.id === "westside" || map.id === "dream" || map.id === "park" || map.id === "fortress");
         if (tile === 3) {
           window.WorldArt.drawRoadTile(ctx, map, x, y, sx, sy, game.purgatorio);
         } else if (tile === 5) {
           window.WorldArt.drawSidewalkTile(ctx, sx, sy, game.purgatorio);
-        } else if ((tile === 1 || tile === 6) && map.id !== "overworld") {
+        } else if (tile === 8) {
+          window.WorldArt.drawDistantCityTile(ctx, x, y, sx, sy, game.purgatorio);
+        } else if (tile === 9) {
+          window.WorldArt.drawFenceTile(ctx, sx, sy, game.purgatorio);
+        } else if (tile === 10) {
+          window.WorldArt.drawWaterTile(ctx, x, y, sx, sy, time, map.id === "dream");
+        } else if ((tile === 1 || tile === 6) && !isExterior) {
           window.WorldArt.drawInteriorWallTile(ctx, map, tile, x, y, sx, sy, game.purgatorio);
-        } else if (map.id !== "overworld" && window.WorldArt.drawInteriorFloorTile(ctx, map.floorType, tile, x, y, sx, sy, time, game.purgatorio)) {
-          // Drawn by refined Stardew interior floor renderer!
+        } else if (!isExterior && window.WorldArt.drawInteriorFloorTile(ctx, map.floorType, tile, x, y, sx, sy, time, game.purgatorio)) {
+          // Drawn by Stardew interior floor renderer!
         } else {
           const g1 = (game.purgatorio && map.floorType === "grass") ? "#24473c" : c1;
           const g2 = (game.purgatorio && map.floorType === "grass") ? "#1d3b32" : c2;
@@ -968,16 +1038,7 @@
     (map.signs || []).forEach(s => window.WorldArt.drawSignpost(ctx, s.tx, s.ty));
     (map.trees || []).forEach(t => window.WorldArt.drawTree(ctx, t.tx * T, t.ty * T, t.kind, time));
 
-    if (map.id === "overworld") {
-      for (let x = 0; x < map.w; x++) {
-        window.WorldArt.drawTree(ctx, x * T, 0, x % 2 === 0 ? "pine" : "oak", time);
-        window.WorldArt.drawTree(ctx, x * T, (map.h - 1) * T, "oak", time);
-      }
-      for (let y = 1; y < map.h - 1; y++) {
-        window.WorldArt.drawTree(ctx, 0, y * T, "pine", time);
-        window.WorldArt.drawTree(ctx, (map.w - 1) * T, y * T, "oak", time);
-      }
-    }
+    // Organic wiggly trees, fences, creek & distant city are now defined per-map!
 
     (map.props || []).filter(p => p.kind !== "rug" && p.kind !== "exit_mat" && (!p.purgOnly || game.purgatorio)).forEach(p => window.WorldArt.drawProp(ctx, p, time));
 
@@ -1006,6 +1067,8 @@
     });
 
     ctx.restore();
+
+    if (map.id === "dream") window.WorldArt.drawDreamBackdrop(ctx, time);
 
     if (game.purgatorio || map.id === "park") {
       ctx.fillStyle = "rgba(76, 29, 149, 0.22)";

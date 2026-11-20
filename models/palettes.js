@@ -299,4 +299,82 @@ window.PALETTES = {
     pants: "#38bdf8", shoes: "#bae6fd",
     aura: "#38bdf8", wings: "float", weapon: null
   }
+,
+  kid: {
+    name: "Little Leo",
+    role: "Kid in Play Corner",
+    trueRole: "Child Who Sees Purgatorio",
+    skin: "#f6d0b4", skinShade: "#d9ab8b",
+    hair: "#b45309", hairHi: "#f59e0b", hairStyle: "messy",
+    eyes: "#22c55e",
+    top: "#ef4444", topShade: "#b91c1c", accent: "#facc15",
+    pants: "#1d4ed8", shoes: "#f8fafc",
+    aura: null, wings: null, weapon: null
+  },
+  party_girl: {
+    name: "Senior Partygoer",
+    role: "Colorado Springs High",
+    trueRole: "Colorado Springs High",
+    skin: "#f5ccb0", skinShade: "#d6a485",
+    hair: "#dc2626", hairHi: "#f87171", hairStyle: "long",
+    eyes: "#3b82f6",
+    top: "#ec4899", topShade: "#be185d", accent: "#fef08a",
+    pants: "#18181b", shoes: "#f472b6",
+    aura: null, wings: null, weapon: null
+  },
+  party_guy: {
+    name: "DJ Marcus",
+    role: "Party Host • Senior",
+    trueRole: "Party Host • Senior",
+    skin: "#8d5524", skinShade: "#6b3e18",
+    hair: "#111827", hairHi: "#374151", hairStyle: "spiky",
+    eyes: "#f59e0b",
+    top: "#06b6d4", topShade: "#0e7490", accent: "#f8fafc",
+    pants: "#0f172a", shoes: "#22d3ee",
+    aura: null, wings: null, weapon: null
+  },
+  neighbor: {
+    name: "Mr. Henderson",
+    role: "Next-Door Neighbor",
+    trueRole: "Retired Historian",
+    skin: "#eec5a8", skinShade: "#cca082",
+    hair: "#9ca3af", hairHi: "#e5e7eb", hairStyle: "messy",
+    eyes: "#475569",
+    top: "#65a30d", topShade: "#4d7c0f", accent: "#fef3c7",
+    pants: "#3f3f46", shoes: "#27272a",
+    aura: null, wings: null, weapon: null
+  },
+  candy_clerk: {
+    name: "Chloe",
+    role: "Sweet Tooth Candy Clerk",
+    trueRole: "Mall Candy Store Clerk",
+    skin: "#f6d4be", skinShade: "#d9b096",
+    hair: "#db2777", hairHi: "#f472b6", hairStyle: "bun",
+    eyes: "#0ea5e9",
+    top: "#f472b6", topShade: "#be185d", accent: "#ffffff",
+    pants: "#1e293b", shoes: "#ec4899",
+    aura: null, wings: null, weapon: null
+  },
+  student_a: {
+    name: "Maya (Senior)",
+    role: "Classmate",
+    trueRole: "Colorado Springs High",
+    skin: "#d8a47f", skinShade: "#b5825e",
+    hair: "#1f2937", hairHi: "#4b5563", hairStyle: "long",
+    eyes: "#78350f",
+    top: "#6366f1", topShade: "#4338ca", accent: "#e0e7ff",
+    pants: "#1f2937", shoes: "#cbd5e1",
+    aura: null, wings: null, weapon: null
+  },
+  student_b: {
+    name: "Tyler (Senior)",
+    role: "Classmate",
+    trueRole: "Colorado Springs High",
+    skin: "#f3ccb0", skinShade: "#d4a686",
+    hair: "#ca8a04", hairHi: "#facc15", hairStyle: "spiky",
+    eyes: "#2563eb",
+    top: "#16a34a", topShade: "#15803d", accent: "#fef08a",
+    pants: "#1e293b", shoes: "#f8fafc",
+    aura: null, wings: null, weapon: null
+  }
 };

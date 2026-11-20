@@ -362,6 +362,52 @@ window.WorldArt = (() => {
       px(ctx, x + w - 12, y + h - 5, 4, 5, "#ef4444");
       const dx = b.doorTx * T;
       px(ctx, dx + 2, y + h - 24, 20, 24, "#1e1b4b"); px(ctx, dx + 15, y + h - 12, 3, 3, "#facc15");
+    } else if (b.style === "school") {
+      // COLORADO SPRINGS HIGH SCHOOL: Brick Campus + Clocktower
+      px(ctx, x, y + 4, w, 16, "#7f1d1d");
+      px(ctx, x, y + 20, w, h - 20, purgatorio ? "#4c2c44" : "#b91c1c");
+      for (let by = y + 24; by < y + h - 4; by += 7) px(ctx, x + 2, by, w - 4, 1, "#991b1b");
+      // Clocktower centerpiece
+      const mid = x + Math.floor(w / 2);
+      px(ctx, mid - 14, y - 16, 28, 22, "#991b1b");
+      px(ctx, mid - 16, y - 18, 32, 4, "#450a0a");
+      px(ctx, mid - 7, y - 12, 14, 14, "#fef3c7"); // clock face
+      px(ctx, mid - 1, y - 9, 2, 5, "#111"); px(ctx, mid - 1, y - 5, 5, 2, "#111");
+      ctx.font = "bold 6px monospace"; ctx.fillStyle = "#fef08a"; ctx.fillText("CS HIGH SCHOOL", x + 16, y + 15);
+      // Tall classroom windows
+      [x + 8, x + w - 26].forEach(wx => {
+        px(ctx, wx, y + 32, 18, 18, "#bae6fd");
+        px(ctx, wx + 8, y + 32, 2, 18, "#7f1d1d"); px(ctx, wx, y + 40, 18, 2, "#7f1d1d");
+      });
+      const dx = b.doorTx * T;
+      px(ctx, dx, y + h - 24, 24, 24, "#451a03");
+      px(ctx, dx + 2, y + h - 22, 9, 22, "#92400e"); px(ctx, dx + 13, y + h - 22, 9, 22, "#92400e");
+    } else if (b.style === "candy_shop") {
+      // MALL CANDY STORE (Ch. XII): Striped Pink/Cream Awning & Pastel Windows
+      px(ctx, x, y + 4, w, 14, "#be185d");
+      px(ctx, x, y + 18, w, h - 18, purgatorio ? "#4c1d4b" : "#fdf2f8");
+      // Pink & White Striped Awning
+      px(ctx, x - 2, y + 22, w + 4, 11, "#ec4899");
+      for (let ax = x; ax < x + w; ax += 12) px(ctx, ax, y + 22, 6, 11, "#fbcfe8");
+      ctx.font = "bold 6px monospace"; ctx.fillStyle = "#fef08a"; ctx.fillText("SWEET TOOTH", x + 22, y + 13);
+      [x + 8, x + w - 28].forEach(wx => {
+        px(ctx, wx, y + 38, 20, 16, "#bae6fd");
+        px(ctx, wx + 3, y + 44, 5, 7, "#ef4444"); px(ctx, wx + 10, y + 42, 5, 9, "#a855f7");
+      });
+      const dx = b.doorTx * T;
+      px(ctx, dx + 2, y + h - 24, 20, 24, "#be185d"); px(ctx, dx + 5, y + h - 21, 14, 18, "#fde68a");
+    } else if (b.style === "neighbor_house") {
+      // EXTRA SUBURBAN NEIGHBOR HOUSE (Slate Blue/Sage Craftsman)
+      px(ctx, x - 3, y + 6, w + 6, 22, "#1e3a8a");
+      px(ctx, x + 2, y, w - 4, 12, "#2563eb");
+      px(ctx, x, y + 28, w, h - 28, purgatorio ? "#94a3b8" : "#dbeafe");
+      px(ctx, x, y + h - 8, w, 8, "#64748b");
+      [x + 10, x + w - 26].forEach(wx => {
+        px(ctx, wx - 2, y + 36, 20, 15, "#1e293b"); px(ctx, wx, y + 38, 16, 11, "#fef08a");
+      });
+      const dx = b.doorTx * T;
+      px(ctx, dx + 2, y + h - 25, 20, 25, "#1e3a8a"); px(ctx, dx + 5, y + h - 22, 14, 20, "#3b82f6");
+      px(ctx, dx + 15, y + h - 12, 3, 3, "#facc15");
     }
 
     // Subtle Purgatorio spectral rune sigil glowing above roofs in Purgatorio mode!
@@ -533,11 +579,157 @@ window.WorldArt = (() => {
       ctx.beginPath(); ctx.ellipse(x + 12, y + 12, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
       px(ctx, x + 7, y + 10, 10, 4, "#111827");
       px(ctx, x + 10, y + 8, 4, 2, "#a855f7");
+    } else if (prop.kind === "play_mat") {
+      // Barnes & Noble Kids' Play Section Colorful Foam Mat!
+      const w = (prop.tw || 3) * T, h = (prop.th || 2) * T;
+      const cols = ["#ef4444", "#3b82f6", "#facc15", "#22c55e"];
+      for (let yy = 0; yy < (prop.th || 2); yy++) {
+        for (let xx = 0; xx < (prop.tw || 3); xx++) {
+          px(ctx, x + xx * T, y + yy * T, T, T, cols[(xx + yy) % 4]);
+          px(ctx, x + xx * T + 2, y + yy * T + 2, T - 4, T - 4, "rgba(255,255,255,0.18)");
+        }
+      }
+    } else if (prop.kind === "toy_blocks") {
+      px(ctx, x + 3, y + 10, 8, 8, "#ef4444"); px(ctx, x + 12, y + 11, 8, 7, "#3b82f6");
+      px(ctx, x + 7, y + 3, 8, 8, "#facc15");
+    } else if (prop.kind === "dj_booth") {
+      const w = 72;
+      px(ctx, x, y + 2, w, 22, "#0f172a"); px(ctx, x + 2, y + 4, w - 4, 14, "#1e293b");
+      const glow = Math.floor(time / 220) % 2 === 0 ? "#ec4899" : "#22d3ee";
+      px(ctx, x + 8, y + 6, 14, 10, "#cbd5e1"); px(ctx, x + 11, y + 8, 8, 6, "#09090b"); // turntable L
+      px(ctx, x + 50, y + 6, 14, 10, "#cbd5e1"); px(ctx, x + 53, y + 8, 8, 6, "#09090b"); // turntable R
+      px(ctx, x + 28, y + 8, 16, 6, glow); // neon mixer
+    } else if (prop.kind === "disco_ball") {
+      const pulse = Math.floor(time / 300) % 3;
+      const cols = ["rgba(236,72,153,0.16)", "rgba(34,211,238,0.16)", "rgba(168,85,247,0.16)"];
+      ctx.fillStyle = cols[pulse];
+      ctx.beginPath(); ctx.arc(x + 12, y + 12, 26, 0, Math.PI * 2); ctx.fill();
+    } else if (prop.kind === "dining_table") {
+      px(ctx, x, y + 4, 48, 20, "#78350f"); px(ctx, x + 2, y + 6, 44, 14, "#b45309");
+      px(ctx, x + 8, y + 9, 8, 6, "#f8fafc"); px(ctx, x + 32, y + 9, 8, 6, "#f8fafc");
+    } else if (prop.kind === "sink_counter") {
+      px(ctx, x, y, 48, 22, "#94a3b8"); px(ctx, x + 2, y + 2, 44, 14, "#f1f5f9");
+      px(ctx, x + 14, y + 5, 18, 9, "#38bdf8");
+    } else if (prop.kind === "locker_row") {
+      const w = 72;
+      px(ctx, x, y, w, 24, "#1e3a8a");
+      for (let lx = 0; lx < w; lx += 12) {
+        px(ctx, x + lx + 1, y + 2, 10, 20, "#2563eb");
+        px(ctx, x + lx + 3, y + 5, 6, 2, "#93c5fd");
+        px(ctx, x + lx + 8, y + 12, 2, 3, "#facc15");
+      }
+    } else if (prop.kind === "chalkboard") {
+      px(ctx, x, y, 96, 18, "#78350f"); px(ctx, x + 3, y + 2, 90, 14, "#14532d");
+      px(ctx, x + 10, y + 6, 28, 2, "#f8fafc"); px(ctx, x + 10, y + 10, 44, 2, "#bbf7d0");
+    } else if (prop.kind === "school_desk") {
+      px(ctx, x + 2, y + 4, 20, 16, "#92400e"); px(ctx, x + 4, y + 6, 16, 10, "#d97706");
+      px(ctx, x + 6, y + 8, 6, 5, "#ffffff"); // open calculus notebook
+    } else if (prop.kind === "candy_case") {
+      const w = 72;
+      px(ctx, x, y, w, 24, "#be185d"); px(ctx, x + 2, y + 2, w - 4, 14, "#fdf2f8");
+      const ccols = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899"];
+      for (let i = 0; i < 6; i++) px(ctx, x + 6 + i * 10, y + 5, 7, 8, ccols[i]);
+    } else if (prop.kind === "arcade_cab") {
+      px(ctx, x + 3, y - 4, 18, 28, "#312e81"); px(ctx, x + 5, y - 2, 14, 10, "#22d3ee");
+      px(ctx, x + 5, y + 10, 14, 5, "#f43f5e"); px(ctx, x + 7, y + 11, 3, 3, "#facc15");
+    } else if (prop.kind === "bush") {
+      px(ctx, x + 3, y + 8, 18, 12, "#15803d"); px(ctx, x + 5, y + 5, 14, 10, "#22c55e");
+      px(ctx, x + 8, y + 8, 3, 3, "#f472b6"); px(ctx, x + 14, y + 11, 3, 3, "#facc15");
     } else if (prop.kind === "exit_mat") {
       px(ctx, x, y + 4, 48, 16, "#991b1b"); px(ctx, x + 3, y + 7, 42, 10, "#f5c542");
       ctx.font = "bold 7px monospace"; ctx.fillStyle = "#111"; ctx.fillText("EXIT", x + 15, y + 14);
     }
   }
 
-  return { T, drawRoadTile, drawSidewalkTile, drawInteriorFloorTile, drawInteriorWallTile, drawTree, drawSignpost, drawBuilding, drawPortal, drawProp };
+  
+  // ---------------------------------------------------------
+  // 2B. ORGANIC PERIMETER TILES: Distant City, Fence & Shimmering Water
+  // ---------------------------------------------------------
+  function drawDistantCityTile(ctx, x, y, sx, sy, purgatorio = false) {
+    // Distant Colorado Springs skyline & suburban rooftops beyond the playable edge
+    const sky = purgatorio ? "#17112b" : "#1e293b";
+    px(ctx, sx, sy, T, T, sky);
+    const seed = (x * 17 + y * 31) % 5;
+    const bH = 10 + seed * 3;
+    const bCol = purgatorio ? "#2d244d" : (seed % 2 === 0 ? "#334155" : "#475569");
+    const winCol = purgatorio ? "#a78bfa" : "#fde047";
+    px(ctx, sx + 2, sy + T - bH, T - 4, bH, bCol);
+    px(ctx, sx + 1, sy + T - bH, T - 2, 2, purgatorio ? "#4c3b7a" : "#64748b");
+    // Tiny glowing distant city windows
+    px(ctx, sx + 5, sy + T - bH + 4, 3, 3, winCol);
+    px(ctx, sx + 14, sy + T - bH + 4, 3, 3, seed % 3 === 0 ? "#38bdf8" : winCol);
+    if (bH > 14) {
+      px(ctx, sx + 5, sy + T - bH + 10, 3, 3, winCol);
+      px(ctx, sx + 14, sy + T - bH + 10, 3, 3, winCol);
+    }
+  }
+
+  function drawFenceTile(ctx, sx, sy, purgatorio = false) {
+    // Grass under a crisp wooden neighborhood fence
+    px(ctx, sx, sy, T, T, purgatorio ? "#1f3d34" : "#3a8540");
+    px(ctx, sx, sy + 9, T, 3, "#78350f");
+    px(ctx, sx, sy + 16, T, 3, "#78350f");
+    [2, 10, 18].forEach(ox => {
+      px(ctx, sx + ox, sy + 5, 4, 16, "#92400e");
+      px(ctx, sx + ox + 1, sy + 4, 2, 2, "#b45309");
+    });
+  }
+
+  function drawWaterTile(ctx, x, y, sx, sy, time = 0, isDream = false) {
+    if (isDream) {
+      // Glowing Dream Realm Cherry Blossom Lake water!
+      px(ctx, sx, sy, T, T, "#131036");
+      const wave = Math.sin(time * 0.003 + x * 0.7 + y * 0.5);
+      if ((x * 7 + y * 11) % 5 === 0) {
+        px(ctx, sx + 6, sy + 8 + Math.round(wave * 2), 8, 2, "rgba(167, 139, 250, 0.45)");
+      }
+      if ((x * 13 + y * 19) % 7 === 0) {
+        const star = wave > 0 ? "#fde047" : "#38bdf8";
+        px(ctx, sx + 11, sy + 11, 2, 2, star);
+      }
+      return;
+    }
+    // Natural Colorado Springs creek/pond water
+    px(ctx, sx, sy, T, T, "#0284c7");
+    const shift = Math.round(Math.sin(time * 0.004 + x + y) * 2);
+    px(ctx, sx + 4 + shift, sy + 7, 8, 2, "#38bdf8");
+    px(ctx, sx + 10 - shift, sy + 16, 7, 2, "#7dd3fc");
+  }
+
+  // Ethereal Dream Realm Floating Backdrop (Eclipse, Floating Islands, Petals & Stars)
+  function drawDreamBackdrop(ctx, time = 0) {
+    // Upper eclipse sky glow
+    const grad = ctx.createLinearGradient(0, 0, 0, 120);
+    grad.addColorStop(0, "rgba(76, 29, 149, 0.45)");
+    grad.addColorStop(1, "rgba(19, 16, 54, 0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 384, 120);
+
+    // Rising Sun & Moon Eclipse reflected in the top-center sky
+    ctx.save();
+    ctx.fillStyle = "rgba(250, 204, 21, 0.35)";
+    ctx.beginPath(); ctx.arc(192, 34, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fde047";
+    ctx.beginPath(); ctx.arc(192, 34, 16, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#131036";
+    ctx.beginPath(); ctx.arc(195, 34, 14, 0, Math.PI * 2); ctx.fill();
+
+    // Floating Ethereal Dream Islands in the background
+    [[54, 48, 28], [326, 56, 24], [46, 215, 22], [336, 210, 26]].forEach(([ix, iy, iw], idx) => {
+      const fy = iy + Math.sin(time * 0.002 + idx * 1.6) * 4;
+      px(ctx, ix - iw / 2, fy, iw, 6, "#4c1d95");
+      px(ctx, ix - iw / 2 + 2, fy - 2, iw - 4, 4, "#f472b6");
+      px(ctx, ix - iw / 4, fy + 6, iw / 2, 5, "#312e81");
+    });
+
+    // Drifting Cherry Blossom Petals across the whole Dream Realm
+    for (let i = 0; i < 16; i++) {
+      const px0 = ((i * 61 + time * 0.018) % 384);
+      const py0 = ((i * 43 + time * 0.012 + Math.sin(time * 0.003 + i) * 14) % 288);
+      px(ctx, px0, py0, 3, 2, i % 2 === 0 ? "#fbcfe8" : "#f472b6");
+    }
+    ctx.restore();
+  }
+
+  return { T, drawRoadTile, drawSidewalkTile, drawDistantCityTile, drawFenceTile, drawWaterTile, drawDreamBackdrop, drawInteriorFloorTile, drawInteriorWallTile, drawTree, drawSignpost, drawBuilding, drawPortal, drawProp };
 })();

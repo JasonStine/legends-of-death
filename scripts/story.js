@@ -135,6 +135,20 @@ window.Story = {
       ]
     },
     {
+      id: "kids_purgatorio",
+      title: "Secret: Children's Sight",
+      tiers: [
+        "Discovered in Barnes & Noble's Kids' Play Corner: Young children like Little Leo haven't psychologically separated the mortal and spirit worlds yet, allowing them to naturally see Reapers in Purgatorio!"
+      ]
+    },
+    {
+      id: "westside_secrets",
+      title: "Secret: Colorado Springs Folklore",
+      tiers: [
+        "Discovered in Westside (Mr. Henderson's House & CS High): Local folklore speaks of winged silhouettes gliding above Limbach Park at midnight—and Senior Prom is set for two weeks from now."
+      ]
+    },
+    {
       id: "deicide_profugo",
       title: "Cyrine: Deicide Profugo",
       tiers: [
