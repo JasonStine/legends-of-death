@@ -1,192 +1,248 @@
-// Storyline, battle briefings, quests, and Lore Codex content.
 // =========================================================
-// scripts/story.js — Enhanced Novel Storyline, Clear Battle
-//                    Explanations, Quests, & Lore Codex
+// scripts/story.js — Complete Novel Campaign (Ch. I – XXV),
+//                    Evolving Lore Codex & Party Discovery
 // =========================================================
 window.Story = {
-  // Ordered quest milestones (questStage = 0 .. 8)
+  // 15 Playable Story Chapters spanning all 5 Acts of the novel
   quests: [
+    { act: "ACT I", ch: "Ch. I", title: "Starlit Funeral", objective: "Walk into St. Jude Church (top-left) and comfort Cyrine.", mapHint: "church" },
+    { act: "ACT I", ch: "Ch. II", title: "Alter & Twilight Fireflies", objective: "Go inside Jacob's House (top-right) and talk to Navi in the kitchen.", mapHint: "house" },
+    { act: "ACT I", ch: "Ch. IV", title: "A Night's Rest", objective: "Rest on Jacob's living room Couch or Bed inside Jacob's House.", mapHint: "house" },
+    { act: "ACT I", ch: "Ch. IV–V", title: "The Dreamer's Reign", objective: "Walk across the glowing Cherry Blossom Lake and speak to Letonin.", mapHint: "dream" },
+    { act: "ACT II", ch: "Ch. VI", title: "Liar's Cry", objective: "Head to the Party House (bottom-right) where Cyrine dragged you.", mapHint: "party" },
+    { act: "ACT II", ch: "Ch. VII", title: "Snow Cat", objective: "Return inside Jacob's House to meet the stray platinum cat, Crista.", mapHint: "house" },
+    { act: "ACT III", ch: "Ch. VIII–IX", title: "Caeleste: Letonin Awake", objective: "Enter the Purgatorio Portal (north of town) to Limbach Park and summon Letonin.", mapHint: "park" },
+    { act: "ACT III", ch: "Ch. X–XI", title: "Moonlight Sonata", objective: "Fuse souls with Illicero & Letonin in Limbach Park to free Sendex from Crepsus's Brand.", mapHint: "park" },
+    { act: "ACT IV", ch: "Ch. XII–XIII", title: "Death's Story", objective: "Speak with the hooded boy (Lord Death) in Limbach Park to learn the truth.", mapHint: "park" },
+    { act: "ACT IV", ch: "Ch. XIV–XV", title: "Earth to Letonin", objective: "Step into the Crimson Portal to Casa Grande and speak to Emillia to rescue Letonin.", mapHint: "fortress" },
+    { act: "ACT V", ch: "Ch. XVI–XVII", title: "Envy Rises", objective: "Confront the Divine Sin Envy in Casa Grande with Navi & Emillia.", mapHint: "fortress" },
+    { act: "ACT V", ch: "Ch. XVIII–XIX", title: "Royal & Memories", objective: "Speak with Sendex (Daniel) in Casa Grande as Mandie's Orb awakens his past.", mapHint: "fortress" },
+    { act: "ACT V", ch: "Ch. XX", title: "Cyrine: Muto", objective: "Face Crepsus with Cyrine's Deicide Profugo form and Jacob's Nephilim Light!", mapHint: "fortress" },
+    { act: "EPILOGUE", ch: "Ch. XXI–XXII", title: "Grief & Resolve", objective: "Speak with Lord Death in Casa Grande to witness Letonin's sacrifice.", mapHint: "fortress" },
+    { act: "EPILOGUE", ch: "Ch. XXIII–XXV", title: "Reset; Start", objective: "Return to Colorado Springs and reunite with Letonin & Cyrine for Senior Year!", mapHint: "overworld" }
+  ],
+
+  // Party roster with Fog of War discovery & evolving trueRole
+  partyOrder: ["jacob", "cyrine", "navi", "letonin", "illicero", "sendex", "emillia", "death"],
+
+  // Evolving Lore Codex: each entry has multiple tiers that unlock as dialogue reveals secrets!
+  loreDefs: [
     {
-      act: "ACT I",
-      title: "Starlit Funeral",
-      objective: "Enter St. Jude Church (top-left) and comfort Cyrine.",
-      mapHint: "church",
-      targetLabel: "St. Jude Church"
+      id: "corpse_circus",
+      title: "The Corpse Circus",
+      tiers: [
+        "A brutal massacre in Colorado Springs that claimed Cyrine's entire family. Detectives found wounds from a forked weapon laced with Iris and Belladonna poison.",
+        "Confirmed to be the work of a rogue Reaper using demonic alchemy poison—not a human killer.",
+        "Masterminded by Crepsus (Death's Advisor) and the Sin Envy to break Cyrine emotionally and awaken her Godslayer bloodline."
+      ]
     },
     {
-      act: "ACT II",
-      title: "A Night's Rest",
-      objective: "Go inside Jacob's House and rest on the Couch or Bed.",
-      mapHint: "house",
-      targetLabel: "Jacob's Couch / Bed"
+      id: "purgatorio",
+      title: "Purgatorio & Reapers",
+      tiers: [
+        "A parallel supernatural dimension layered over Earth. Reapers are servants of Death who guide human souls and hunt rogue demons unseen.",
+        "Led by 4 Reapers of Order (Letonin, Illicero, Navi, Sendex) and billions of Morte Discipuli soldiers. In Caeleste form, Reapers manifest wings and full combat power.",
+        "Secret Origin: Per a pact with God, Reapers are born from humans who died by suicide. Recovering all past human memories purifies a Reaper into an Angel."
+      ]
     },
     {
-      act: "ACT II",
-      title: "The Dreamer's Reign",
-      objective: "Speak with Letonin across the glowing Cherry Blossom Lake.",
-      mapHint: "dream",
-      targetLabel: "Letonin"
+      id: "navi_alter",
+      title: "Navi & Alter Magic",
+      tiers: [
+        "Cyrine's quiet, surprisingly muscular 'older brother' who cooks incredible brunch—even though Jacob barely remembers meeting him before.",
+        "Revealed by Letonin: Navi is NOT Cyrine's brother. He is a Reaper of Order using 'Alter' (perception manipulation) to live at Jacob's house and guard them.",
+        "Navi is haunted by an inner voice named Misnomer—his dormant demonic half. After Crepsus's fall, Death promotes Navi to Death's Advisor."
+      ]
     },
     {
-      act: "ACT III",
-      title: "Liar's Cry",
-      objective: "Enter the Party House (bottom-right) where Cyrine dragged you.",
-      mapHint: "party",
-      targetLabel: "Party House"
+      id: "ring_of_night",
+      title: "Dream Magic & Ring of Night",
+      tiers: [
+        "A starry midnight-blue ring gifted to Jacob inside a lucid dream by Letonin—yet it physically stayed on Jacob's finger when he woke up.",
+        "Letonin is the only Reaper to invent Dream Magic, forging weapons from sleeping humans' dreams (and stronger obsidian weapons from nightmares).",
+        "When Letonin drinks Death's blood potion to become mortal, Death keeps the Ring of Night so Jacob and Letonin can fall in love naturally."
+      ]
     },
     {
-      act: "ACT III",
-      title: "Awaken the Sleeper",
-      objective: "Enter the Purgatorio Portal to Limbach Park and summon Letonin.",
-      mapHint: "park",
-      targetLabel: "Limbach Park Portal"
+      id: "soul_fusion",
+      title: "Jacob's Soul & Squire Bonds",
+      tiers: [
+        "Unlike normal humans whose souls form weapons for Illicero, Jacob's soul resonates with Reapers—allowing him to command Navi & Illicero together.",
+        "Jacob can fuse his Nephilim soul directly with a Reaper to heal wounds, boost speed, and shatter curses like Crepsus's branding.",
+        "By freeing Sendex inside the Moonlight Sonata mindscape, Sendex intentionally forged a rare Squire Bond—linking his mind and guardian oath to Jacob."
+      ]
     },
     {
-      act: "ACT IV",
-      title: "Blood Moon Rising",
-      objective: "Step through the Crimson Portal in Limbach Park to Casa Grande.",
-      mapHint: "fortress",
-      targetLabel: "Casa Grande Fortress"
+      id: "crista_cat",
+      title: "Crista the Snow Cat",
+      tiers: [
+        "A platinum-furred stray cat with striking blue eyes that mysteriously appeared on Jacob's couch. Its presence strangely calms Cyrine.",
+        "Ancient Reapers could disguise themselves as animals to soothe panicked souls. Crista is actually Illicero watching over Cyrine in secret!"
+      ]
     },
     {
-      act: "ACT V",
-      title: "Deicide Profugo",
-      objective: "Confront Crepsus in Casa Grande to end the Reaperian Civil War.",
-      mapHint: "fortress",
-      targetLabel: "Crepsus"
+      id: "sendex_daniel",
+      title: "Sendex (Daniel Flora)",
+      tiers: [
+        "The youngest and strongest Reaper of Order, wielding the fire thorn-whip Ultor and Rage Sensory. Initially hostile toward Jacob.",
+        "Sendex wasn't acting on his own—Crepsus branded him with Envy's black toxin, hijacking his mind and erasing his memory of the attacks.",
+        "Mandie's celestial orb unlocked his human past: Sendex was Cyrine's beloved cousin, Daniel Flora. Remembering his life transformed him into an Angel!"
+      ]
     },
     {
-      act: "EPILOGUE",
-      title: "Reset; Start",
-      objective: "Peace restored! Talk to Letonin & Cyrine in Colorado Springs.",
-      mapHint: "overworld",
-      targetLabel: "Colorado Springs"
+      id: "emillia_envy",
+      title: "The Siren Princess & Envy",
+      tiers: [
+        "Emillia Luve Vi Sonasa: a runaway Siren Princess with sonic screams, plant magic, and phantasm illusions who joins Jacob inside Letonin's dream.",
+        "The colossal poison serpent Envy is Emillia's corrupted sister, Clarica Vi Sonasa, who murdered their mother after Emillia refused to abuse the Royal Voice."
+      ]
+    },
+    {
+      id: "deicide_profugo",
+      title: "Cyrine: Deicide Profugo",
+      tiers: [
+        "Letonin sensed overwhelming demonic energy sleeping inside Cyrine—she isn't fully human.",
+        "Crepsus calls her breed the 'Deicide Profugo'—a rare Godslayer demon capable of summoning ancestral spirits and annihilating even divine beings."
+      ]
     }
   ],
 
-  lore: [
-    {
-      title: "Purgatorio",
-      text: "A parallel supernatural dimension layered over the human world. Most humans cannot see or touch beings in Purgatorio, though young children and Nephilim like Jacob are rare exceptions."
-    },
-    {
-      title: "The 4 Reapers of Order",
-      text: "Elite servants of Death who balance life and death across the 7 continents: Letonin (Dreams), Illicero (Souls), Navi (Lightning), and Sendex (Fire). Each possesses a Caeleste combat form."
-    },
-    {
-      title: "Alter & Squire Bonds",
-      text: "Reapers use 'Alter' to rewrite human memories—like Navi posing as Cyrine's older brother. A Squire Bond links a human's soul to a Reaper guardian, sharing power and memories."
-    },
-    {
-      title: "Jacob's Soul Resonance",
-      text: "Unlike ordinary humans whose souls forge weapons for Illicero, Jacob's Nephilim soul heals, amplifies, and FUSES with Reapers—allowing him to fight alongside allies in 2-on-1 battles."
-    },
-    {
-      title: "Deicide Profugo",
-      text: "Cyrine's dormant demonic lineage—a Godslayer breed capable of summoning ancestral spirits and annihilating even divine beings. Crepsus murdered her family to awaken and steal this power."
-    }
-  ],
-
-  // Key story dialogues with crystal-clear context
+  // Story Dialogues — with inline lore unlocks & party reveals!
   dialogues: {
     intro: [
-      { id: "jacob", mood: "sad", text: "April 23rd — Colorado Springs. A week and a half ago, Cyrine's entire family was murdered in what detectives call the 'Corpse Circus.'" },
+      { id: "jacob", mood: "sad", text: "April 23rd — Colorado Springs. A week and a half ago, Cyrine's entire family was murdered in what detectives call the 'Corpse Circus.'", unlockParty: ["jacob", "cyrine"], unlockLore: { id: "corpse_circus", tier: 1 } },
       { id: "jacob", mood: "sad", text: "She's waiting inside St. Jude Church right now. Mom offered to let Cyrine and her older brother Navi stay at our house." },
-      { id: "jacob", mood: "neutral", text: "Let's walk north-west into St. Jude Church and check on her. (Follow the golden quest arrow!)" }
+      { id: "jacob", mood: "neutral", text: "Check the yard signs if you want to explore town, or follow the golden arrow into St. Jude Church (top-left). Tap the Progress Bar anytime to check your Story!" }
     ],
 
     churchCyrine: [
-      { id: "cyrine", mood: "sad", text: "I couldn't even say goodbye, Jacob... The detectives said it was a forked weapon laced with concentrated Iris and Belladonna poison." },
-      { id: "cyrine", mood: "angry", text: "What if the man who killed them comes for me next? Staying at your house puts you and your mom in danger!" },
-      { id: "jacob", mood: "neutral", text: "You're not going anywhere, Cyrine. You have me, my mom, and your brother Navi right here. We'll be alright—I promise." },
-      { id: "cyrine", mood: "sad", text: "...Whatever you gotta tell yourself, Jacob. Let's head back to your house. You look exhausted." },
-      { id: "jacob", mood: "neutral", text: "Got it. Let's head inside Jacob's House (north-east) and get some sleep on the living room couch or my bed." }
+      { id: "cyrine", mood: "sad", text: "I couldn't even say goodbye, Jacob... The detectives said each of them was killed by a forked weapon laced with Iris and Belladonna poison." },
+      { id: "cyrine", mood: "angry", text: "What if the man who killed them comes for me too? Staying with you puts you and your mom in danger!" },
+      { id: "jacob", mood: "neutral", text: "You're not going anywhere, Cyrine. You have me, my mom, and your older brother Navi right here. We'll be alright—I promise." },
+      { id: "cyrine", mood: "sad", text: "...Whatever you gotta tell yourself, Jacob. Let's head back to your house. Navi's already in the kitchen." }
+    ],
+
+    naviKitchen: [
+      { id: "navi", mood: "neutral", text: "Morning, Jacob. Good to finally meet you—Cyrine tells me all about you. I made quiche, pancakes, and sorted fruits.", unlockParty: ["navi"], unlockLore: { id: "navi_alter", tier: 1 } },
+      { id: "jacob", mood: "neutral", text: "Whoa, this brunch is unreal... Funny though, I know next to nothing about you. Did you ever read 'Twilight Fireflies'—the book Cyrine's mom wrote us?" },
+      { id: "navi", mood: "sad", text: "...No. I didn't. (A red spirit setting the forest aflame and a yellow spirit dissolving to calm it... What plan does Death have for these two?)" },
+      { id: "navi", mood: "neutral", text: "You look exhausted, Jacob. Go get some sleep on the living room couch or your bed whenever you're ready." }
     ],
 
     sleepPrompt: [
-      { id: "navi", mood: "neutral", text: "I made pancakes and quiche in the kitchen for tomorrow morning. Go ahead and get some rest, Jacob—you've had a long week." },
-      { id: "jacob", mood: "neutral", text: "Thanks, Navi. Even if I barely know you, your cooking is unreal... Alright, time to lie down and get some sleep." }
+      { id: "jacob", mood: "neutral", text: "My eyes feel heavy... Lying down on this couch feels amazing. Just a quick rest..." }
     ],
 
     dreamLetonin: [
-      { id: "letonin", mood: "happy", text: "Hey there, Jacob. Relax—you're safe. You're standing in my Dream Realm, a psychic space I merged with your mind while you sleep." },
-      { id: "jacob", mood: "intense", text: "Wait... you're not just a dream?! Who are you? And how do you know about Cyrine?!" },
-      { id: "letonin", mood: "sad", text: "My name is Letonin, one of the four Reapers of Order. I've been trapped in a poison-induced coma for two years—and the killer who murdered Cyrine's family is after you both." },
-      { id: "letonin", mood: "blush", text: "Take this—the Ring of Night. Even when you wake up in the real world, it will stay on your finger so I can protect you and reach you again." },
-      { id: "letonin", mood: "neutral", text: "One more thing: Navi is NOT Cyrine's real brother. He's a Reaper hiding under a memory spell called 'Alter'—he means well, though. Now wake up... trouble is already heading to your friend's party!" }
+      { id: "letonin", mood: "happy", text: "Hey there, Jacob. Relax—you're safe. The storm's gone. You're standing in my Dream Realm, a cherry blossom lake under an eclipse.", unlockParty: ["letonin"], unlockLore: { id: "purgatorio", tier: 1 } },
+      { id: "jacob", mood: "intense", text: "Wait... you're communicating through my inner monologue?! You're a real person?!" },
+      { id: "letonin", mood: "sad", text: "My name is Letonin, a Reaper of Order. I've been trapped in a poison-induced sleep for two years—and the Reaper who murdered Cyrine's family is after you both.", unlockLore: { id: "corpse_circus", tier: 2 } },
+      { id: "letonin", mood: "blush", text: "Take this: the Ring of Night. Even when you wake up in reality, it will stay on your finger so I can reach you. One day, I have faith you'll save me.", unlockLore: { id: "ring_of_night", tier: 1 } },
+      { id: "letonin", mood: "neutral", text: "Also: Navi is NOT who he says he is—he's using a Reaper memory spell called 'Alter' to pose as Cyrine's brother. He means well, though. Now wake up!", unlockLore: { id: "navi_alter", tier: 2 } }
     ],
 
     afterDreamWake: [
-      { id: "jacob", mood: "intense", text: "Whoa... the Ring of Night is ACTUALLY on my hand! It wasn't just a dream!" },
-      { id: "cyrine", mood: "happy", text: "Come on, Jacob! I'm dragging you and Navi to my classmate's house party down south-east to take our minds off things!" },
-      { id: "jacob", mood: "sad", text: "(Letonin warned me we're in danger... I better follow Cyrine to the Party House and keep an eye on her!)" }
+      { id: "jacob", mood: "intense", text: "No way... the black-trimmed starry ring is ACTUALLY on my finger! Letonin wasn't just a dream!" },
+      { id: "cyrine", mood: "happy", text: "Come on, Jacob! You've been staring at that ring all afternoon—I'm dragging you and Navi to my classmate's Party House (bottom-right)!" },
+      { id: "jacob", mood: "sad", text: "(Letonin warned me we're in danger... I can't let Cyrine go to that party alone!)" }
     ],
 
-    // EXPLICITLY EXPLAINS WHY THERE ARE 2 FIGHTERS ON YOUR SIDE!
     partyConfrontation: [
-      { id: "sendex", mood: "angry", text: "There you are! A mere human carrying Letonin's Dream energy?! I'll block everyone's perception and kill you right here!" },
-      { id: "navi", mood: "intense", text: "You're not laying a finger on Jacob, Sendex! What the hell has gotten into you?!" },
-      { id: "illicero", mood: "intense", text: "Easy, Navi—I've got your back. Jacob, don't panic! I'm Illicero, another Reaper of Order." },
-      { id: "navi", mood: "neutral", text: "Listen carefully, Jacob: Sendex is the strongest of us, so neither of us can stop him alone. Your pure soul is already resonating with ours!" },
-      { id: "illicero", mood: "happy", text: "That means YOU'LL be commanding BOTH of us in this 2-on-1 battle—Navi with his Lightning Halberd and me with my Soul Rapier! Let's knock some sense into Sendex!" }
+      { id: "sendex", mood: "angry", text: "A mere human carrying Letonin's Dream energy?! How ridiculous! I'll block everyone's perception and kill you right here!", unlockParty: ["sendex"], unlockLore: { id: "sendex_daniel", tier: 1 } },
+      { id: "navi", mood: "intense", text: "You're not hurting him, Sendex! What the hell are you thinking?!" },
+      { id: "illicero", mood: "intense", text: "Easy, Navi—I've got your back. Jacob, breathe! I'm Illicero, another Reaper of Order.", unlockParty: ["illicero"], unlockLore: { id: "purgatorio", tier: 2 } },
+      { id: "navi", mood: "neutral", text: "Listen carefully, Jacob: Sendex is the strongest Reaper of Time, so neither of us can stop him alone—but your pure soul is resonating with both of us!", unlockLore: { id: "soul_fusion", tier: 1 } },
+      { id: "illicero", mood: "happy", text: "That means YOU command BOTH of us in this 2-on-1 fight—Navi with his Lightning Halberd and me with my Soul Rapier! Let's push Sendex back!" }
     ],
 
-    // POST-FIGHT CUTSCENE DIALOGUE (Before Sendex walks out!)
     partyPostBattle: [
-      { id: "illicero", mood: "intense", text: "Enough, Sendex. You're outnumbered and out of line. Start walking." },
-      { id: "sendex", mood: "angry", text: "...Tch. Fine. Enjoy your little human while you still can, Illicero." }
+      { id: "illicero", mood: "intense", text: "Sendex, I think you need to leave. Start walking." },
+      { id: "sendex", mood: "angry", text: "...Tch. Well played, Navi. This isn't over." }
     ],
 
     partyAfterWalkout: [
-      { id: "jacob", mood: "intense", text: "Wait... he just walked straight out the front door! Who WAS that guy, and why did he call you Reapers?!" },
-      { id: "illicero", mood: "happy", text: "I'm Illicero—Latin for seduction, if you're wondering. Look, Letonin's ring is pulsing hard. He wants you to meet him at Limbach Park." },
-      { id: "navi", mood: "sad", text: "The Purgatorio Portal just opened north of town. Head through it to Limbach Park—I'll guard Cyrine and meet you there." }
+      { id: "jacob", mood: "intense", text: "He just walked straight out the front door... Illicero, what does your name even mean?" },
+      { id: "illicero", mood: "happy", text: "It's Latin for 'seduction.' Here's my number in case things get dicey. Head home with Navi and Cyrine—there's a nasty storm rolling in." }
     ],
 
-    // LIMBACH PARK — EXPLAINS SOUL FUSION & WHY 2 CHARACTERS FIGHT!
-    parkAwaken: [
-      { id: "letonin", mood: "happy", text: "You actually chanted the Latin summoning incantation... Jacob, you broke my two-year coma! I'm finally awake in Purgatorio!" },
-      { id: "jacob", mood: "blush", text: "Letonin! You're really standing right here in front of me!" },
+    snowCatCrista: [
+      { id: "jacob", mood: "happy", text: "Whoa—where did this platinum white cat with blue eyes come from?! I'm naming him Crista—Latin for 'Crest.'", unlockLore: { id: "crista_cat", tier: 1 } },
+      { id: "cyrine", mood: "sad", text: "It's weird... I've felt something eating at me all week, but looking at this cat gives me the exact same calm feeling I felt the night my family died..." },
+      { id: "navi", mood: "intense", text: "(Rolls eyes—that's Illicero disguised in animal form watching over her.) Jacob! Your ring is glowing nonstop—Letonin is calling you!", unlockLore: { id: "crista_cat", tier: 2 } },
+      { id: "letonin", mood: "intense", text: "(Through the Ring) Jacob, please trust me! Step through the Purgatorio Portal north of town to Limbach Park—only YOU can wake me up!" }
+    ],
+
+    parkSummonLetonin: [
+      { id: "jacob", mood: "intense", text: "'A Deo factus est re: confusa aperire portam, quia est nomen ejus Letonin!' ...Whoa, a golden border just washed over the whole park!" },
+      { id: "letonin", mood: "happy", text: "Hey Jacob. I'm finally awake—and you're even sweeter in real life than in my dreams.", unlockLore: { id: "ring_of_night", tier: 2 } },
+      { id: "letonin", mood: "sad", text: "Wait... before we celebrate, I sensed something terrible back at your house. Jacob... Cyrine isn't human. She's a demon.", unlockLore: { id: "deicide_profugo", tier: 1 } },
       { id: "sendex", mood: "angry", text: "There you are, Letonin! And you brought the human! I'll burn you both to ash with Ultor!" },
-      { id: "illicero", mood: "intense", text: "Wait—Sendex has a glowing crimson brand on his arm! Crepsus is mind-controlling him! Jacob, place my hand over your heart!" },
-      { id: "jacob", mood: "intense", text: "Whoa!! I can feel our souls fusing together! Every ounce of my healing power is flowing straight into Illicero!" },
-      { id: "letonin", mood: "intense", text: "Incredible! With Jacob FUSED inside Illicero's soul, you'll fight as a 2-unit team: [Jacob + Illicero] together alongside [Letonin] with his Dream Mallet! Break Crepsus's brand!" }
+      { id: "illicero", mood: "intense", text: "Stop! Look at Sendex's arm—that glowing crimson crescent is the Brand of Crepsus! Crepsus is mind-controlling him!" }
+    ],
+
+    parkSoulFusion: [
+      { id: "illicero", mood: "intense", text: "Jacob, place my hand over your heart! Your soul doesn't make a weapon—it HEALS and AMPLIFIES! Let's fuse!", unlockLore: { id: "soul_fusion", tier: 2 } },
+      { id: "jacob", mood: "intense", text: "Whoa!! I can feel every molecule of our souls syncing up! Letonin, ready your Obsidian Nightmare Mallet!" },
+      { id: "letonin", mood: "intense", text: "With Jacob FUSED inside Illicero, we fight 2-on-1: [Jacob + Illicero] and [Letonin]! Break Crepsus's brand and save Sendex!" }
     ],
 
     parkPostBattle: [
-      { id: "jacob", mood: "sad", text: "I shattered the chains inside his mind... The crimson brand on Sendex's arm just burned away!" },
-      { id: "sendex", mood: "sad", text: "...Jacob? You saved me—even after I tried to kill you? Then I swear a Squire Bond to you. I'll be your guardian." },
-      { id: "death", mood: "neutral", text: "Well done, Jacob Menos. I am Death. Crepsus—my own Rogue Advisor—is hiding in Casa Grande, Arizona, preparing a Blood Moon ritual to steal Cyrine's demonic power." },
-      { id: "death", mood: "intense", text: "I cannot slay my own child unless balance is broken. Step through the Crimson Portal here in Limbach Park and stop Crepsus!" }
+      { id: "jacob", mood: "sad", text: "I entered his mindscape while Moonlight Sonata played... shattered his rusty chains and pulled the black-poisoned knife from his shoulder!", unlockLore: { id: "sendex_daniel", tier: 2 } },
+      { id: "sendex", mood: "sad", text: "...You saved me, Jacob, even after I tried to kill you. Look at your shoulder and my chest—I intentionally forged a Squire Bond to be your guardian.", unlockLore: { id: "soul_fusion", tier: 3 } },
+      { id: "letonin", mood: "neutral", text: "Look over there—a ten-year-old boy in a black hoodie eating a rainbow lollipop. Jacob... that's Lord Death himself. Go talk to him." }
+    ],
+
+    deathStory: [
+      { id: "death", mood: "neutral", text: "Nice to formally meet you, Jacob Menos. Thank you for saving two of my children—Letonin and Sendex.", unlockParty: ["death"], unlockLore: { id: "purgatorio", tier: 3 } },
+      { id: "death", mood: "sad", text: "Here is the truth: God gave me an army of 563 Angels who all died by suicide, and I trained them into Reapers. Crepsus was one of the first—my own Advisor." },
+      { id: "death", mood: "intense", text: "Now Crepsus has betrayed us, hiding in a desert fortress in Casa Grande, Arizona, plotting to steal Cyrine's 'Deicide Profugo' Godslayer power.", unlockLore: { id: "corpse_circus", tier: 3 } },
+      { id: "death", mood: "neutral", text: "I will not kill my own child unless balance breaks. Step through the Crimson Portal on the right—stop Crepsus!" }
+    ],
+
+    fortressEmilliaDream: [
+      { id: "jacob", mood: "intense", text: "Crepsus shot Letonin with a cursed bullet and put him back to sleep! Sendex gave me sleeping pills so I could dive into Letonin's mind..." },
+      { id: "emillia", mood: "angry", text: "Hmph—a newbie human shattering my phantasm spell? I'm Emillia Luve Vi Sonasa, a Siren Princess! Crepsus hired me, then teamed up with the monster who killed my mother!", unlockParty: ["emillia"], unlockLore: { id: "emillia_envy", tier: 1 } },
+      { id: "letonin", mood: "happy", text: "Jacob! You rescued me again! And Emillia's switching sides to fight with us! Now let's wake up—Crepsus just cast Messes Luna!" }
     ],
 
     fortressEnvyIntro: [
-      { id: "crepsus", mood: "angry", text: "Welcome to Casa Grande! Too late—Messes Luna! I drain the moon's light to summon the Divine Sin of Poison: ENVY!" },
-      { id: "emillia", mood: "intense", text: "Not so fast, Crepsus! I'm Emillia—Siren Princess—and that giant serpent is my corrupted sister Clarica! She murdered our mother!" },
-      { id: "navi", mood: "intense", text: "Letonin, link your mana to mine! Jacob, direct Navi (Lightning Storm) and Emillia (Siren Royal Voice) in this 2-on-1 fight to bring Envy down!" }
+      { id: "crepsus", mood: "angry", text: "Messes Luna! I drain the moon into a Blood Moon and summon my pride and joy—the Divine Sin of Poison, ENVY!" },
+      { id: "emillia", mood: "intense", text: "Clarica... my own sister, twisted into the Cobra Sin of Envy! You murdered our mother with those Iris-venom fangs!", unlockLore: { id: "emillia_envy", tier: 2 } },
+      { id: "navi", mood: "intense", text: "Letonin just shared his massive mana with me! Jacob, direct BOTH of us in this 2-on-1: Navi's Lightning Storm (Fulgur de Praeda) + Emillia's Siren Royal Voice!" }
     ],
 
     fortressEnvyPost: [
-      { id: "emillia", mood: "intense", text: "By the Royal Voice of Sonasa... Clarica, your reign of poison ends NOW!" },
-      { id: "sendex", mood: "happy", text: "Envy's fallen... and Cyrine—holding Mandie's orb—you're my cousin! I remember my human life... I'm Daniel Flora!" },
-      { id: "sendex_angel", mood: "happy", text: "My black wings just turned pure white... I've ascended into an Angel! Before Heaven pulls me upward, I'm awakening your true power, Cyrine—avenge our family!" }
+      { id: "emillia", mood: "intense", text: "By the Royal Voice of Sonasa... Princess Clarica, your reign of poison ends NOW!" },
+      { id: "emillia", mood: "sad", text: "Wait... thousands of freed spirits just appeared—and a spirit named Mandie formed a glowing golden orb from Heaven! She told me to give it to Sendex!" }
+    ],
+
+    fortressDanielAscend: [
+      { id: "cyrine", mood: "sad", text: "Sendex... when I touched Mandie's golden orb, I saw a memory of you handing me sheet music. Your real name is Daniel Flora... you're my cousin!", unlockLore: { id: "sendex_daniel", tier: 3 } },
+      { id: "sendex_angel", mood: "happy", text: "...I remember everything! My black wings are turning pure white—I've ascended into an Angel! Mandie's jade axe is in my hands, and Moonlight Sonata echoes across Purgatorio!" },
+      { id: "sendex_angel", mood: "sad", text: "Heaven is pulling me upward, Cyrine... Before I go, I'm awakening your true Deicide Profugo power. Avenge our family—I'll always watch over you from the stars!" }
     ],
 
     fortressCrepsusIntro: [
-      { id: "cyrine", mood: "intense", text: "Crepsus... YOU killed my family. You hurt Jacob, Illicero, and Danny. My Deicide Profugo flames are awake!" },
-      { id: "jacob", mood: "intense", text: "You're not fighting him alone, Cyrine! My Nephilim healing light will keep you standing—let's end this 2-on-1!" }
+      { id: "cyrine", mood: "intense", text: "Crepsus!! You murdered my family, poisoned Jacob, and hurt everyone I love! Ancestors of the deceased—rise with my Deicide Profugo flames!", unlockLore: { id: "deicide_profugo", tier: 2 } },
+      { id: "jacob", mood: "intense", text: "You're not alone, Cyrine! My Nephilim light will keep you standing—let's end this 2-on-1!" }
     ],
 
     fortressCrepsusPost: [
-      { id: "crepsus", mood: "sad", text: "Impossible... a human and a demoness... I only wanted power beyond Death..." },
-      { id: "death", mood: "intense", text: "You shattered the balance of life and death, Crepsus. Your betrayal ends here." },
-      { id: "death", mood: "neutral", text: "It is finished. Return home to Colorado Springs—your new beginning awaits." }
+      { id: "crepsus", mood: "sad", text: "Impossible... a human and a demoness... I created a power I can't control..." },
+      { id: "death", mood: "intense", text: "You threw off the balance of life and death, Crepsus—and let Envy parasite your soul. Your betrayal ends here." }
     ],
 
-    epilogueLetonin: [
-      { id: "letonin", mood: "blush", text: "Months later... I gave up my immortality and memories so we could both start over as normal Seniors at Colorado Springs High." },
-      { id: "jacob", mood: "happy", text: "And somehow, even without remembering Purgatorio, we still found our way right back to each other under the stars." },
-      { id: "cyrine", mood: "happy", text: "You two are hopeless! Congratulations on completing Legends of Death and the Reapers of Time!" }
+    griefAndResolve: [
+      { id: "death", mood: "sad", text: "It is finished. Navi—I name you my new Advisor. And Jacob... to protect your human future, I must gently seal your memories of Purgatorio.", unlockLore: { id: "navi_alter", tier: 3 } },
+      { id: "letonin", mood: "sad", text: "Wait, Death! I've served 9 years—I'm retiring! Mix Jacob's blood, Cyrine's blood, and a drop of Envy's poison. I'll give up my immortality and memories too...", unlockLore: { id: "ring_of_night", tier: 3 } },
+      { id: "letonin", mood: "blush", text: "...so I can enroll as a normal human Senior at Jacob's school and fall in love with him all over again." },
+      { id: "death", mood: "sad", text: "I'll miss you, my son. Go—start your new life in Colorado Springs." }
+    ],
+
+    epilogueReunion: [
+      { id: "letonin", mood: "blush", text: "Months later... Funny how I transferred to Colorado Springs High with Emillia and couldn't stop staring at you in Calculus, Jacob." },
+      { id: "jacob", mood: "happy", text: "And you ran all the way to my bus stop with Lindor dark chocolate to ask me to Prom! Under the moon and stars... I feel like I've loved you forever." },
+      { id: "cyrine", mood: "happy", text: "Illicero and I are heading to Australia next week—you two better invite us to the wedding! (Years later, Jacob, Letonin, and their adopted son Dolan watch a shooting star... while far away, a mysterious voice whispers: 'Bitten Sweet.')" }
     ]
   }
 };

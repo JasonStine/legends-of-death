@@ -5,131 +5,182 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Legends of Death & the Reapers of Time</title>
+  <title>Legends of Death &amp; the Reapers of Time</title>
   <link rel="stylesheet" href="styles/game.css" />
 </head>
 <body>
-  <div id="handheld-shell">
-    <!-- Top Status Header -->
+  <div id="handheld-shell" data-theme="default" data-btn-size="medium">
+    <!-- Top Handheld Status Header -->
     <header id="top-bar">
       <div class="brand">
         <span class="dot"></span>
         <span>LEGENDS OF DEATH</span>
       </div>
       <div id="location-pill">Colorado Springs</div>
-      <button id="btn-menu-top" class="mini-btn" aria-label="Menu">QUESTS</button>
+      <button id="btn-menu-top" class="mini-btn" aria-label="Menu">MENU</button>
     </header>
 
-    <!-- Main 32-bit GBA Viewport (384x256 internal resolution) -->
+    <!-- Handheld Console Body: Dark Screen Lens Framed by Device Shell -->
     <main id="screen-bezel">
-      <div id="screen-wrap">
-        <canvas id="game-canvas" width="384" height="256"></canvas>
-
-        <!-- Cinematic Letterbox Bars for Cutscenes -->
-        <div id="letterbox-top" class="letterbox"></div>
-        <div id="letterbox-bottom" class="letterbox"></div>
-        <div id="cutscene-badge">CUTSCENE</div>
-
-        <!-- Active Quest Tracker Banner -->
-        <div id="quest-hud">
-          <span id="quest-act">ACT I</span>
-          <span id="quest-text">Loading...</span>
+      <div id="console-lens">
+        <div class="lens-top-strip">
+          <div class="lens-led-wrap">
+            <span class="lens-led"></span>
+            <span class="lens-led-label">POWER</span>
+          </div>
+          <span class="lens-model">32-BIT COLOR SYSTEM</span>
         </div>
 
-        <!-- Dialogue Overlay with 64x64 Pixel Portrait -->
-        <div id="dialogue-box" class="hidden">
-          <div id="portrait-frame">
-            <canvas id="portrait-canvas" width="64" height="64"></canvas>
-          </div>
-          <div id="dialogue-content">
-            <div id="dialogue-header">
-              <span id="speaker-name">Jacob</span>
-              <span id="speaker-role">Nephilim</span>
+        <div id="screen-wrap">
+          <canvas id="game-canvas" width="384" height="256"></canvas>
+
+          <!-- Cinematic Letterbox Bars for Cutscenes -->
+          <div id="letterbox-top" class="letterbox"></div>
+          <div id="letterbox-bottom" class="letterbox"></div>
+          <div id="cutscene-badge">CUTSCENE</div>
+
+          <!-- Clickable Story Progress Bar -->
+          <button id="progress-hud" title="Tap to view Storyline & Quests" aria-label="Story Progress">
+            <span id="progress-act">ACT I</span>
+            <div id="progress-track">
+              <div id="progress-fill"></div>
             </div>
-            <p id="dialogue-text"></p>
-            <div id="dialogue-next">▼ PRESS A</div>
+            <span id="progress-pct">0%</span>
+          </button>
+
+          <!-- Tiny Corner Lore Unlock / Evolution Popup -->
+          <div id="lore-toast" class="hidden" aria-live="polite">
+            <span class="toast-icon">✦</span>
+            <div class="toast-body">
+              <div id="toast-label">NEW LORE</div>
+              <div id="toast-title">Purgatorio</div>
+            </div>
           </div>
-        </div>
 
-        <!-- Choice Prompt Overlay -->
-        <div id="choice-box" class="hidden"></div>
-
-        <!-- Turn-Based Battle Overlay (Full-Body 32-bit Models) -->
-        <div id="battle-ui" class="hidden">
-          <div id="battle-top-hud">
-            <div id="enemy-hud" class="stat-card">
-              <div class="stat-row">
-                <span id="enemy-name">Sendex</span>
-                <span id="enemy-tag">Lv.18</span>
+          <!-- Dialogue Overlay with 64x64 Pixel Portrait -->
+          <div id="dialogue-box" class="hidden">
+            <div id="portrait-frame">
+              <canvas id="portrait-canvas" width="64" height="64"></canvas>
+            </div>
+            <div id="dialogue-content">
+              <div id="dialogue-header">
+                <span id="speaker-name">Jacob</span>
+                <span id="speaker-role">Nephilim</span>
               </div>
-              <div class="hp-bar-bg"><div id="enemy-hp-fill" class="hp-bar-fill"></div></div>
-              <div id="enemy-hp-text" class="hp-text">180 / 180</div>
+              <p id="dialogue-text"></p>
+              <div id="dialogue-next">▼ PRESS A</div>
             </div>
           </div>
 
-          <div id="battle-party-hud"></div>
+          <!-- Choice Prompt Overlay (D-Pad + A/B navigable) -->
+          <div id="choice-box" class="hidden"></div>
 
-          <div id="battle-bottom">
-            <div id="battle-log">Battle started!</div>
-            <div id="battle-actions"></div>
-          </div>
-        </div>
-
-        <!-- Quest / Party / Lore Menu Overlay -->
-        <div id="menu-overlay" class="hidden">
-          <div class="menu-panel">
-            <div class="menu-tabs">
-              <button class="tab-btn active" data-tab="quests">Quests</button>
-              <button class="tab-btn" data-tab="party">Party</button>
-              <button class="tab-btn" data-tab="lore">Lore</button>
-              <button class="tab-btn" data-tab="save">Save</button>
-              <button id="menu-close" class="tab-close">✕</button>
+          <!-- Turn-Based Battle Overlay (Full-Body 32-bit Models + D-Pad Nav) -->
+          <div id="battle-ui" class="hidden">
+            <div id="battle-top-hud">
+              <div id="enemy-hud" class="stat-card">
+                <div class="stat-row">
+                  <span id="enemy-name">Sendex</span>
+                  <span id="enemy-tag">Lv.18</span>
+                </div>
+                <div class="hp-bar-bg"><div id="enemy-hp-fill" class="hp-bar-fill"></div></div>
+                <div id="enemy-hp-text" class="hp-text">180 / 180</div>
+              </div>
             </div>
-            <div id="menu-body"></div>
+
+            <div id="battle-party-hud"></div>
+
+            <div id="battle-bottom">
+              <div id="battle-log">Battle started!</div>
+              <div id="battle-actions"></div>
+            </div>
           </div>
+
+          <!-- Title Screen Overlay (D-Pad + A navigable) -->
+          <div id="title-screen">
+            <div class="title-emblem">✦ ⚔ ✦</div>
+            <h1>LEGENDS OF DEATH</h1>
+            <h2>&amp; THE REAPERS OF TIME</h2>
+            <p class="title-sub">Complete Novel Edition • 5 Acts • 15 Chapters</p>
+            <div id="title-buttons" class="title-buttons">
+              <button id="btn-new-game" class="primary-btn focused" data-title-idx="0">▶ NEW JOURNEY</button>
+              <button id="btn-continue" class="secondary-btn hidden" data-title-idx="1">CONTINUE</button>
+            </div>
+            <p class="title-hint">D-Pad / WASD • A Confirm • Hold B to Run</p>
+          </div>
+
+          <!-- Scene Transition Fade -->
+          <div id="fade-layer"></div>
         </div>
 
-        <!-- Title Screen Overlay -->
-        <div id="title-screen">
-          <div class="title-emblem">✦ ⚔ ✦</div>
-          <h1>LEGENDS OF DEATH</h1>
-          <h2>&amp; THE REAPERS OF TIME</h2>
-          <p class="title-sub">32-Bit Story RPG • Multi-File Edition</p>
-          <div class="title-buttons">
-            <button id="btn-new-game" class="primary-btn">NEW JOURNEY</button>
-            <button id="btn-continue" class="secondary-btn hidden">CONTINUE</button>
-          </div>
-          <p class="title-hint">D-Pad / WASD to Move • A / Z / Enter to Interact</p>
+        <div class="lens-bottom-strip">
+          <span class="lens-brand">REAPERS OF TIME</span>
         </div>
-
-        <!-- Scene Transition Fade -->
-        <div id="fade-layer"></div>
       </div>
     </main>
 
-    <!-- Tactile Mobile / Handheld Controls -->
+    <!-- Handheld Gamepad Deck (Colored Shell + Speaker Grille + Recessed Controls) -->
     <footer id="controls-deck">
-      <div id="dpad" aria-label="Directional Pad">
-        <button class="dpad-btn up" data-dir="up">▲</button>
-        <button class="dpad-btn left" data-dir="left">◀</button>
-        <div class="dpad-center"></div>
-        <button class="dpad-btn right" data-dir="right">▶</button>
-        <button class="dpad-btn down" data-dir="down">▼</button>
+      <div class="deck-top-row">
+        <span class="deck-stamp">PURGATORIO HANDHELD</span>
+        <div class="speaker-grille" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
       </div>
 
-      <div id="mid-controls">
-        <button id="btn-realm" class="pill-btn">PURGATORIO</button>
-        <button id="btn-menu" class="pill-btn">MENU</button>
-      </div>
+      <div class="deck-controls-row">
+        <div id="dpad-well">
+          <div id="dpad" aria-label="Directional Pad">
+            <button class="dpad-btn up" data-dir="up">▲</button>
+            <button class="dpad-btn left" data-dir="left">◀</button>
+            <div class="dpad-center"></div>
+            <button class="dpad-btn right" data-dir="right">▶</button>
+            <button class="dpad-btn down" data-dir="down">▼</button>
+          </div>
+        </div>
 
-      <div id="ab-pad">
-        <button id="btn-b" class="round-btn btn-b">B</button>
-        <button id="btn-a" class="round-btn btn-a">A</button>
+        <div id="mid-controls">
+          <button id="btn-realm" class="pill-btn">PURGATORIO</button>
+          <button id="btn-menu" class="pill-btn">MENU</button>
+        </div>
+
+        <div id="ab-well">
+          <div id="ab-pad">
+            <div class="btn-slot slot-b">
+              <button id="btn-b" class="round-btn btn-b" aria-label="B / Run">B</button>
+              <span class="btn-micro-label" id="b-mode-label">RUN</span>
+            </div>
+            <div class="btn-slot slot-a">
+              <button id="btn-a" class="round-btn btn-a" aria-label="A / Action">A</button>
+              <span class="btn-micro-label">ACT</span>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
+
+    <!-- Full-Screen Menu & Settings Overlay -->
+    <div id="menu-overlay" class="hidden" role="dialog" aria-modal="true">
+      <div class="menu-panel">
+        <div class="menu-top-title">
+          <span>✦ LEGENDS OF DEATH — MENU</span>
+          <button id="menu-close" class="tab-close" aria-label="Close Menu">✕</button>
+        </div>
+        <div class="menu-tabs">
+          <button class="tab-btn active" data-tab="quests">Story</button>
+          <button class="tab-btn" data-tab="party">Party</button>
+          <button class="tab-btn" data-tab="lore">Lore</button>
+          <button class="tab-btn" data-tab="settings">Settings</button>
+          <button class="tab-btn" data-tab="save">Save</button>
+        </div>
+        <div id="menu-body"></div>
+        <div class="menu-footer-hint">◀▶ Switch Tabs • ▲▼ Select • A Confirm • B Close</div>
+      </div>
+    </div>
   </div>
 
   <!-- Modular Project Scripts -->
+  <script src="scripts/audio.js"></script>
   <script src="models/palettes.js"></script>
   <script src="models/sprites.js"></script>
   <script src="models/world_art.js"></script>

@@ -1,6 +1,6 @@
-// Turn-based party combat, battle models, and visual effects.
 // =========================================================
 // scripts/battle.js — Full-Body 32-Bit GBA Turn-Based Battle
+//                     with D-Pad / A Button Grid Navigation
 // =========================================================
 window.Battle = (() => {
   const ui = () => document.getElementById("battle-ui");
@@ -14,7 +14,6 @@ window.Battle = (() => {
   let vfx = [];
   let shake = 0;
 
-  // Encounter Definitions (Each 2-fighter team is clearly named & explained!)
   const ENCOUNTERS = {
     partySendex: {
       bg: "party",
@@ -129,7 +128,8 @@ window.Battle = (() => {
       bg: tpl.bg,
       enemy: { ...tpl.enemy, lunge: 0, flash: 0 },
       party: tpl.party.map(m => ({ ...m, lunge: 0, flash: 0 })),
-      turnIdx: 0, // 0 = party[0], 1 = party[1]
+      turnIdx: 0,
+      focusIdx: 0,
       busy: false
     };
 
@@ -139,9 +139,7 @@ window.Battle = (() => {
     renderMoves();
   }
 
-  function setLog(msg) {
-    logEl().textContent = msg;
-  }
+  function setLog(msg) { logEl().textContent = msg; }
 
   function renderHud() {
     const e = state.enemy;
@@ -173,15 +171,37 @@ window.Battle = (() => {
   function renderMoves() {
     const actor = state.party[state.turnIdx];
     actionsEl().innerHTML = actor.moves.map((mv, idx) => `
-      <button class="move-btn" ${state.busy ? "disabled" : ""} data-idx="${idx}">
-        <span>${mv.name}</span>
+      <button class="move-btn ${idx === state.focusIdx ? "focused" : ""}" ${state.busy ? "disabled" : ""} data-idx="${idx}">
+        <span>${idx === state.focusIdx ? "▶ " : ""}${mv.name}</span>
         <small>${mv.desc}</small>
       </button>
     `).join("");
 
     actionsEl().querySelectorAll(".move-btn").forEach(btn => {
-      btn.onclick = () => useMove(Number(btn.dataset.idx));
+      btn.onclick = () => {
+        state.focusIdx = Number(btn.dataset.idx);
+        useMove(state.focusIdx);
+      };
     });
+  }
+
+  // Full D-Pad + A button navigation for the 2x2 battle move grid
+  function moveFocus(dir) {
+    if (!active || !state || state.busy) return;
+    const prev = state.focusIdx;
+    if (dir === "right" && state.focusIdx % 2 === 0) state.focusIdx++;
+    else if (dir === "left" && state.focusIdx % 2 === 1) state.focusIdx--;
+    else if (dir === "down" && state.focusIdx < 2) state.focusIdx += 2;
+    else if (dir === "up" && state.focusIdx >= 2) state.focusIdx -= 2;
+    if (prev !== state.focusIdx) {
+      window.AudioFX.cursor();
+      renderMoves();
+    }
+  }
+
+  function confirmMove() {
+    if (!active || !state || state.busy) return;
+    useMove(state.focusIdx);
   }
 
   function spawnVfx(x, y, color) {
@@ -204,10 +224,12 @@ window.Battle = (() => {
 
     if (mv.healAll) {
       state.party.forEach(p => { if (p.hp > 0) p.hp = Math.min(p.maxHp, p.hp + mv.healAll); });
+      window.AudioFX.heal();
       spawnVfx(105, 148, mv.color);
       setLog(`${actor.name} used ${mv.name}! Restored ${mv.healAll} HP to the team!`);
     } else if (mv.heal) {
       actor.hp = Math.min(actor.maxHp, actor.hp + mv.heal);
+      window.AudioFX.heal();
       spawnVfx(95 + state.turnIdx * 45, 148, mv.color);
       setLog(`${actor.name} used ${mv.name} and recovered ${mv.heal} HP!`);
     } else {
@@ -215,6 +237,7 @@ window.Battle = (() => {
       state.enemy.hp = Math.max(0, state.enemy.hp - dmg);
       state.enemy.flash = 14;
       shake = 10;
+      window.AudioFX.hit();
       spawnVfx(290, 96, mv.color);
       setLog(`${actor.name} unleashed ${mv.name} for ${dmg} damage!`);
     }
@@ -224,13 +247,13 @@ window.Battle = (() => {
     setTimeout(() => {
       if (state.enemy.hp <= 0) {
         setLog(`${state.enemy.name} was defeated! Entering cutscene...`);
-        setTimeout(() => finish(true), 950);
+        setTimeout(() => finish(true), 900);
         return;
       }
 
-      // Advance to second party member if alive, otherwise enemy turn
       if (state.turnIdx === 0 && state.party[1] && state.party[1].hp > 0) {
         state.turnIdx = 1;
+        state.focusIdx = 0;
         state.busy = false;
         setLog(`Now choose ${state.party[1].name}'s move!`);
         renderHud();
@@ -238,7 +261,7 @@ window.Battle = (() => {
       } else {
         enemyTurn();
       }
-    }, 850);
+    }, 820);
   }
 
   function enemyTurn() {
@@ -254,22 +277,24 @@ window.Battle = (() => {
     target.hp = Math.max(0, target.hp - dmg);
     target.flash = 14;
     shake = 10;
+    window.AudioFX.hit();
     spawnVfx(100, 148, "#ef4444");
     setLog(`${e.name} used ${moveName} on ${target.name} for ${dmg} damage!`);
     renderHud();
 
     setTimeout(() => {
       if (state.party.every(p => p.hp <= 0)) {
-        // Story-friendly recovery so player is never frustrated or soft-locked
         state.party.forEach(p => { p.hp = Math.floor(p.maxHp * 0.65); });
+        window.AudioFX.heal();
         setLog("Jacob's Nephilim soul surges with golden light, reviving the team!");
         renderHud();
       }
       state.turnIdx = state.party[0].hp > 0 ? 0 : 1;
+      state.focusIdx = 0;
       state.busy = false;
       renderHud();
       renderMoves();
-    }, 950);
+    }, 900);
   }
 
   function finish(won) {
@@ -280,10 +305,8 @@ window.Battle = (() => {
     if (cb) cb(won);
   }
 
-  // Draw the full 32-bit GBA Battle Arena + Full-Body Animated Character Models
   function draw(ctx, time) {
     if (!active || !state) return;
-
     ctx.save();
     if (shake > 0) {
       ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
@@ -291,25 +314,17 @@ window.Battle = (() => {
       if (shake < 0.5) shake = 0;
     }
 
-    // Dramatic Arena Sky Background
     const grad = ctx.createLinearGradient(0, 0, 0, 256);
     if (state.bg === "bloodmoon") {
-      grad.addColorStop(0, "#2b050b");
-      grad.addColorStop(0.55, "#7f1d1d");
-      grad.addColorStop(1, "#1c1917");
+      grad.addColorStop(0, "#2b050b"); grad.addColorStop(0.55, "#7f1d1d"); grad.addColorStop(1, "#1c1917");
     } else if (state.bg === "party") {
-      grad.addColorStop(0, "#1e1b4b");
-      grad.addColorStop(0.55, "#4c1d95");
-      grad.addColorStop(1, "#0f172a");
+      grad.addColorStop(0, "#1e1b4b"); grad.addColorStop(0.55, "#4c1d95"); grad.addColorStop(1, "#0f172a");
     } else {
-      grad.addColorStop(0, "#0f172a");
-      grad.addColorStop(0.55, "#312e81");
-      grad.addColorStop(1, "#1e293b");
+      grad.addColorStop(0, "#0f172a"); grad.addColorStop(0.55, "#312e81"); grad.addColorStop(1, "#1e293b");
     }
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 384, 256);
 
-    // Blood Moon / Starry Sky Detail
     if (state.bg === "bloodmoon") {
       ctx.fillStyle = "#ef4444";
       ctx.beginPath(); ctx.arc(192, 46, 26, 0, Math.PI * 2); ctx.fill();
@@ -317,12 +332,9 @@ window.Battle = (() => {
       ctx.beginPath(); ctx.arc(192, 46, 34, 0, Math.PI * 2); ctx.fill();
     } else {
       ctx.fillStyle = "rgba(255,255,255,0.65)";
-      for (let i = 0; i < 20; i++) {
-        ctx.fillRect((i * 53) % 380, (i * 29) % 100, 2, 2);
-      }
+      for (let i = 0; i < 20; i++) ctx.fillRect((i * 53) % 380, (i * 29) % 100, 2, 2);
     }
 
-    // GBA Elliptical Battle Platforms
     ctx.fillStyle = "rgba(15, 23, 42, 0.72)";
     ctx.beginPath(); ctx.ellipse(290, 134, 62, 16, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = "#f5c542"; ctx.lineWidth = 2; ctx.stroke();
@@ -331,11 +343,9 @@ window.Battle = (() => {
     ctx.beginPath(); ctx.ellipse(104, 178, 78, 18, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 2; ctx.stroke();
 
-    // Draw FULL-BODY Enemy Model (facing left)
     if (state.enemy.flash > 0) state.enemy.flash--;
     window.Sprites.drawBattleModel(ctx, state.enemy.id, 290, 98, true, time, state.enemy.lunge, state.enemy.flash > 0);
 
-    // Draw FULL-BODY 2-Character Player Party Models (facing right)
     state.party.forEach((p, idx) => {
       if (p.hp <= 0) return;
       if (p.flash > 0) p.flash--;
@@ -344,7 +354,6 @@ window.Battle = (() => {
       window.Sprites.drawBattleModel(ctx, p.id, px, py, false, time + idx * 400, p.lunge, p.flash > 0);
     });
 
-    // Render Spell VFX Particles
     for (let i = vfx.length - 1; i >= 0; i--) {
       const pt = vfx[i];
       pt.x += pt.vx; pt.y += pt.vy; pt.life--;
@@ -356,5 +365,5 @@ window.Battle = (() => {
     ctx.restore();
   }
 
-  return { start, draw, isActive: () => active };
+  return { start, draw, moveFocus, confirmMove, isActive: () => active };
 })();

@@ -1,7 +1,6 @@
-// Overworld animation frames, portraits, and full-body battle sprites.
 // =========================================================
 // models/sprites.js — 32-Bit Overworld Sprites, 64x64 Portraits,
-//                     & 96x96 FULL-BODY Battle Models
+//                     Ambient Emotes & 96x96 FULL-BODY Battle Models
 // =========================================================
 window.Sprites = (() => {
   function px(ctx, x, y, w, h, color) {
@@ -9,28 +8,27 @@ window.Sprites = (() => {
     ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   }
 
-  // ---------------------------------------------------------
-  // 1. OVERWORLD 24x32 CHARACTER SPRITE (Smooth 4-Frame Walk)
-  // ---------------------------------------------------------
-  function drawOverworld(ctx, id, x, y, dir = "down", frame = 0, purgatorio = false) {
+  // 1. OVERWORLD 24x32 CHARACTER SPRITE (Smooth 4-Frame Walk + Ambient Activity)
+  function drawOverworld(ctx, id, x, y, dir = "down", frame = 0, purgatorio = false, activity = null, time = 0) {
     const p = window.PALETTES[id] || window.PALETTES.jacob;
-    const step = frame % 4; // 0: idle, 1: left foot, 2: idle, 3: right foot
-    const bob = (step === 1 || step === 3) ? -1 : 0;
+    const step = frame % 4;
+    const danceBob = activity === "dance" ? Math.round(Math.sin(time * 0.014 + x) * 2) : 0;
+    const bob = ((step === 1 || step === 3) ? -1 : 0) + danceBob;
     const leftLegY = step === 1 ? -2 : (step === 3 ? 1 : 0);
     const rightLegY = step === 3 ? -2 : (step === 1 ? 1 : 0);
     const armSwing = step === 1 ? 2 : (step === 3 ? -2 : 0);
 
-    // Special case: Crista the platinum cat
+    // Special: Crista the platinum cat
     if (p.hairStyle === "cat") {
       ctx.fillStyle = "rgba(0,0,0,0.3)";
       ctx.beginPath();
       ctx.ellipse(x + 12, y + 27, 7, 3, 0, 0, Math.PI * 2);
       ctx.fill();
       px(ctx, x + 7, y + 19 + bob, 10, 7, p.top);
-      px(ctx, x + 15, y + 16 + bob, 3, 5, p.skinShade); // tail
-      px(ctx, x + 7, y + 13 + bob, 9, 7, p.hair); // head
-      px(ctx, x + 7, y + 11 + bob, 2, 3, p.hair); // ear L
-      px(ctx, x + 14, y + 11 + bob, 2, 3, p.hair); // ear R
+      px(ctx, x + 15, y + 16 + bob, 3, 5, p.skinShade);
+      px(ctx, x + 7, y + 13 + bob, 9, 7, p.hair);
+      px(ctx, x + 7, y + 11 + bob, 2, 3, p.hair);
+      px(ctx, x + 14, y + 11 + bob, 2, 3, p.hair);
       px(ctx, x + 9, y + 16 + bob, 2, 2, p.eyes);
       px(ctx, x + 13, y + 16 + bob, 2, 2, p.eyes);
       return;
@@ -42,15 +40,15 @@ window.Sprites = (() => {
     ctx.ellipse(x + 12, y + 29, 7, 3, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Subtle Purgatorio wings if active
+    // Subtle Purgatorio wings
     if (purgatorio && p.wings && p.wings !== "float") {
       const wCol = p.wings === "angel" ? "#f8fafc" : (p.wings === "corrupted" ? "#7f1d1d" : "#111827");
-      const flap = Math.sin(Date.now() * 0.008) * 2;
+      const flap = Math.sin(time * 0.008) * 2;
       px(ctx, x - 4, y + 10 + bob + flap, 7, 9, wCol);
       px(ctx, x + 21, y + 10 + bob + flap, 7, 9, p.wings === "corrupted" ? "#dc2626" : wCol);
     }
 
-    // Legs & Shoes (alternating stride)
+    // Legs & Shoes
     if (dir === "left" || dir === "right") {
       const stride = step === 1 ? 3 : (step === 3 ? -3 : 0);
       px(ctx, x + 9 - stride, y + 21, 4, 6, p.pants);
@@ -64,14 +62,12 @@ window.Sprites = (() => {
       px(ctx, x + 13, y + 26 + rightLegY, 4, 3, p.shoes);
     }
 
-    // Torso / Jacket with shading
+    // Torso
     px(ctx, x + 6, y + 13 + bob, 12, 9, p.top);
     px(ctx, x + 6, y + 19 + bob, 12, 3, p.topShade);
-    if (dir === "down") {
-      px(ctx, x + 10, y + 14 + bob, 4, 6, p.accent);
-    }
+    if (dir === "down") px(ctx, x + 10, y + 14 + bob, 4, 6, p.accent);
 
-    // Arms with walk swing
+    // Arms
     if (dir === "down" || dir === "up") {
       px(ctx, x + 3, y + 14 + bob + armSwing, 3, 6, p.topShade);
       px(ctx, x + 3, y + 19 + bob + armSwing, 3, 2, p.skin);
@@ -111,12 +107,10 @@ window.Sprites = (() => {
         px(ctx, x + 5, y + 4 + bob, 2, 4, p.hair);
         px(ctx, x + 17, y + 4 + bob, 2, 4, p.hair);
       }
-      if (dir === "up") {
-        px(ctx, x + 5, y + 3 + bob, 14, 9, p.hair);
-      }
+      if (dir === "up") px(ctx, x + 5, y + 3 + bob, 14, 9, p.hair);
     }
 
-    // Face details
+    // Eyes
     if (dir === "down") {
       px(ctx, x + 8, y + 7 + bob, 2, 3, "#111");
       px(ctx, x + 8, y + 8 + bob, 2, 2, p.eyes);
@@ -127,21 +121,41 @@ window.Sprites = (() => {
     } else if (dir === "right") {
       px(ctx, x + 15, y + 7 + bob, 2, 3, p.eyes);
     }
+
+    // Ambient life visual cue (cooking steam, vaping puff, music note, clipboard)
+    if (activity === "cook" && Math.floor(time / 900) % 2 === 0) {
+      const drift = (time * 0.015) % 8;
+      px(ctx, x + 10, y - 5 - drift, 3, 3, "rgba(255,255,255,0.7)");
+      px(ctx, x + 14, y - 8 - drift, 2, 2, "rgba(254,240,138,0.8)");
+    } else if (activity === "vape" && Math.floor(time / 1200) % 3 === 0) {
+      const drift = (time * 0.012) % 9;
+      px(ctx, x + 12, y - 4 - drift, 4, 3, "rgba(244,114,182,0.55)");
+    } else if (activity === "dance" && Math.floor(time / 500) % 2 === 0) {
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 8px monospace";
+      ctx.fillText("♪", x + 16, y - 2);
+    }
   }
 
-  // ---------------------------------------------------------
   // 2. 64x64 EXPRESSIVE DIALOGUE PORTRAIT
-  // ---------------------------------------------------------
   function drawPortrait(ctx, id, mood = "neutral") {
     const p = window.PALETTES[id] || window.PALETTES.jacob;
     ctx.clearRect(0, 0, 64, 64);
 
-    // Subtle character aura backdrop
     const grad = ctx.createRadialGradient(32, 28, 4, 32, 32, 34);
     grad.addColorStop(0, p.aura ? p.aura + "55" : "#47556966");
     grad.addColorStop(1, "#0f1324");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 64, 64);
+
+    if (p.hairStyle === "sign") {
+      px(ctx, 29, 34, 6, 24, "#78350f");
+      px(ctx, 10, 14, 44, 24, "#92400e");
+      px(ctx, 13, 17, 38, 18, "#fef3c7");
+      px(ctx, 18, 22, 28, 3, "#78350f");
+      px(ctx, 18, 28, 20, 3, "#78350f");
+      return;
+    }
 
     if (p.hairStyle === "cat") {
       px(ctx, 18, 26, 28, 24, p.hair);
@@ -155,25 +169,20 @@ window.Sprites = (() => {
       return;
     }
 
-    // Shoulders & Jacket
     px(ctx, 10, 44, 44, 20, p.top);
     px(ctx, 10, 56, 44, 8, p.topShade);
     px(ctx, 25, 45, 14, 19, p.accent);
-    // Neck
     px(ctx, 26, 38, 12, 9, p.skinShade);
 
-    // Back hair for long styles
     if (p.hairStyle === "long" || p.hairStyle === "wavy_long") {
       px(ctx, 12, 16, 40, 36, p.hair);
     }
 
-    // Head shape
     px(ctx, 18, 14, 28, 26, p.skin);
     px(ctx, 20, 38, 24, 3, p.skinShade);
-    px(ctx, 16, 22, 3, 8, p.skinShade); // ear L
-    px(ctx, 45, 22, 3, 8, p.skinShade); // ear R
+    px(ctx, 16, 22, 3, 8, p.skinShade);
+    px(ctx, 45, 22, 3, 8, p.skinShade);
 
-    // Hair / Hood
     if (p.hairStyle === "hood") {
       px(ctx, 10, 6, 44, 38, p.top);
       px(ctx, 16, 14, 32, 26, "#09090b");
@@ -195,7 +204,6 @@ window.Sprites = (() => {
       }
     }
 
-    // Eyes
     const eyeY = 24;
     px(ctx, 21, eyeY, 7, 6, "#ffffff");
     px(ctx, 36, eyeY, 7, 6, "#ffffff");
@@ -206,7 +214,6 @@ window.Sprites = (() => {
     px(ctx, 23, eyeY + 1, 1, 1, "#ffffff");
     px(ctx, 38, eyeY + 1, 1, 1, "#ffffff");
 
-    // Eyebrows & Mood Expressions
     if (mood === "angry" || mood === "intense") {
       px(ctx, 20, 21, 8, 2, p.hair);
       px(ctx, 25, 22, 4, 2, p.hair);
@@ -217,7 +224,7 @@ window.Sprites = (() => {
       px(ctx, 20, 22, 8, 2, p.hair);
       px(ctx, 36, 22, 8, 2, p.hair);
       px(ctx, 28, 35, 8, 2, "#9a5b48");
-      px(ctx, 22, 31, 2, 4, "#38bdf8"); // tear
+      px(ctx, 22, 31, 2, 4, "#38bdf8");
     } else if (mood === "happy" || mood === "blush") {
       px(ctx, 20, 20, 8, 2, p.hair);
       px(ctx, 36, 20, 8, 2, p.hair);
@@ -234,9 +241,7 @@ window.Sprites = (() => {
     }
   }
 
-  // ---------------------------------------------------------
-  // 3. 96x96 FULL-BODY BATTLE CHARACTER MODEL (Animated!)
-  // ---------------------------------------------------------
+  // 3. 96x96 FULL-BODY BATTLE CHARACTER MODEL
   function drawBattleModel(ctx, id, cx, cy, flip = false, animTime = 0, lunge = 0, hitFlash = false) {
     const p = window.PALETTES[id] || window.PALETTES.jacob;
     const breath = Math.sin(animTime * 0.005) * 2;
@@ -245,37 +250,24 @@ window.Sprites = (() => {
     ctx.save();
     ctx.translate(cx + (flip ? -lunge : lunge), cy + breath);
     if (flip) ctx.scale(-1, 1);
+    if (hitFlash) ctx.filter = "brightness(2.5) saturate(0.2)";
 
-    if (hitFlash) {
-      ctx.filter = "brightness(2.5) saturate(0.2)";
-    }
-
-    // Special Boss Model: ENVY (Colossal Poison Serpent)
     if (p.weapon === "serpent") {
-      // Coiled giant emerald/violet serpent
       ctx.fillStyle = "rgba(16, 185, 129, 0.25)";
-      ctx.beginPath();
-      ctx.ellipse(0, 32, 38, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Coils
+      ctx.beginPath(); ctx.ellipse(0, 32, 38, 10, 0, 0, Math.PI * 2); ctx.fill();
       px(ctx, -34, 14, 68, 16, "#065f46");
       px(ctx, -28, 18, 56, 8, "#10b981");
       px(ctx, -24, 0, 48, 16, "#047857");
       px(ctx, -18, 4, 36, 8, "#34d399");
-      // Rising neck & cobra hood
       px(ctx, -20, -28, 40, 30, "#064e3b");
-      px(ctx, -14, -24, 28, 24, "#581c87"); // violet markings
+      px(ctx, -14, -24, 28, 24, "#581c87");
       px(ctx, -10, -20, 20, 20, "#10b981");
-      // Serpent Head
       px(ctx, -16, -42, 32, 18, "#065f46");
       px(ctx, -12, -38, 24, 10, "#10b981");
-      // Glowing Eyes & Fangs
       px(ctx, -10, -36, 6, 4, "#fde047");
       px(ctx, 4, -36, 6, 4, "#fde047");
       px(ctx, -8, -26, 3, 7, "#ffffff");
       px(ctx, 5, -26, 3, 7, "#ffffff");
-      // Dripping black Iris toxin
       const drip = (animTime * 0.03) % 14;
       px(ctx, -7, -18 + drip, 2, 5, "#a855f7");
       px(ctx, 6, -15 + ((drip + 6) % 14), 2, 5, "#111827");
@@ -283,73 +275,45 @@ window.Sprites = (() => {
       return;
     }
 
-    // Aura glow underneath
     if (p.aura) {
       ctx.fillStyle = p.aura + "33";
-      ctx.beginPath();
-      ctx.ellipse(0, 34, 26, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, 34, 26, 8, 0, 0, Math.PI * 2); ctx.fill();
     }
 
-    // Wings (Full-body Caeleste / Angel / Demon / Corrupted)
     if (p.wings && p.wings !== "float") {
       const leftCol = p.wings === "angel" ? "#f8fafc" : (p.wings === "demon" ? "#7f1d1d" : "#111827");
       const rightCol = p.wings === "corrupted" ? "#991b1b" : leftCol;
       const trim = p.wings === "angel" ? "#f5c542" : (p.wings === "demon" ? "#ef4444" : "#374151");
-
-      // Left wing
       ctx.fillStyle = leftCol;
       ctx.beginPath();
-      ctx.moveTo(-6, -6);
-      ctx.lineTo(-42, -24 + wingFlap);
-      ctx.lineTo(-34, 4 + wingFlap * 0.5);
-      ctx.lineTo(-8, 10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = trim;
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.moveTo(-6, -6); ctx.lineTo(-42, -24 + wingFlap); ctx.lineTo(-34, 4 + wingFlap * 0.5); ctx.lineTo(-8, 10);
+      ctx.closePath(); ctx.fill(); ctx.strokeStyle = trim; ctx.lineWidth = 2; ctx.stroke();
 
-      // Right wing
       ctx.fillStyle = rightCol;
       ctx.beginPath();
-      ctx.moveTo(6, -6);
-      ctx.lineTo(42, -24 + wingFlap);
-      ctx.lineTo(34, 4 + wingFlap * 0.5);
-      ctx.lineTo(8, 10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Crepsus glowing blue eye on corrupted wing
-      if (p.wings === "corrupted") {
-        px(ctx, 20, -14 + wingFlap * 0.6, 6, 4, "#38bdf8");
-      }
+      ctx.moveTo(6, -6); ctx.lineTo(42, -24 + wingFlap); ctx.lineTo(34, 4 + wingFlap * 0.5); ctx.lineTo(8, 10);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      if (p.wings === "corrupted") px(ctx, 20, -14 + wingFlap * 0.6, 6, 4, "#38bdf8");
     }
 
-    // Legs & Boots (Full body stance)
     px(ctx, -11, 14, 8, 16, p.pants);
     px(ctx, 3, 14, 8, 16, p.pants);
     px(ctx, -13, 28, 10, 6, p.shoes);
     px(ctx, 3, 28, 10, 6, p.shoes);
 
-    // Torso / Coat / Armor
     px(ctx, -12, -10, 24, 24, p.top);
     px(ctx, -12, 8, 24, 7, p.topShade);
     px(ctx, -5, -8, 10, 18, p.accent);
-    // Shoulder armor for Navi / Crepsus
     if (id === "navi" || id === "crepsus") {
       px(ctx, -16, -12, 7, 7, p.accent);
       px(ctx, 9, -12, 7, 7, p.accent);
     }
 
-    // Arms
     px(ctx, -18, -8, 6, 16, p.topShade);
     px(ctx, -18, 6, 6, 5, p.skin);
     px(ctx, 12, -8, 6, 16, p.topShade);
     px(ctx, 12, 6, 6, 5, p.skin);
 
-    // Head & Hair
     px(ctx, -10, -30, 20, 19, p.skin);
     px(ctx, -10, -14, 20, 3, p.skinShade);
 
@@ -373,11 +337,9 @@ window.Sprites = (() => {
       }
     }
 
-    // Eyes
     px(ctx, -6, -22, 4, 4, p.eyes);
     px(ctx, 3, -22, 4, 4, p.eyes);
 
-    // Signature Weapons
     if (p.weapon === "halberd") {
       px(ctx, 18, -36, 3, 62, "#f59e0b");
       px(ctx, 14, -38, 14, 12, "#38bdf8");
@@ -406,23 +368,15 @@ window.Sprites = (() => {
       px(ctx, 17, -38, 4, 68, "#4c1d95");
       ctx.fillStyle = "#e2e8f0";
       ctx.beginPath();
-      ctx.moveTo(19, -38);
-      ctx.quadraticCurveTo(-12, -46, -16, -22);
-      ctx.quadraticCurveTo(0, -30, 19, -28);
+      ctx.moveTo(19, -38); ctx.quadraticCurveTo(-12, -46, -16, -22); ctx.quadraticCurveTo(0, -30, 19, -28);
       ctx.fill();
     } else if (p.weapon === "sickle") {
       px(ctx, 16, -8, 3, 18, "#db2777");
-      ctx.strokeStyle = "#f8fafc";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(16, -10, 10, Math.PI * 0.9, Math.PI * 2.1);
-      ctx.stroke();
+      ctx.strokeStyle = "#f8fafc"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(16, -10, 10, Math.PI * 0.9, Math.PI * 2.1); ctx.stroke();
     } else if (p.weapon === "ring") {
-      ctx.strokeStyle = "#facc15";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(16, 8, 7 + Math.sin(animTime * 0.01) * 2, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.strokeStyle = "#facc15"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(16, 8, 7 + Math.sin(animTime * 0.01) * 2, 0, Math.PI * 2); ctx.stroke();
     } else if (p.weapon === "claws") {
       px(ctx, 14, 10, 10, 3, "#ef4444");
       px(ctx, 16, 14, 10, 3, "#ef4444");

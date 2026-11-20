@@ -1,11 +1,11 @@
-// Character color palettes, roles, wings, and weapon configuration.
 // =========================================================
 // models/palettes.js — 32-Bit Character & Realm Palettes
 // =========================================================
 window.PALETTES = {
   jacob: {
     name: "Jacob Menos",
-    role: "Nephilim • Healer",
+    role: "High School Senior",
+    trueRole: "Nephilim • Healer",
     skin: "#f4c8a6", skinShade: "#d9a27c",
     hair: "#c8a165", hairHi: "#e5c88f", hairStyle: "messy",
     eyes: "#38bdf8",
@@ -15,7 +15,8 @@ window.PALETTES = {
   },
   cyrine: {
     name: "Cyrine Huesic",
-    role: "Demon • Deicide Profugo",
+    role: "Best Friend • Senior",
+    trueRole: "Demon • Deicide Profugo",
     skin: "#f6d2bd", skinShade: "#dbb098",
     hair: "#e5e7eb", hairHi: "#ffffff", hairStyle: "long",
     eyes: "#a855f7",
@@ -25,7 +26,8 @@ window.PALETTES = {
   },
   navi: {
     name: "Navi",
-    role: "Everred • Reaper of Order",
+    role: "Cyrine's Older Brother (?)",
+    trueRole: "Everred • Reaper of Order",
     skin: "#f1ccb0", skinShade: "#d4a688",
     hair: "#4b2e1e", hairHi: "#71462f", hairStyle: "wavy_long",
     eyes: "#0284c7",
@@ -35,7 +37,8 @@ window.PALETTES = {
   },
   letonin: {
     name: "Letonin",
-    role: "Reaper of Order • Dreams",
+    role: "Dream Visitor",
+    trueRole: "Reaper of Order • Dreams",
     skin: "#f3cfb3", skinShade: "#d4a787",
     hair: "#1f1b24", hairHi: "#3f374a", hairStyle: "wavy",
     eyes: "#b45309",
@@ -45,7 +48,8 @@ window.PALETTES = {
   },
   illicero: {
     name: "Illicero (Kain)",
-    role: "Reaper of Order • Souls",
+    role: "Stranger at the Party",
+    trueRole: "Reaper of Order • Souls",
     skin: "#f0c29e", skinShade: "#ce9972",
     hair: "#eab308", hairHi: "#fef08a", hairStyle: "spiky",
     eyes: "#f59e0b",
@@ -54,8 +58,9 @@ window.PALETTES = {
     aura: "#f43f5e", wings: "dark", weapon: "rapier"
   },
   sendex: {
-    name: "Sendex (Daniel)",
-    role: "Reaper of Order • Fire",
+    name: "Sendex",
+    role: "Hostile Reaper",
+    trueRole: "Daniel Flora • Squire Guardian",
     skin: "#efd0ba", skinShade: "#cca68d",
     hair: "#111827", hairHi: "#374151", hairStyle: "curly",
     eyes: "#ef4444",
@@ -64,8 +69,9 @@ window.PALETTES = {
     aura: "#f97316", wings: "dark", weapon: "whip"
   },
   sendex_angel: {
-    name: "Daniel (Ascended)",
-    role: "Angel • Moonlight Sonata",
+    name: "Daniel Flora",
+    role: "Ascended Angel",
+    trueRole: "Angel • Moonlight Sonata",
     skin: "#f8dfc9", skinShade: "#dcb99d",
     hair: "#1f2937", hairHi: "#6b7280", hairStyle: "curly",
     eyes: "#fef08a",
@@ -75,7 +81,8 @@ window.PALETTES = {
   },
   crepsus: {
     name: "Crepsus",
-    role: "Rogue Advisor • Hybrid",
+    role: "Death's Advisor",
+    trueRole: "Rogue Advisor • Demon Hybrid",
     skin: "#d8b49c", skinShade: "#b08970",
     hair: "#5c3a21", hairHi: "#855834", hairStyle: "spiky",
     eyes: "#22c55e",
@@ -85,7 +92,8 @@ window.PALETTES = {
   },
   envy: {
     name: "Envy (Clarica)",
-    role: "Divine Sin • Poison",
+    role: "Divine Sin of Poison",
+    trueRole: "Clarica Vi Sonasa • Divine Sin",
     skin: "#e9d5c0", skinShade: "#c4ad95",
     hair: "#1e1b4b", hairHi: "#4338ca", hairStyle: "long",
     eyes: "#10b981",
@@ -95,7 +103,8 @@ window.PALETTES = {
   },
   emillia: {
     name: "Emillia Sonasa",
-    role: "Siren Princess • Vocality",
+    role: "Dream Phantom",
+    trueRole: "Siren Princess • Royal Voice",
     skin: "#f7d4bc", skinShade: "#dbb195",
     hair: "#fde047", hairHi: "#fef9c3", hairStyle: "long",
     eyes: "#3b82f6",
@@ -105,7 +114,8 @@ window.PALETTES = {
   },
   death: {
     name: "Lord Death",
-    role: "The Grim Reaper",
+    role: "Boy in a Black Hoodie",
+    trueRole: "The Grim Reaper • Oberon",
     skin: "#e5e7eb", skinShade: "#cbd5e1",
     hair: "#451a03", hairHi: "#78350f", hairStyle: "hood",
     eyes: "#a855f7",
@@ -116,6 +126,7 @@ window.PALETTES = {
   mom: {
     name: "Dr. Menos",
     role: "Jacob's Mom • Doctor",
+    trueRole: "Jacob's Mom • Traveling Doctor",
     skin: "#f3c9aa", skinShade: "#d4a482",
     hair: "#92400e", hairHi: "#b45309", hairStyle: "bun",
     eyes: "#2563eb",
@@ -125,12 +136,22 @@ window.PALETTES = {
   },
   crista: {
     name: "Crista",
-    role: "Platinum Cat (Illicero)",
+    role: "Stray Platinum Cat",
+    trueRole: "Illicero (Animal Form)",
     skin: "#f1f5f9", skinShade: "#cbd5e1",
     hair: "#ffffff", hairHi: "#ffffff", hairStyle: "cat",
     eyes: "#38bdf8",
     top: "#e2e8f0", topShade: "#94a3b8", accent: "#38bdf8",
     pants: "#e2e8f0", shoes: "#cbd5e1",
     aura: "#fbbf24", wings: null, weapon: null
+  },
+  sign: {
+    name: "Signpost",
+    role: "Colorado Springs",
+    trueRole: "Signpost",
+    skin: "#d6a36c", skinShade: "#9a6b3e",
+    hair: "#78350f", hairHi: "#92400e", hairStyle: "sign",
+    eyes: "#111", top: "#78350f", topShade: "#451a03", accent: "#fef3c7",
+    pants: "#451a03", shoes: "#451a03", aura: null, wings: null, weapon: null
   }
 };

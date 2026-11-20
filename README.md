@@ -1,25 +1,10 @@
-# Legends of Death & the Reapers of Time (32-Bit RPG)
+# Legends of Death & the Reapers of Time (32-Bit RPG — v3)
 
-A 32-bit GBA-style story RPG inspired by *Pokémon LeafGreen* and based on the novel *Legends of Death and the Reapers of Time*. Runs directly on Android, iPhone, and Desktop browsers via GitHub Pages.
+Complete 5-Act, 15-Chapter 32-bit GBA-style handheld RPG adaptation of *Legends of Death and the Reapers of Time*.
 
-## Project Structure
-```
-legends-of-death/
-├── index.html             # Entry HTML page & handheld UI shell
-├── README.md              # Setup & deployment guide
-├── styles/
-│   └── game.css           # Responsive mobile/handheld styling & cutscene bars
-├── models/
-│   ├── palettes.js        # Character color palettes, roles & weapons
-│   ├── sprites.js         # 24x32 animated overworld sprites, 64x64 portraits & 96x96 full-body battle models
-│   └── world_art.js       # Layered trees, 5 unique buildings, animated portals & real furniture (couch/bed)
-└── scripts/
-    ├── story.js           # Enhanced storyline, battle briefings, quests & Lore Codex
-        ├── maps.js            # Colorado Springs overworld, 5 interiors, Dream Realm, Limbach Park & Casa Grande
-            ├── battle.js          # Turn-based 2-unit RPG battle system with full-body models & VFX
-                └── engine.js          # Smooth GBA movement, cutscene walk-out engine & auto-save
-                ```
-
-                ## Controls
-                - **Mobile:** On-screen D-Pad, **A** (Interact / Advance), **B** (Back), **PURGATORIO** (Realm Shift), **MENU** (Quests/Party/Lore).
-                - **Desktop:** Arrow Keys / WASD to walk, **Z / Enter / Space** = A, **X / Esc** = B, **M** = Menu.
+## What's New in v3
+- **B Button = Run + Run-by-Default Swap:** Hold **B** (or `Shift`/`X` on keyboard) to sprint. Toggle **Run by Default** in Settings to auto-run and hold **B** to walk.
+- **Gamepad Console Shell Vibe:** Replaces empty black phone margins with a molded handheld console shell, dark glass screen lens with power LED, recessed D-pad/A-B wells, and speaker grille.
+- **Full-Screen Menu & Settings:** Story, Party, Lore, Settings, and Save now open full-screen for comfortable reading and tapping on phones.
+- **Button Size Toggle (`SMALL` / `MEDIUM` / `LARGE`):** Scales the D-pad and A/B buttons while dynamically adjusting gameplay screen spacing.
+- **7 Device Color Styles:** Midnight Blue (Default), Dark Purple, Dark Green, Light Off-White, Light Green, Light Blue, and **Sunburnt Yellow ★ (Special Edition)**.
