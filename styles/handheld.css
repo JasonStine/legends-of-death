@@ -224,8 +224,8 @@
   justify-content: center;
 }
 
-/* UNFOLDED FOLD 7 / WIDE SQUARE TABLET: Keep spacious balanced screen + controls */
-@media (min-width: 600px) and (min-height: 541px) {
+/* UNFOLDED FOLD 7 / WIDE SQUARE TABLET (Only when NOT tall portrait!) */
+@media (min-width: 600px) and (min-height: 541px) and (min-aspect-ratio: 3/4) {
   #handheld-body {
     grid-template-rows: 1fr auto auto;
     padding: 10px 16px 14px;
@@ -236,7 +236,7 @@
     align-items: center;
   }
   #console-lens {
-    max-width: 560px;
+    max-width: 660px;
   }
 }
 
@@ -408,6 +408,7 @@
   display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
 }
 .dpad-btn {
+  touch-action: none;
   background: var(--dpad-bg); border: 2px solid var(--dpad-border);
   color: var(--dpad-text); font-size: var(--dpad-font); font-weight: 900;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -420,6 +421,7 @@
 .dpad-btn.pressed, .dpad-btn:active { background: #4f46e5; border-color: #a5b4fc; }
 
 .pill-btn {
+  touch-action: none;
   background: var(--pill-bg); border: 1.5px solid var(--pill-border);
   color: var(--pill-text); font-size: var(--pill-font); font-weight: 900;
   letter-spacing: 0.06em; padding: var(--pill-pad-y) 9px; border-radius: 999px;
@@ -441,6 +443,7 @@
 .btn-micro-label { font-size: 8px; font-weight: 900; letter-spacing: 0.1em; color: var(--shell-subtext); }
 
 .round-btn {
+  touch-action: none;
   width: var(--ab-size); height: var(--ab-size);
   border-radius: 50%; font-size: var(--ab-font); font-weight: 900; color: #fff;
   border: 3px solid rgba(255,255,255,0.28); box-shadow: 0 4px 0 rgba(0,0,0,0.55); cursor: pointer;

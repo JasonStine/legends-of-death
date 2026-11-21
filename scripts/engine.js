@@ -253,25 +253,31 @@
   // MAP LOADING & AMBIENT LIVING NPCS
   // ---------------------------------------------------------
   function loadMap(mapId, tx, ty, afterFade) {
+    const safeId = (window.Maps && window.Maps[mapId]) ? mapId : "overworld";
     game.warpCooldown = 0.9;
-    window.AudioFX.portal();
+    try { window.AudioFX.portal(); } catch (_) {}
     fadeLayer.classList.add("active");
     setTimeout(() => {
-      game.mapId = mapId;
-      game.player.x = tx * T;
-      game.player.y = ty * T;
-      if (mapId !== "overworld" && mapId !== "westside") game.player.dir = "up";
-      game.player.frame = 0;
-      rebuildActors();
-      markExplored(mapId, game.player.x, game.player.y);
-      document.getElementById("location-pill").textContent = window.Maps[mapId].name + (game.purgatorio ? " (Purgatorio)" : "");
-      updatePurgatorioBtn();
-      updateProgressHud();
-      saveProgress();
-      setTimeout(() => {
-        fadeLayer.classList.remove("active");
-        if (afterFade) afterFade();
-      }, 160);
+      try {
+        game.mapId = safeId;
+        game.player.x = (Number.isFinite(tx) ? tx : 12) * T;
+        game.player.y = (Number.isFinite(ty) ? ty : 7) * T;
+        if (safeId !== "overworld" && safeId !== "westside") game.player.dir = "up";
+        game.player.frame = 0;
+        rebuildActors();
+        markExplored(safeId, game.player.x, game.player.y);
+        document.getElementById("location-pill").textContent = window.Maps[safeId].name + (game.purgatorio ? " (Purgatorio)" : "");
+        updatePurgatorioBtn();
+        updateProgressHud();
+        saveProgress();
+      } catch (err) {
+        console.error("loadMap error:", err);
+      } finally {
+        setTimeout(() => {
+          fadeLayer.classList.remove("active");
+          if (afterFade) afterFade();
+        }, 160);
+      }
     }, 200);
   }
 
@@ -690,7 +696,7 @@
             () => {
               advanceStage(9);
               rebuildActors();
-      markExplored(mapId, game.player.x, game.player.y);
+              markExplored(game.mapId, game.player.x, game.player.y);
               runCutscene([
                 { type: "dialogue", lines: D.parkPostBattle },
                 { type: "walk", actorId: "sendex", tx: 12, ty: 5, speed: 56, hideAtEnd: true }
@@ -808,7 +814,7 @@
 
   function interact() {
     if (!game.pinUnlocked) return;
-    if (snake.active) { if (snake.over) window.SnakeGame.start(() => setSideQuest("snake_champ", "done")); return; }
+    if (window.SnakeGame.isActive()) { if (window.SnakeGame.isOver()) window.SnakeGame.start(() => setSideQuest("snake_champ", "done")); return; }
     if (!game.started) { confirmTitle(); return; }
     if (window.Battle.isActive()) { window.Battle.confirmMove(); return; }
     if (game.choice) { confirmChoice(); return; }
@@ -1080,7 +1086,11 @@
       }
     }
 
-    render(time);
+    try {
+      render(time);
+    } catch (err) {
+      console.error("Render error:", err);
+    }
     requestAnimationFrame(tick);
   }
 
@@ -1474,7 +1484,21 @@
     btn.addEventListener("pointercancel", release);
   });
 
-  document.getElementById("btn-a").addEventListener("click", interact);
+  const btnA = document.getElementById("btn-a");
+  btnA.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    btnA.classList.add("pressed");
+    interact();
+  });
+  const releaseA = () => btnA.classList.remove("pressed");
+  btnA.addEventListener("pointerup", releaseA);
+  btnA.addEventListener("pointerleave", releaseA);
+  btnA.addEventListener("pointercancel", releaseA);
+
+  // Prevent long-press text selection / context menu popup on handheld buttons
+  document.querySelectorAll(".dpad-btn, .round-btn, .pill-btn, #dpad-well, #ab-well").forEach(el => {
+    el.addEventListener("contextmenu", e => e.preventDefault());
+  });
   document.getElementById("dialogue-box").addEventListener("click", advanceDialogue);
 
   const btnB = document.getElementById("btn-b");
