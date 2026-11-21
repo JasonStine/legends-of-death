@@ -626,6 +626,8 @@
           { id: "student_b", mood: "sad", text: "SIDE QUEST: Hey Jacob, I promised my date Lindor Dark Chocolate from Sweet Tooth Candy Store down the street, but I'm stuck waiting for my ride! Could you grab a box for me?" }
         ]);
       }
+    } else if (eventName === "hendersonPhotos") {
+      startDialogue([{ id: "neighbor", mood: "happy", text: "Framed 1980s Colorado Springs Photos: Pikes Peak at sunset, the old St. Jude bell tower, and a blurry silhouette with dark wings above Limbach Park!" }]);
     } else if (eventName === "loreNeighborHistory") {
       setSideQuest("henderson_folklore", "done");
       startDialogue([
@@ -1475,35 +1477,46 @@
   // ---------------------------------------------------------
   // EVENT BINDINGS
   // ---------------------------------------------------------
+  // Globally block Android/iOS long-press context menu on the handheld shell
+  shell.addEventListener("contextmenu", e => e.preventDefault());
+  window.addEventListener("contextmenu", e => e.preventDefault());
+
   document.querySelectorAll(".dpad-btn").forEach(btn => {
     const dir = btn.dataset.dir;
-    btn.addEventListener("pointerdown", e => { e.preventDefault(); btn.classList.add("pressed"); onDpadPress(dir); });
-    const release = () => { btn.classList.remove("pressed"); onDpadRelease(dir); };
-    btn.addEventListener("pointerup", release);
-    btn.addEventListener("pointerleave", release);
+    const press = e => { e.preventDefault(); btn.classList.add("pressed"); onDpadPress(dir); };
+    const release = e => { if (e && e.cancelable) e.preventDefault(); btn.classList.remove("pressed"); onDpadRelease(dir); };
+    btn.addEventListener("touchstart", press, { passive: false });
+    btn.addEventListener("touchend", release, { passive: false });
+    btn.addEventListener("touchcancel", release, { passive: false });
+    btn.addEventListener("pointerdown", e => { if (e.pointerType !== "touch") press(e); });
+    btn.addEventListener("pointerup", e => { if (e.pointerType !== "touch") release(e); });
+    btn.addEventListener("pointerleave", e => { if (e.pointerType !== "touch") release(e); });
     btn.addEventListener("pointercancel", release);
   });
 
   const btnA = document.getElementById("btn-a");
-  btnA.addEventListener("pointerdown", e => {
-    e.preventDefault();
+  let lastAPress = 0;
+  const pressA = e => {
+    if (e && e.cancelable) e.preventDefault();
+    const now = performance.now();
+    if (now - lastAPress < 110) return;
+    lastAPress = now;
     btnA.classList.add("pressed");
     interact();
-  });
+  };
   const releaseA = () => btnA.classList.remove("pressed");
+  btnA.addEventListener("touchstart", pressA, { passive: false });
+  btnA.addEventListener("touchend", releaseA, { passive: false });
+  btnA.addEventListener("touchcancel", releaseA, { passive: false });
+  btnA.addEventListener("pointerdown", e => { if (e.pointerType !== "touch") pressA(e); });
   btnA.addEventListener("pointerup", releaseA);
   btnA.addEventListener("pointerleave", releaseA);
   btnA.addEventListener("pointercancel", releaseA);
-
-  // Prevent long-press text selection / context menu popup on handheld buttons
-  document.querySelectorAll(".dpad-btn, .round-btn, .pill-btn, #dpad-well, #ab-well").forEach(el => {
-    el.addEventListener("contextmenu", e => e.preventDefault());
-  });
   document.getElementById("dialogue-box").addEventListener("click", advanceDialogue);
 
   const btnB = document.getElementById("btn-b");
-  btnB.addEventListener("pointerdown", e => {
-    e.preventDefault();
+  const pressB = e => {
+    if (e && e.cancelable) e.preventDefault();
     btnB.classList.add("pressed");
     game.input.run = true;
     if (!relOverlay.classList.contains("hidden")) closeReleaseNotes();
@@ -1512,8 +1525,12 @@
     else if (game.settingsOpen) closeSettings();
     else if (game.ingameMenuOpen) closeIngameMenu();
     else if (game.dialogue) advanceDialogue();
-  });
+  };
   const releaseB = () => { btnB.classList.remove("pressed"); game.input.run = false; };
+  btnB.addEventListener("touchstart", pressB, { passive: false });
+  btnB.addEventListener("touchend", releaseB, { passive: false });
+  btnB.addEventListener("touchcancel", releaseB, { passive: false });
+  btnB.addEventListener("pointerdown", e => { if (e.pointerType !== "touch") pressB(e); });
   btnB.addEventListener("pointerup", releaseB);
   btnB.addEventListener("pointerleave", releaseB);
   btnB.addEventListener("pointercancel", releaseB);

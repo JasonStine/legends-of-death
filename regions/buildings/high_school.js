@@ -31,14 +31,14 @@ window.Maps.school = (() => {
       { kind: "plaque", tx: 12, ty: 2, interact: "lorePromPoster", label: "Senior Prom Poster" },
       { kind: "school_desk", tx: 4, ty: 5 }, { kind: "school_desk", tx: 7, ty: 5 }, { kind: "school_desk", tx: 10, ty: 5 },
       { kind: "school_desk", tx: 4, ty: 7 }, { kind: "school_desk", tx: 7, ty: 7 }, { kind: "school_desk", tx: 10, ty: 7 },
-      // All hallway doors mounted flush along the north hallway wall (NO floating doors!)
-      { kind: "closed_door", tx: 2, ty: 9, interact: "doorPhysics", label: "Room 101: Physics" },
+      // Closed classroom doors recessed cleanly INTO the north hallway wall (y = 8)!
+      { kind: "closed_door", tx: 2, ty: 8, interact: "doorPhysics", label: "Room 101: Physics" },
       { kind: "locker_row", tx: 3, ty: 9 },
       { kind: "locker_row", tx: 10, ty: 9 },
-      { kind: "closed_door", tx: 13, ty: 9, interact: "doorLatin", label: "Room 103: Latin" },
+      { kind: "closed_door", tx: 13, ty: 8, interact: "doorLatin", label: "Room 103: Latin" },
       { kind: "trophy_case", tx: 14, ty: 9, interact: "loreTrophyCase", label: "CSHS Trophy Case" },
       { kind: "water_fountain", tx: 16, ty: 9 },
-      { kind: "closed_door", tx: 19, ty: 9, interact: "doorGym", label: "Gymnasium Doors" },
+      { kind: "closed_door", tx: 19, ty: 8, interact: "doorGym", label: "Gymnasium Doors" },
       { kind: "vending_machine", tx: 15, ty: 3, interact: "vendingSnack", label: "Hallway Vending Machine" },
       { kind: "cafe_set", tx: 17, ty: 5 },
       { kind: "plant", tx: 19, ty: 3 },
